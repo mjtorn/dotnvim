@@ -175,24 +175,13 @@ function! MaybeSpeshulTab(...)
   endif
 endfunction
 
-function! C_DisableNeocomplete()
-  if &ft ==# 'cpp' || &ft ==# 'c'
-    call neocomplete#init#disable()
-    imap <buffer> <Tab> <C-r>=MaybeSpeshulTab('forward')<CR>
-    imap <buffer> <S-Tab> <C-r>=MaybeSpeshulTab('backward')<CR>
-  else
-    call neocomplete#init#enable()
-  endif
-endfunction
-autocmd BufEnter * call C_DisableNeocomplete()
-
-:source ~/.vim/config/colors.vim
-:source ~/.vim/config/mjthl.vim
-:source ~/.vim/config/mjttab.vim
-:source ~/.vim/config/mjtabbrev.vim
-:source ~/.vim/config/mjtmaps.vim
-:source ~/.vim/config/statusline.vim
-:source ~/.vim/config/tabline.vim
+:source ~/.nvim/config/colors.vim
+:source ~/.nvim/config/mjthl.vim
+:source ~/.nvim/config/mjttab.vim
+:source ~/.nvim/config/mjtabbrev.vim
+:source ~/.nvim/config/mjtmaps.vim
+:source ~/.nvim/config/statusline.vim
+:source ~/.nvim/config/tabline.vim
 
 " EOF
 

@@ -119,5 +119,5 @@ let g:pyindent_open_paren = '&-sw'
 let g:pyindent_nested_paren = '&-sw'
 
 "" This sources everything else I want
-:source ~/.vim/config/mjt.vim
+:source ~/.nvim/config/mjt.vim
 

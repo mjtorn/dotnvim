@@ -38,9 +38,9 @@ nnoremap <Leader>a :Ack
 "" Copy line and edit
 nmap <Leader>c yyPVgcj
 
-nmap ;C :source ~/.vim/vimrc<Enter>
-nmap ;S :source ~/.vim/plugin/scratchpad.vim<Enter>
-nmap ;M :source ~/.vim/config/mjt.vim<Enter>
+nmap ;C :source ~/.nvim/nvimrc<Enter>
+nmap ;S :source ~/.nvim/plugin/scratchpad.nvim<Enter>
+nmap ;M :source ~/.nvim/config/mjt.nvim<Enter>
 
 " Stolen from mbrochh's vim-as-a-python-ide talk
 vnoremap < <gv " better indentation
