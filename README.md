@@ -1,7 +1,9 @@
-dotnvim
-=======
+https://github.com/mjtorn/dotnvim
+=================================
 
 mjt's .nvim stuff
+
+See also `https://github.com/mjtorn/dotvim`
 
 Installation
 ------------
