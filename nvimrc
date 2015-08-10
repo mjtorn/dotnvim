@@ -11,6 +11,9 @@ let g:NERDTreeWinSize = 30
 
 set modeline
 
+" Do not want surprises from other input devices
+set mouse=
+
 " Prefer this in the statusbar, for vmath and echoes to work
 set noshowmode
 
