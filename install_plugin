@@ -6,9 +6,9 @@ BUNDLE_DIR="bundle"
 set -e
 
 need_chdir=0
-if [ $PWD != ${HOME}/.vim/ ]; then
+if [ $PWD != ${HOME}/.nvim/ ]; then
   need_chdir=1
-  cd ${HOME}/.vim/
+  cd ${HOME}/.nvim/
 fi
 
 which git > /dev/null || {
