@@ -51,26 +51,22 @@ let g:insertlessly_cleanup_all_ws = 0
 " Try this with conqueterm
 let g:ConqueTerm_ReadUnfocused = 1
 
-"" some neocomplete confs, taken from https://github.com/Shougo/neocomplete.vim
-let g:neocomplete#enable_at_startup = 1
-
-" Plugin key-mappings.
-inoremap <expr><C-l>     neocomplete#complete_common_string()
+"" some deoplete
+let g:deoplete#enable_at_startup = 1
 
 " <CR>: close popup and save indent.
 inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
 function! s:my_cr_function()
   " For no inserting <CR> key.
-  return pumvisible() ? neocomplete#close_popup() : "\<CR>"
+  return pumvisible() ? deoplete#close_popup() : "\<CR>"
 endfunction
 
+"" XXX seems broken with neovim
 " <TAB>: completion.
 inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 
-"" What's wrong with jedi.vim? Need to disable it to make it work?
-let g:jedi#completions_enabled=0
-" This is not the droid you are looking for :(
-"let g:jedi#popup_select_first = 0
+"" Enable jedi
+let g:jedi#completions_enabled=1
 
 "" clang?
 let g:clang_library_path="/usr/lib/llvm-3.5/lib/"
