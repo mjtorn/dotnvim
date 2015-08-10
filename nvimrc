@@ -96,7 +96,7 @@ set foldlevelstart=10
 
 "" From neocomplete and http://blog.fluther.com/django-vim/
 " XXX: Is markdown really html enough to use the same completions
-autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+autocmd FileType python setlocal omnifunc=python3complete#Complete
 autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
 autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
 autocmd FileType fbml set omnifunc=htmlcomplete#CompleteTags
