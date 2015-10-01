@@ -60,3 +60,6 @@ nmap          ++  vip++
 "" Fix whitespaces manually
 nnoremap <Leader>fw :%s/\s\+\%#\@<!$//g<CR>
 
+"" Highlighted search clear
+nnoremap <Leader>h :noh<CR>
+
