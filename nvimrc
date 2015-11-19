@@ -42,7 +42,7 @@ set undolevels=1000
 set undoreload=10000
 
 let g:ctrlp_custom_ignore = {
-\  'file': '\v\.(pyc)$',
+\  'file': '\v\.(pyc|o)$',
 \ }
 
 " Make insertlessly do less. Frees the space key for folding
