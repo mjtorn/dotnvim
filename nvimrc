@@ -54,17 +54,6 @@ let g:insertlessly_cleanup_all_ws = 0
 "" some deoplete
 let g:deoplete#enable_at_startup = 1
 
-" <CR>: close popup and save indent.
-inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
-function! s:my_cr_function()
-  " For no inserting <CR> key.
-  return pumvisible() ? deoplete#close_popup() : "\<CR>"
-endfunction
-
-"" XXX seems broken with neovim
-" <TAB>: completion.
-inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
-
 "" Enable jedi
 let g:jedi#completions_enabled=1
 
