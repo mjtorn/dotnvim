@@ -3,9 +3,6 @@
 runtime bundle/pathogen/autoload/pathogen.vim
 call pathogen#infect()
 
-" Deal with python
-let g:python_host_prog = '/usr/bin/python'
-
 " Needed for coffeescript
 filetype plugin indent on
 
