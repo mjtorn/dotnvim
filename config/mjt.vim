@@ -175,13 +175,13 @@ function! MaybeSpeshulTab(...)
   endif
 endfunction
 
-:source ~/.nvim/config/colors.vim
-:source ~/.nvim/config/mjthl.vim
-:source ~/.nvim/config/mjttab.vim
-:source ~/.nvim/config/mjtabbrev.vim
-:source ~/.nvim/config/mjtmaps.vim
-:source ~/.nvim/config/statusline.vim
-:source ~/.nvim/config/tabline.vim
+:source ~/.config/nvim/config/colors.vim
+:source ~/.config/nvim/config/mjthl.vim
+:source ~/.config/nvim/config/mjttab.vim
+:source ~/.config/nvim/config/mjtabbrev.vim
+:source ~/.config/nvim/config/mjtmaps.vim
+:source ~/.config/nvim/config/statusline.vim
+:source ~/.config/nvim/config/tabline.vim
 
 " EOF
 

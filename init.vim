@@ -3,6 +3,9 @@
 runtime bundle/pathogen/autoload/pathogen.vim
 call pathogen#infect()
 
+" Deal with python
+let g:python_host_prog = '/usr/bin/python'
+
 " Needed for coffeescript
 filetype plugin indent on
 
@@ -104,5 +107,5 @@ let g:pyindent_open_paren = '&-sw'
 let g:pyindent_nested_paren = '&-sw'
 
 "" This sources everything else I want
-:source ~/.nvim/config/mjt.vim
+:source ~/.config/nvim/config/mjt.vim
 

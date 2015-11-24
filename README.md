@@ -1,16 +1,16 @@
 https://github.com/mjtorn/dotnvim
 =================================
 
-mjt's .nvim stuff
+mjt's .condig/nvim/ stuff
 
 See also `https://github.com/mjtorn/dotvim`
 
 Installation
 ------------
 
-    git clone git://github.com/mjtorn/dotnvim.git .nvim/
+    git clone git://github.com/mjtorn/dotnvim.git .config/vim/
 
-    cd .nvim/
+    cd .config/nvim/
 
     git submodule update --init
 
