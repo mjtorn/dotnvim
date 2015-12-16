@@ -52,10 +52,12 @@ let g:insertlessly_cleanup_trailing_ws = 0
 let g:insertlessly_cleanup_all_ws = 0
 
 "" some deoplete
+" https://github.com/Shougo/deoplete.nvim/blob/master/doc/deoplete.txt
 let g:deoplete#enable_at_startup = 1
-
-"" Enable jedi
-let g:jedi#completions_enabled=1
+let g:jedi#completions_enabled = 0
+let g:jedi#auto_vim_configuration = 0
+let g:jedi#smart_auto_mappings = 0
+let g:jedi#show_call_signatures = 1
 
 "" clang?
 let g:clang_library_path="/usr/lib/llvm-3.5/lib/"
@@ -85,7 +87,7 @@ set foldlevelstart=10
 
 "" From neocomplete and http://blog.fluther.com/django-vim/
 " XXX: Is markdown really html enough to use the same completions
-autocmd FileType python setlocal omnifunc=python3complete#Complete
+autocmd FileType python setlocal omnifunc=jedi#completions
 autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
 autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
 autocmd FileType fbml set omnifunc=htmlcomplete#CompleteTags
