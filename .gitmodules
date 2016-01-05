@@ -66,4 +66,4 @@
 	url = https://github.com/bps/vim-textobj-python.git
 [submodule "bundle/deoplete"]
 	path = bundle/deoplete
-	url = git@github.com:Shougo/deoplete.nvim.git
+	url = https://github.com/Shougo/deoplete.nvim.git
