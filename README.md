@@ -8,7 +8,7 @@ See also `https://github.com/mjtorn/dotvim`
 Installation
 ------------
 
-    git clone git://github.com/mjtorn/dotnvim.git .config/vim/
+    git clone git://github.com/mjtorn/dotnvim.git .config/nvim/
 
     cd .config/nvim/
 
