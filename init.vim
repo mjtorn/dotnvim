@@ -36,7 +36,7 @@ nnoremap <Leader>u :GundoToggle<CR>
 let g:gundo_right = 1
 
 set undofile
-set undodir=$HOME/.vim/undo
+set undodir=$HOME/.config/nvim/undo
 set undolevels=1000
 " How many lines
 set undoreload=10000
