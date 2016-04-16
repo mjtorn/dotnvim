@@ -64,3 +64,6 @@
 [submodule "bundle/deoplete"]
 	path = bundle/deoplete
 	url = https://github.com/Shougo/deoplete.nvim.git
+[submodule "bundle/deoplete-jedi"]
+	path = bundle/deoplete-jedi
+	url = https://github.com/zchee/deoplete-jedi.git
