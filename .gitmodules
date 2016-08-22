@@ -67,3 +67,6 @@
 [submodule "bundle/deoplete-jedi"]
 	path = bundle/deoplete-jedi
 	url = https://github.com/zchee/deoplete-jedi.git
+[submodule "bundle/FastFold"]
+	path = bundle/FastFold
+	url = https://github.com/Konfekt/FastFold.git
