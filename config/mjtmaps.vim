@@ -60,6 +60,9 @@ nmap          ++  vip++
 "" Fix whitespaces manually
 nnoremap <Leader>fw :%s/\s\+\%#\@<!$//g<CR>
 
+"" When searching in visual mode, constrain to visual
+vnoremap / <Esc>/\%V
+
 "" Highlighted search clear
 nnoremap <Leader>h :noh<CR>
 
