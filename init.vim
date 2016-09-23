@@ -54,7 +54,12 @@ let g:insertlessly_cleanup_all_ws = 0
 "" some deoplete
 " https://github.com/Shougo/deoplete.nvim/blob/master/doc/deoplete.txt
 let g:deoplete#enable_at_startup = 1
+let g:deoplete#auto_complete_start_length = 0
 let g:deoplete#sources#jedi#show_docstring = 1
+let g:jedi#completions_enabled = 0
+let g:jedi#auto_vim_configuration = 0
+let g:jedi#smart_auto_mappings = 0
+let g:jedi#show_call_signatures = 1
 
 "" clang?
 let g:clang_library_path="/usr/lib/llvm-3.5/lib/"
