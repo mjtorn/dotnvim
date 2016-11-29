@@ -79,3 +79,6 @@
 [submodule "bundle/VOoM"]
 	path = bundle/VOoM
 	url = https://github.com/vim-scripts/VOoM.git
+[submodule "bundle/vader"]
+	path = bundle/vader
+	url = https://github.com/junegunn/vader.vim.git
