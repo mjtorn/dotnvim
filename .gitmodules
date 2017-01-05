@@ -82,6 +82,3 @@
 [submodule "bundle/vader"]
 	path = bundle/vader
 	url = https://github.com/junegunn/vader.vim.git
-[submodule "bundle/neovim-intellij-complete-deoplete"]
-	path = bundle/neovim-intellij-complete-deoplete
-	url = https://github.com/vhakulinen/neovim-intellij-complete-deoplete.git
