@@ -144,6 +144,7 @@ function! LoadLocalJavaComp()
     if findfile(s:path) == s:path
       exec 'source ' . s:path
       " echo 'Loaded local syntastic conf ' . s:path
+      let g:local_javacomplete_conf_found = 1
     endif
   endif
 endfunction
@@ -155,6 +156,7 @@ function! LoadLocalSyntastic()
     if findfile(s:path) == s:path
       exec 'source ' . s:path
       " echo 'Loaded local syntastic conf ' . s:path
+      let g:local_syntastic_conf_found = 1
     endif
   endif
 endfunction
