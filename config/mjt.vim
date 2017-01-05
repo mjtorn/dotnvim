@@ -138,6 +138,17 @@ function! FakeMode()
   return "-- " . paste . mode . " --""
 endfunction
 
+function! LoadLocalJavaComp()
+  let s:path = getcwd() . '/.javacomplete.vim'
+  if !exists('g:local_javacomplete_conf_found')
+    if findfile(s:path) == s:path
+      exec 'source ' . s:path
+      " echo 'Loaded local syntastic conf ' . s:path
+    endif
+  endif
+endfunction
+au BufEnter *java call LoadLocalJavaComp()
+
 function! LoadLocalSyntastic()
   let s:path = getcwd() . '/.syntastic_conf.vim'
   if !exists('g:local_syntastic_conf_found')
@@ -194,6 +205,7 @@ endfunction
 :source ~/.config/nvim/config/mjtmaps.vim
 :source ~/.config/nvim/config/statusline.vim
 :source ~/.config/nvim/config/tabline.vim
+:source ~/.config/nvim/config/javacomplete.vim
 
 " EOF
 
