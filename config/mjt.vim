@@ -148,7 +148,7 @@ function! LoadLocalJavaComp()
     endif
   endif
 endfunction
-au BufEnter *java call LoadLocalJavaComp()
+au BufEnter * call LoadLocalJavaComp()
 
 function! LoadLocalSyntastic()
   let s:path = getcwd() . '/.syntastic_conf.vim'
