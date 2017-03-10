@@ -85,3 +85,6 @@
 [submodule "bundle/javacomplete2"]
 	path = bundle/javacomplete2
 	url = https://github.com/artur-shaik/vim-javacomplete2.git
+[submodule "bundle/python-support"]
+	path = bundle/python-support
+	url = https://github.com/roxma/python-support.nvim.git
