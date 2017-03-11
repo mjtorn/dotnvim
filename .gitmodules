@@ -46,9 +46,6 @@
 [submodule "bundle/visualstarsearch"]
 	path = bundle/visualstarsearch
 	url = git://github.com/nelstrom/vim-visual-star-search.git
-[submodule "bundle/syntastic"]
-	path = bundle/syntastic
-	url = https://github.com/scrooloose/syntastic.git
 [submodule "bundle/emmet"]
 	path = bundle/emmet
 	url = https://github.com/mattn/emmet-vim.git
