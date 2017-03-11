@@ -40,17 +40,18 @@ file `.clang_complete` for compiler flags/options, like this:
 
 ```
 -I/home/foo/src/libfoo-qt5/
+-Isrc/
 -isystem /usr/include/x86_64-linux-gnu/qt5
 -isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork
 -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore
 -std=c++11
+-fPIC
 ```
 
-Syntastic gets helped by
+ALE gets helped by
 
 ```vim
-let g:syntastic_cpp_auto_refresh_includes = 1
-let b:syntastic_cpp_cflags = ' -I/home/foo/src/libfoo-qt5/ -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -std=c++11'
+let g:ale_cpp_clang_options = '-I/home/foo/src/libfoo-qt5/ -Isrc/ -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -std=c++11 -fPIC'
 ```
 
 ### Python
