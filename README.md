@@ -1,12 +1,10 @@
-https://github.com/mjtorn/dotnvim
-=================================
+# https://github.com/mjtorn/dotnvim
 
 mjt's .condig/nvim/ stuff
 
 See also `https://github.com/mjtorn/dotvim`
 
-Installation
-------------
+## Installation
 
     git clone git://github.com/mjtorn/dotnvim.git .config/nvim/
 
@@ -16,8 +14,7 @@ Installation
 
     mkdir undo
 
-Bonuses
--------
+## Bonuses
 
 Some flake8 conf for use with syntastic: https://gist.github.com/mjtorn/9870434
 
