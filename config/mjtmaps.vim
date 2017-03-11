@@ -7,6 +7,9 @@ nnoremap <C-l> <C-w>l
 "" Double <Leader> is a good way to prevent fiddling with timeoutlen!
 inoremap <Leader><Leader> <Leader>
 
+"" Look at the undo tree
+nnoremap <Leader>u :GundoToggle<CR>
+
 "" To get NERDTree going
 nmap <Leader>N :NERDTreeTabsToggle<CR>
 
