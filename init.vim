@@ -20,6 +20,13 @@ func! LoadLocalConf()
   endif
 endfunc
 
+" So vim-git works etc
+let mapleader=","
+
+" Though this doesn't indent inside the parentheses, I like it
+let g:pyindent_open_paren = '&-sw'
+let g:pyindent_nested_paren = '&-sw'
+
 " Needed for coffeescript
 filetype plugin indent on
 
@@ -40,11 +47,6 @@ set noautochdir
 set lazyredraw
 set laststatus=2
 
-autocmd BufRead /tmp/mutt* :source ~/.vim/config/mail.vim
-
-" So vim-git works etc
-let mapleader=","
-
 set undofile
 set undodir=$HOME/.config/nvim/undo
 set undolevels=1000
@@ -56,6 +58,9 @@ set undoreload=10000
 set nobackup
 set noswapfile
 
+"" And not have folds closed by default!
+set foldlevelstart=10
+
 "" Try to go full hipster
 set relativenumber
 let &number = 1
@@ -63,6 +68,7 @@ let &number = 1
 set foldcolumn=1
 
 "" Fix some file presets
+autocmd BufRead /tmp/mutt* :source ~/.vim/config/mail.vim
 autocmd BufEnter *.py setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax
 autocmd BufEnter *ml setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8
 autocmd BufEnter *vim setl tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8
@@ -70,9 +76,6 @@ autocmd BufEnter *.coffee setl tabstop=2 expandtab autoindent shiftwidth=2 filee
 autocmd BufEnter *.c setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax
 autocmd BufEnter *.cpp setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax
 autocmd BufEnter *.java setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax
-
-"" And not have folds closed by default!
-set foldlevelstart=10
 
 "" From neocomplete and http://blog.fluther.com/django-vim/
 " XXX: Is markdown really html enough to use the same completions
@@ -83,17 +86,13 @@ autocmd FileType fbml set omnifunc=htmlcomplete#CompleteTags
 autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
 autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
 
-" Though this doesn't indent inside the parentheses, I like it
-let g:pyindent_open_paren = '&-sw'
-let g:pyindent_nested_paren = '&-sw'
-
 " My defaults for plugins
 :source ~/.config/nvim/init_plugins.vim
 
 " Local configurations
 call LoadLocalConf()
 
-" Configuration that affects plugins
+" Interface with python-support.nvim
 let g:python_support_python3_requirements = extend(get(g:, 'python_support_python3_requirements', []), g:venv_reqs)
 
 "" This sources everything else I want
