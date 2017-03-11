@@ -3,6 +3,23 @@
 runtime bundle/pathogen/autoload/pathogen.vim
 call pathogen#infect()
 
+""
+" Define a function for loading local configs, call it later in this file
+func! LoadLocalConf()
+  if !exists('g:local_conf_loaded')
+    let s:path = getcwd() . '/.local.vim'
+    if findfile(s:path) == s:path
+      exec 'source ' . s:path
+      let g:local_conf_loaded = 1
+    endif
+    for s:path in [getcwd() . '/.javacomplete.vim', getcwd() . '/.syntastic_conf.vim', getcwd() . '/.ctrlp_conf.vim']
+      if findfile(s:path) == s:path
+        echom 'You should move this to .local.vim: ' . s:path
+      endif
+    endfor
+  endif
+endfunc
+
 " Needed for coffeescript
 filetype plugin indent on
 
@@ -103,6 +120,11 @@ let g:pyindent_nested_paren = '&-sw'
 
 " Verify some basic things are installed when working in Python
 let g:venv_reqs = ['jedi', 'flake8', 'isort', 'flake8-isort']
+
+" Local configurations
+call LoadLocalConf()
+
+" Configuration that affects plugins
 let g:python_support_python3_requirements = extend(get(g:, 'python_support_python3_requirements', []), g:venv_reqs)
 
 "" This sources everything else I want

@@ -138,42 +138,6 @@ function! FakeMode()
   return "-- " . paste . mode . " --""
 endfunction
 
-function! LoadLocalJavaComp()
-  let s:path = getcwd() . '/.javacomplete.vim'
-  if !exists('g:local_javacomplete_conf_found')
-    if findfile(s:path) == s:path
-      exec 'source ' . s:path
-      " echo 'Loaded local syntastic conf ' . s:path
-      let g:local_javacomplete_conf_found = 1
-    endif
-  endif
-endfunction
-au BufEnter * call LoadLocalJavaComp()
-
-function! LoadLocalSyntastic()
-  let s:path = getcwd() . '/.syntastic_conf.vim'
-  if !exists('g:local_syntastic_conf_found')
-    if findfile(s:path) == s:path
-      exec 'source ' . s:path
-      " echo 'Loaded local syntastic conf ' . s:path
-      let g:local_syntastic_conf_found = 1
-    endif
-  endif
-endfunction
-au BufEnter * call LoadLocalSyntastic()
-
-function! LoadLocalCtrlp()
-  let s:path = getcwd() . '/.ctrlp_conf.vim'
-  if !exists('g:local_ctrlp_conf_found')
-    if findfile(s:path) == s:path
-      exec 'source ' . s:path
-      " echo 'Loaded local ctrlp conf ' . s:path
-      let g:local_ctrlp_conf_found = 1
-    endif
-  endif
-endfunction
-au BufEnter * call LoadLocalCtrlp()
-
 function! StripWhiteSpaces()
   :silent! %s/^\s\+$//g
   :silent! %s/^\(\s*[^\s]\+\)\s\+$/\1/g
