@@ -101,6 +101,10 @@ autocmd FileType html,css EmmetInstall
 let g:pyindent_open_paren = '&-sw'
 let g:pyindent_nested_paren = '&-sw'
 
+" Verify some basic things are installed when working in Python
+let g:venv_reqs = ['jedi', 'flake8', 'isort', 'flake8-isort']
+let g:python_support_python3_requirements = extend(get(g:, 'python_support_python3_requirements', []), g:venv_reqs)
+
 "" This sources everything else I want
 :source ~/.config/nvim/config/mjt.vim
 
