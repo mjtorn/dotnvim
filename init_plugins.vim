@@ -31,6 +31,7 @@ let g:ale_linters = {
       \ 'python': ['flake8']
 \ }
 let g:ale_python_flake8_executable = $HOME . '/.config/nvim/bundle/python-support/autoload/nvim_py3/bin/flake8'
+let g:python_support_python2_require = 0
 
 " Emmet might be a bit trigger happy
 let g:user_emmet_install_global = 0
