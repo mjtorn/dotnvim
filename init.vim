@@ -1,5 +1,8 @@
 " vim: tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8
 
+" Set this before Pathogen just to be safe
+let g:python3_host_prog = $HOME . '/.config/nvim/bundle/python-support/autoload/nvim_py3/bin/python3'
+
 runtime bundle/pathogen/autoload/pathogen.vim
 call pathogen#infect()
 
