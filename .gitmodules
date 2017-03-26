@@ -88,3 +88,6 @@
 [submodule "bundle/ALE"]
 	path = bundle/ALE
 	url = https://github.com/w0rp/ale.git
+[submodule "bundle/snowflake"]
+	path = bundle/snowflake
+	url = git@github.com:mjtorn/snowflake.nvim.git

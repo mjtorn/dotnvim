@@ -38,5 +38,5 @@ let g:user_emmet_install_global = 0
 autocmd FileType html,css EmmetInstall
 
 " Verify some basic things are installed when working in Python
-let g:venv_reqs = ['jedi', 'flake8', 'isort', 'flake8-isort']
+let g:venv_reqs = ['jedi', 'flake8', 'isort', 'flake8-isort', 'pyyaml']
 
