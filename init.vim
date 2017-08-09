@@ -89,6 +89,11 @@ autocmd FileType fbml set omnifunc=htmlcomplete#CompleteTags
 autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
 autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
 
+"" Update buffers if files are changed
+autocmd CursorHold,CursorHoldI,FocusGained,BufEnter * checktime
+autocmd FileChangedShellPost *
+  \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
+
 " My defaults for plugins
 :source ~/.config/nvim/init_plugins.vim
 
