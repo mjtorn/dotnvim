@@ -91,3 +91,7 @@
 [submodule "bundle/mundo"]
 	path = bundle/mundo
 	url = https://github.com/simnalamburt/vim-mundo.git
+[submodule "bundle/vim-gdscript"]
+	path = bundle/vim-gdscript
+	url = https://github.com/a-watson/vim-gdscript.git
+
