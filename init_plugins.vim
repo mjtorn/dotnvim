@@ -3,8 +3,10 @@
 let g:nerdtree_tabs_focus_on_files = 1
 let g:NERDTreeWinSize = 30
 
-" Gundo on the right
-let g:gundo_right = 1
+" Mundo on the right, preview on the bottom, help on the top
+let g:mundo_right = 1
+let g:mundo_preview_bottom = 1
+let g:mundo_help = 1
 
 " Ctrlp should ignore pyc files
 let g:ctrlp_custom_ignore = {

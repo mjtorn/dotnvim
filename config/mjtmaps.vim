@@ -8,7 +8,7 @@ nnoremap <C-l> <C-w>l
 inoremap <Leader><Leader> <Leader>
 
 "" Look at the undo tree
-nnoremap <Leader>u :GundoToggle<CR>
+nnoremap <Leader>u :MundoToggle<CR>
 
 "" To get NERDTree going
 nmap <Leader>N :NERDTreeTabsToggle<CR>
