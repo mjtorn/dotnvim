@@ -35,7 +35,7 @@ map <Space> za
 "imap <C-CR> <ESC><CR>i
 
 "" Play around with ack-grep
-let g:ackprg="ack-grep -H --nocolor --nogroup --column"
+let g:ackprg="ack -H --nocolor --nogroup --column"
 nnoremap <Leader>a :Ack
 
 "" Copy line and edit
