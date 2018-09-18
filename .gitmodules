@@ -92,3 +92,6 @@
 	path = bundle/mundo
 	url = https://github.com/simnalamburt/vim-mundo.git
 
+[submodule "bundle/vim-gdscript3"]
+	path = bundle/vim-gdscript3
+	url = https://github.com/calviken/vim-gdscript3.git
