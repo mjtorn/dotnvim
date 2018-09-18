@@ -8,3 +8,5 @@ autocmd FileType python iabbrev c <C-R>=(4 % (virtcol('.') - 1)) == 0 ? "class" 
 autocmd FileType c iabbrev #d <C-R>="#define"<CR>
 autocmd FileType c iabbrev #i <C-R>="#include"<CR>
 
+autocmd FileType gdscript3 iabbrev f <C-R>=(virtcol('.') - 1 == 0) ? "func" : "f"<CR>
+

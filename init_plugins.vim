@@ -23,6 +23,13 @@ let g:jedi#auto_vim_configuration = 0
 let g:jedi#smart_auto_mappings = 0
 let g:jedi#show_call_signatures = 1
 
+" This may only have been documented at
+" https://github.com/calviken/vim-gdscript3/issues/1
+" and apparently the sources stuff in the issue is not required
+let g:deoplete#omni#input_patterns = {}
+let g:deoplete#omni#input_patterns.gdscript3 = ['\.|\w+']
+
+
 "" clang?
 let g:clang_library_path="/usr/lib/llvm-3.5/lib/"
 

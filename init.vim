@@ -89,6 +89,8 @@ autocmd FileType fbml set omnifunc=htmlcomplete#CompleteTags
 autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
 autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
 
+autocmd FileType gdscript3 setl tabstop=4 noexpandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax
+
 "" Update buffers if files are changed
 autocmd CursorHold,CursorHoldI,FocusGained,BufEnter * checktime
 autocmd FileChangedShellPost *
