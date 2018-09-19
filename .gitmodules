@@ -95,3 +95,6 @@
 [submodule "bundle/vim-gdscript3"]
 	path = bundle/vim-gdscript3
 	url = https://github.com/calviken/vim-gdscript3.git
+[submodule "bundle/vim-escoria"]
+	path = bundle/vim-escoria
+	url = git@github.com:mjtorn/vim-escoria.git
