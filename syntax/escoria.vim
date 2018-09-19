@@ -65,7 +65,21 @@ syn match escComment
   \ contains=escTodo,@Spell
 
 "" Folding
-" TODO: Event folding
+syn region escEventFold
+  \ start="^:"
+  \ end="\ze\%(^:\)\+\%(\z1\s\)\@!."
+  \ fold transparent
+
+syn region escBlockFold
+  \ start="^\s*>"
+  \ end="\ze\%(\s*\n\)\+\%(\z1\s\)\@!."
+  \ fold transparent
+
+syn region escDialogFold
+  \ start="^\s*?"
+  \ end="\ze\%(\s*repeat\n\)"
+  \ fold transparent
+
 syn region escCommentFold matchgroup=escComment
   \ start='#.*{{{.*$'
   \ end='#.*}}}.*$'
