@@ -28,7 +28,6 @@ syn region escBlockStart
   \ matchgroup=escCommand
   \ start="^>"
   \ end=" "
-syn match escCommand "^> "
 
 syn region escDialogStart
   \ matchgroup=escCommand
