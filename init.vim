@@ -91,6 +91,8 @@ autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
 
 autocmd FileType gdscript3 setl tabstop=4 noexpandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax
 autocmd FileType escoria setl tabstop=4 noexpandtab autoindent shiftwidth=4 fileencoding=utf-8
+" To work with commentary.vim
+autocmd FileType escoria setl commentstring=#\ %s
 
 "" Update buffers if files are changed
 autocmd CursorHold,CursorHoldI,FocusGained,BufEnter * checktime
