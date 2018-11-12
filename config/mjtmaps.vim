@@ -69,6 +69,9 @@ vnoremap / <Esc>/\%V
 "" Highlighted search clear
 nnoremap <Leader>h :noh<CR>
 
+"" Escoria debug
+autocmd FileType escoria nnoremap <Leader>ed i<CR># {{{ DEBUG<CR><CR># }}}<CR><ESC>A<CR><ESC>3k
+
 "" Debug current highlight
 map <F9> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<'
   \ . synIDattr(synID(line("."),col("."),0),"name") . "> lo<"
