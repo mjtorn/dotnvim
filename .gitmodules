@@ -98,3 +98,6 @@
 [submodule "bundle/vim-escoria"]
 	path = bundle/vim-escoria
 	url = git@gitlab.com:fad-games/vim-escoria.git
+[submodule "bundle/csv.vim"]
+	path = bundle/csv.vim
+	url = https://github.com/chrisbra/csv.vim
