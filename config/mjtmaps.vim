@@ -13,6 +13,12 @@ nnoremap <Leader>u :MundoToggle<CR>
 "" To get NERDTree going
 nmap <Leader>N :NERDTreeTabsToggle<CR>
 
+"" Add ability to quickly toggle MBE
+"" XXX: This does suck because it skips to the last tab, but MBE isn't
+""      super-crucial to always have open
+let g:miniBufExplorerAutoStart = 0
+nmap <Leader>m :MBEToggleAll<CR>
+
 "" Navigate into wrapped lines as if they were real lines, but skip over them
 "" like expected
 nnoremap <expr> j v:count ? 'j' : 'gj'
