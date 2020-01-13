@@ -87,10 +87,12 @@ imap <Leader>s <ESC>:w<CR>:echo "saved"<CR>a
 function! ToggleNumbers()
   if &number == 0 && &relativenumber == 0
     let &relativenumber = 1
-  elseif &number == 1
-    let &relativenumber = 1
-  elseif &relativenumber == 1
     let &number = 1
+  elseif &number == 1 && &relativenumber == 0
+    let &number = 0
+  elseif &number == 1 && &relativenumber == 1
+    let &number = 1
+    let &relativenumber = 0
   endif
 endfunction
 
