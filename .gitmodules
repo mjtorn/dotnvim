@@ -101,3 +101,6 @@
 [submodule "bundle/csv.vim"]
 	path = bundle/csv.vim
 	url = https://github.com/chrisbra/csv.vim
+[submodule "bundle/git-messenger"]
+	path = bundle/git-messenger
+	url = https://github.com/rhysd/git-messenger.vim.git
