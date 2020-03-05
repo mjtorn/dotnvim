@@ -98,6 +98,18 @@ endfunction
 
 nmap <Leader>n :call ToggleNumbers()<Enter>
 
+function! ToggleALEColumn()
+  if g:ale_sign_column_always == 0
+    let g:ale_sign_column_always = 1
+    echo "Always showing ALE column"
+  else
+    let g:ale_sign_column_always = 0
+    echo "Not always showing ALE column"
+  endif
+endfunction
+
+nmap <silent> <Leader>A :call ToggleALEColumn()<Enter>:e<Enter>
+
 " https://github.com/mbrochh/vim-as-a-python-ide/blob/master/.vimrc
 
 set completeopt=longest,menuone
