@@ -16,18 +16,20 @@ let g:ctrlp_custom_ignore = {
 "" some deoplete
 " https://github.com/Shougo/deoplete.nvim/blob/master/doc/deoplete.txt
 let g:deoplete#enable_at_startup = 1
-let g:deoplete#auto_complete_start_length = 0
 let g:deoplete#sources#jedi#show_docstring = 1
 let g:jedi#completions_enabled = 0
 let g:jedi#auto_vim_configuration = 0
 let g:jedi#smart_auto_mappings = 0
 let g:jedi#show_call_signatures = 1
 
+call deoplete#custom#option({'auto_complete_start_length': 0})
+
 " This may only have been documented at
 " https://github.com/calviken/vim-gdscript3/issues/1
 " and apparently the sources stuff in the issue is not required
-let g:deoplete#omni#input_patterns = {}
-let g:deoplete#omni#input_patterns.gdscript3 = ['\.|\w+']
+call deoplete#custom#var('omni', 'input_patterns', {
+      \ 'gdscript3': ['\.|\w+'],
+\})
 
 
 "" clang?
