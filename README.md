@@ -58,6 +58,21 @@ let g:ale_cpp_clang_options = '-I/home/foo/src/libfoo-qt5/ -Isrc/ -isystem /usr/
 
 Should work pretty much out of the box as-is.
 
+### Rust
+
+Make sure to `source ~/.cargo/env` and maybe even export `RUST_SRC_PATH` to be
+sure you have all of that in order. This depends on [racer](https://github.com/racer-rust/racer)
+which currently works only with "nightly" so you must have everything set up
+for 0d releases.
+
+Configure at least the racer path in `.local.vim`, and if you don't export `RUST_SRC_PATH`
+you must set it as well.
+
+```vim
+let g:deoplete#sources#rust#racer_binary='/home/mjt/.cargo/bin/racer'
+" let g:deoplete#sources#rust#rust_source_path='/home/mjt/src/git_checkouts/rust/src'
+```
+
 ## Bonuses
 
 Some flake8 conf for use with syntastic: https://gist.github.com/mjtorn/9870434

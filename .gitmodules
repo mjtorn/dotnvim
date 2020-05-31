@@ -104,3 +104,6 @@
 [submodule "bundle/git-messenger"]
 	path = bundle/git-messenger
 	url = https://github.com/rhysd/git-messenger.vim.git
+[submodule "bundle/deoplete-rust"]
+	path = bundle/deoplete-rust
+	url = https://github.com/sebastianmarkow/deoplete-rust.git
