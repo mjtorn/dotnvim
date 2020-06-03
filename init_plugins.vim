@@ -39,7 +39,8 @@ let g:clang_library_path="/usr/lib/llvm-3.5/lib/"
 let g:ale_linters = {
       \ 'cpp': ['clang'],
       \ 'c': ['clang'],
-      \ 'python': ['flake8']
+      \ 'python': ['flake8'],
+      \ 'rust': ['analyzer']
 \ }
 let g:ale_python_flake8_executable = $HOME . '/.config/nvim/bundle/python-support/autoload/nvim_py3/bin/flake8'
 let g:python_support_python2_require = 0

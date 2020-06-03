@@ -73,6 +73,8 @@ let g:deoplete#sources#rust#racer_binary='/home/mjt/.cargo/bin/racer'
 " let g:deoplete#sources#rust#rust_source_path='/home/mjt/src/git_checkouts/rust/src'
 ```
 
+Also [install rust-analyzer](https://rust-analyzer.github.io/manual.html#rust-analyzer-language-server-binary)
+
 ## Bonuses
 
 Some flake8 conf for use with syntastic: https://gist.github.com/mjtorn/9870434
