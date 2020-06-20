@@ -64,6 +64,9 @@ set noswapfile
 "" And not have folds closed by default!
 set foldlevelstart=10
 
+"" Rust needs speshul config
+let g:rust_fold = 1
+
 "" Try to go full hipster
 set relativenumber
 let &number = 1
