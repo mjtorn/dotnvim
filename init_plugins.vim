@@ -24,6 +24,9 @@ let g:jedi#show_call_signatures = 1
 
 call deoplete#custom#option({'auto_complete_start_length': 0})
 
+" Tabs are maybe the coolest for going to definition. Maybe...
+nmap <buffer> gd <plug>DeopleteRustGoToDefinitionTab
+
 " This may only have been documented at
 " https://github.com/calviken/vim-gdscript3/issues/1
 " and apparently the sources stuff in the issue is not required
