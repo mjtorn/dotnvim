@@ -67,6 +67,9 @@ set foldlevelstart=10
 "" Rust needs speshul config
 let g:rust_fold = 1
 
+"" And rust.vim's autoformat
+let g:rustfmt_autosave = 0
+
 "" Try to go full hipster
 set relativenumber
 let &number = 1
