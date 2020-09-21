@@ -178,6 +178,16 @@ function! MaybeSpeshulTab(...)
   endif
 endfunction
 
+"" https://vim.fandom.com/wiki/Convert_between_hex_and_decimal
+" Adapted hex format
+function! Dec2hex(arg)
+  return printf('%02x', a:arg + 0)
+endfunction
+
+function! Hex2dec(arg)
+  return (a:arg =~? '^0x') ? a:arg + 0 : ('0x'.a:arg) + 0
+endfunction
+
 :source ~/.config/nvim/config/colors.vim
 :source ~/.config/nvim/config/mjthl.vim
 :source ~/.config/nvim/config/mjttab.vim
