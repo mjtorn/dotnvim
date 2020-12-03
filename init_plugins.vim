@@ -41,6 +41,7 @@ let g:clang_library_path="/usr/lib/llvm-3.5/lib/"
 " ALE
 let g:ale_linters = {
       \ 'cpp': ['clang'],
+      \ 'cs': ['OmniSharp'],
       \ 'c': ['clang'],
       \ 'python': ['flake8'],
       \ 'rust': ['analyzer']
