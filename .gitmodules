@@ -113,3 +113,6 @@
 [submodule "bundle/omnisharp"]
 	path = bundle/omnisharp
 	url = https://github.com/OmniSharp/omnisharp-vim
+[submodule "bundle/deoplete-omnisharp"]
+	path = bundle/deoplete-omnisharp
+	url = https://gitlab.com/mixedCase/deoplete-omnisharp.git
