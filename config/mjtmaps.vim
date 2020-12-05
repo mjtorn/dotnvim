@@ -75,6 +75,19 @@ vnoremap / <Esc>/\%V
 "" Highlighted search clear
 nnoremap <Leader>h :noh<CR>
 
+"" Old git.vim mappings haphazardly thrown at vim-fugitive
+nnoremap <Leader>gs :G<Enter>
+nnoremap <Leader>ga :Git add %<Enter>
+nnoremap <Leader>gc :Git commit %<Enter>
+nnoremap <Leader>gb :Git blame<Enter>
+nnoremap <Leader>gD :Git diff --staged %<Enter>
+nnoremap <Leader>gd :Gdiffsplit<Enter>
+nnoremap <Leader>gl :Git log %<Enter>
+nnoremap <Leader>gL :Gclog<Enter>  " XXX Nice if this didn't destroy the original buffer, use with care
+" XXX At least these exhibit issues if tmux is vertically split
+nnoremap <Leader>gP :Git push --force-with-lease<Enter>
+nnoremap <Leader>gp :Git pull<Enter>
+
 "" Escoria debug
 autocmd FileType escoria nnoremap <Leader>ed i<CR># {{{ DEBUG<CR><CR># }}}<CR><ESC>A<CR><ESC>3k
 

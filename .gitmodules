@@ -7,9 +7,6 @@
 [submodule "bundle/nerdtree-tabs"]
 	path = bundle/nerdtree-tabs
 	url = git://github.com/jistr/vim-nerdtree-tabs.git
-[submodule "bundle/gitvim"]
-	path = bundle/gitvim
-	url = git://github.com/motemen/git-vim.git
 [submodule "bundle/pathogen"]
 	path = bundle/pathogen
 	url = git://github.com/tpope/vim-pathogen.git
@@ -119,3 +116,6 @@
 [submodule "bundle/dispatch"]
 	path = bundle/dispatch
 	url = https://github.com/tpope/vim-dispatch
+[submodule "bundle/fugitive"]
+	path = bundle/fugitive
+	url = https://github.com/tpope/vim-fugitive
