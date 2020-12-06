@@ -22,9 +22,6 @@ let g:jedi#auto_vim_configuration = 0
 let g:jedi#smart_auto_mappings = 0
 let g:jedi#show_call_signatures = 1
 
-" This is required for Unity3D
-let g:OmniSharp_server_use_mono = 1
-
 call deoplete#custom#option({'auto_complete_start_length': 0})
 
 " Tabs are maybe the coolest for going to definition. Maybe...
