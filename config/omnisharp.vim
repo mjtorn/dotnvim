@@ -3,6 +3,9 @@
 " This is required for Unity3D
 let g:OmniSharp_server_use_mono = 1
 
+" Seems pretty much everyone uses tabs, and so far I have found no better foldmethod
+autocmd BufEnter *.cs setl tabstop=4 noexpandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=indent
+
 augroup omnisharp_commands
   autocmd!
 
