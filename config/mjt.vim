@@ -196,6 +196,7 @@ endfunction
 :source ~/.config/nvim/config/statusline.vim
 :source ~/.config/nvim/config/tabline.vim
 :source ~/.config/nvim/config/javacomplete.vim
+:source ~/.config/nvim/config/omnisharp.vim
 
 " EOF
 
