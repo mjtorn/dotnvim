@@ -25,9 +25,6 @@
 [submodule "bundle/insertlessly"]
 	path = bundle/insertlessly
 	url = git://github.com/dahu/Insertlessly.git
-[submodule "bundle/ctrlp"]
-	path = bundle/ctrlp
-	url = git://github.com/kien/ctrlp.vim.git
 [submodule "bundle/surround"]
 	path = bundle/surround
 	url = https://github.com/tpope/vim-surround
@@ -116,3 +113,6 @@
 [submodule "bundle/fugitive"]
 	path = bundle/fugitive
 	url = https://github.com/tpope/vim-fugitive
+[submodule "bundle/neovim-fuzzy"]
+	path = bundle/neovim-fuzzy
+	url = https://github.com/cloudhead/neovim-fuzzy.git

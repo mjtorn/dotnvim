@@ -24,6 +24,11 @@ nmap <Leader>m :MBEToggleAll<CR>
 nnoremap <expr> j v:count ? 'j' : 'gj'
 nnoremap <expr> k v:count ? 'k' : 'gk'
 
+"" Quickfix navigation
+" .fi style! Would probably not work as [q and ]q with other keymaps
+nnoremap <silent> öq :cprevious<CR>
+nnoremap <silent> äq :cnext<CR>
+
 "" Also prefer Y to be congruent with C and D
 nnoremap Y y$
 
@@ -39,10 +44,6 @@ map <Space> za
 
 "" Would appreciate Control-Enter behaving as without insert mode
 "imap <C-CR> <ESC><CR>i
-
-"" Play around with ack-grep
-let g:ackprg="ack -H --nocolor --nogroup --column"
-nnoremap <Leader>a :Ack
 
 "" Copy line and edit
 nmap <Leader>c yyPVgcj

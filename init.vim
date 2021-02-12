@@ -15,7 +15,7 @@ func! LoadLocalConf()
       exec 'source ' . s:path
       let g:local_conf_loaded = 1
     endif
-    for s:path in [getcwd() . '/.javacomplete.vim', getcwd() . '/.syntastic_conf.vim', getcwd() . '/.ctrlp_conf.vim']
+    for s:path in [getcwd() . '/.javacomplete.vim', getcwd() . '/.syntastic_conf.vim']
       if findfile(s:path) == s:path
         echom 'You should move this to .local.vim: ' . s:path
       endif
@@ -75,6 +75,8 @@ set relativenumber
 let &number = 1
 
 set foldcolumn=1
+
+set grepprg=rg\ --vimgrep\ --type-not\ sql\ --smart-case
 
 "" Fix some file presets
 autocmd BufRead /tmp/mutt* :source ~/.vim/config/mail.vim

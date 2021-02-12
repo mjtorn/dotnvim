@@ -21,14 +21,10 @@ These go in your working root's `.local.vim` file
 ### Java
 
 Only install python-neovim, add something to the search path (if needed)
-and have ctrlp ignore compiled files:
 
 ```vim
 let g:venv_reqs = ['neovim']
 let g:JavaComplete_LibsPath = './lib/Scribejava_core_3_2_0/'
-let g:ctrlp_custom_ignore = {
-\  'file': '\v\.class$',
-\ }
 ```
 
 See more at [vim-javacomplete2](https://github.com/artur-shaik/vim-javacomplete2)
