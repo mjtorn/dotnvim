@@ -8,6 +8,9 @@ let g:mundo_right = 1
 let g:mundo_preview_bottom = 1
 let g:mundo_help = 1
 
+" Fuzzy finder
+nnoremap <C-p> :FuzzyOpen<CR>
+
 "" some deoplete
 " https://github.com/Shougo/deoplete.nvim/blob/master/doc/deoplete.txt
 let g:deoplete#enable_at_startup = 1
