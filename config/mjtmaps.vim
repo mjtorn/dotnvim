@@ -25,8 +25,9 @@ nnoremap <expr> j v:count ? 'j' : 'gj'
 nnoremap <expr> k v:count ? 'k' : 'gk'
 
 "" Quickfix navigation
-nnoremap <silent> [q :cprevious<CR>
-nnoremap <silent> ]q :cnext<CR>
+" .fi style! Would probably not work as [q and ]q with other keymaps
+nnoremap <silent> öq :cprevious<CR>
+nnoremap <silent> äq :cnext<CR>
 
 "" Also prefer Y to be congruent with C and D
 nnoremap Y y$
