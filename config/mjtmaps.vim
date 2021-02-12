@@ -40,10 +40,6 @@ map <Space> za
 "" Would appreciate Control-Enter behaving as without insert mode
 "imap <C-CR> <ESC><CR>i
 
-"" Play around with ack-grep
-let g:ackprg="ack -H --nocolor --nogroup --column"
-nnoremap <Leader>a :Ack
-
 "" Copy line and edit
 nmap <Leader>c yyPVgcj
 

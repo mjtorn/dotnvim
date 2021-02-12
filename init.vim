@@ -76,6 +76,8 @@ let &number = 1
 
 set foldcolumn=1
 
+set grepprg=rg\ --vimgrep\ --type-not\ sql\ --smart-case
+
 "" Fix some file presets
 autocmd BufRead /tmp/mutt* :source ~/.vim/config/mail.vim
 autocmd BufEnter *.py setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax

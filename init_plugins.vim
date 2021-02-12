@@ -11,6 +11,13 @@ let g:mundo_help = 1
 " Fuzzy finder
 nnoremap <C-p> :FuzzyOpen<CR>
 
+"" Play around with ack-grep
+" https://www.freecodecamp.org/news/how-to-search-project-wide-vim-ripgrep-ack/
+let g:ackprg = 'rg --vimgrep --type-not sql --smart-case'
+let g:ack_use_cword_for_empty_search = 1
+let g:ack_autoclose = 1
+nnoremap <Leader>a :Ack!<SPACE>
+
 "" some deoplete
 " https://github.com/Shougo/deoplete.nvim/blob/master/doc/deoplete.txt
 let g:deoplete#enable_at_startup = 1
