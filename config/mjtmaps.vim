@@ -24,6 +24,10 @@ nmap <Leader>m :MBEToggleAll<CR>
 nnoremap <expr> j v:count ? 'j' : 'gj'
 nnoremap <expr> k v:count ? 'k' : 'gk'
 
+"" Quickfix navigation
+nnoremap <silent> [q :cprevious<CR>
+nnoremap <silent> ]q :cnext<CR>
+
 "" Also prefer Y to be congruent with C and D
 nnoremap Y y$
 
