@@ -119,3 +119,6 @@
 [submodule "bundle/nvim-lspconfig"]
 	path = bundle/nvim-lspconfig
 	url = https://github.com/neovim/nvim-lspconfig
+[submodule "bundle/nvim-lspinstall"]
+	path = bundle/nvim-lspinstall
+	url = https://github.com/kabouzeid/nvim-lspinstall
