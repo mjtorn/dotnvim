@@ -113,3 +113,6 @@
 [submodule "bundle/nvim-lspinstall"]
 	path = bundle/nvim-lspinstall
 	url = https://github.com/kabouzeid/nvim-lspinstall
+[submodule "bundle/nvim-compe"]
+	path = bundle/nvim-compe
+	url = https://github.com/hrsh7th/nvim-compe
