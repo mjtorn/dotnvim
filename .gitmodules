@@ -49,12 +49,6 @@
 [submodule "bundle/vim-textobj-python"]
 	path = bundle/vim-textobj-python
 	url = https://github.com/bps/vim-textobj-python.git
-[submodule "bundle/deoplete"]
-	path = bundle/deoplete
-	url = https://github.com/Shougo/deoplete.nvim.git
-[submodule "bundle/deoplete-jedi"]
-	path = bundle/deoplete-jedi
-	url = https://github.com/zchee/deoplete-jedi.git
 [submodule "bundle/FastFold"]
 	path = bundle/FastFold
 	url = https://github.com/Konfekt/FastFold.git
@@ -98,9 +92,6 @@
 [submodule "bundle/git-messenger"]
 	path = bundle/git-messenger
 	url = https://github.com/rhysd/git-messenger.vim.git
-[submodule "bundle/deoplete-rust"]
-	path = bundle/deoplete-rust
-	url = https://github.com/sebastianmarkow/deoplete-rust.git
 [submodule "bundle/rust.vim"]
 	path = bundle/rust.vim
 	url = https://github.com/rust-lang/rust.vim.git

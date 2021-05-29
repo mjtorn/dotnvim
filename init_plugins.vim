@@ -18,27 +18,8 @@ let g:ack_use_cword_for_empty_search = 1
 let g:ack_autoclose = 1
 nnoremap <Leader>a :Ack!<SPACE>
 
-"" some deoplete
-" https://github.com/Shougo/deoplete.nvim/blob/master/doc/deoplete.txt
-let g:deoplete#enable_at_startup = 1
-let g:deoplete#sources#jedi#show_docstring = 1
-let g:jedi#completions_enabled = 0
-let g:jedi#auto_vim_configuration = 0
-let g:jedi#smart_auto_mappings = 0
-let g:jedi#show_call_signatures = 1
-
-call deoplete#custom#option({'auto_complete_start_length': 0})
-
 " Tabs are maybe the coolest for going to definition. Maybe...
 nmap <buffer> gd <plug>DeopleteRustGoToDefinitionTab
-
-" This may only have been documented at
-" https://github.com/calviken/vim-gdscript3/issues/1
-" and apparently the sources stuff in the issue is not required
-call deoplete#custom#var('omni', 'input_patterns', {
-      \ 'gdscript3': ['\.|\w+'],
-\})
-
 
 "" clang?
 let g:clang_library_path="/usr/lib/llvm-3.5/lib/"
