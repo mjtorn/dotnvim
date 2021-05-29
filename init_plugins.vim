@@ -61,3 +61,7 @@ autocmd FileType html,css EmmetInstall
 " Verify some basic things are installed when working in Python
 let g:venv_reqs = ['jedi', 'flake8', 'isort', 'flake8-isort', 'pyyaml']
 
+" Here's to hipsterism!
+:lua require('init_lsp')
+:lua setup_servers()
+
