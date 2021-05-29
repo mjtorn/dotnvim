@@ -116,3 +116,6 @@
 [submodule "bundle/neovim-fuzzy"]
 	path = bundle/neovim-fuzzy
 	url = https://github.com/cloudhead/neovim-fuzzy.git
+[submodule "bundle/nvim-lspconfig"]
+	path = bundle/nvim-lspconfig
+	url = https://github.com/neovim/nvim-lspconfig
