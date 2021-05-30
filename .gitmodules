@@ -70,9 +70,6 @@
 [submodule "bundle/python-support"]
 	path = bundle/python-support
 	url = https://github.com/roxma/python-support.nvim.git
-[submodule "bundle/ALE"]
-	path = bundle/ALE
-	url = https://github.com/w0rp/ale.git
 [submodule "bundle/snowflake"]
 	path = bundle/snowflake
 	url = https://github.com/mjtorn/snowflake.nvim.git
