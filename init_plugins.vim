@@ -48,17 +48,6 @@ nmap <buffer> gd <plug>DeopleteRustGoToDefinitionTab
 "" clang?
 let g:clang_library_path="/usr/lib/llvm-3.5/lib/"
 
-"" nvim-lint
-" sigh @ lua :/
-lua << EOF
-require('lint').linters_by_ft = {
-  python = {'flake8',}
-}
-EOF
-
-"" nvim-lint configs
-au TextChanged *.py lua require('lint').try_lint()
-
 "" python-support does not need python2
 let g:python_support_python2_require = 0
 
