@@ -1,23 +1,39 @@
 # https://github.com/mjtorn/dotnvim
 
-mjt's .condig/nvim/ stuff
+mjt's `.config/nvim/` stuff
 
 See also `https://github.com/mjtorn/dotvim`
 
 ## Installation
 
-    git clone git://github.com/mjtorn/dotnvim.git .config/nvim/
+```shell
+git clone git://github.com/mjtorn/dotnvim.git .config/nvim/
 
-    cd .config/nvim/
+cd .config/nvim/
 
-    git submodule update --init
+git submodule update --init
 
-    mkdir undo
+mkdir undo
+```
 
 ### NeoVim 0.5 neophilia
 
+Make sure you install from eg.
+
+```
+deb http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu bionic main
+```
+
 Most of the stuff should just work, but this is a WIP
 branch for now, so maybe not everything does.
+
+Most likely broken are:
+
+  * C
+  * C++
+  * Java
+
+and Rust is slow as balls, but that's probably Rust being Rust.
 
 #### OmniSharp/mono
 
@@ -80,7 +96,7 @@ let g:ale_cpp_clang_options = '-I/home/foo/src/libfoo-qt5/ -Isrc/ -isystem /usr/
 
 ### Python
 
-Should work pretty much out of the box as-is.
+Should work pretty much out of the box as-is, remember to `:PythonSupportInitPython3`.
 
 ### Rust
 
