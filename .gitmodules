@@ -110,3 +110,6 @@
 [submodule "bundle/nvim-compe"]
 	path = bundle/nvim-compe
 	url = https://github.com/hrsh7th/nvim-compe
+[submodule "bundle/nvim-lint"]
+	path = bundle/nvim-lint
+	url = https://github.com/mfussenegger/nvim-lint
