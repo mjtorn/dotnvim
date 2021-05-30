@@ -141,3 +141,14 @@ hi rubycontrol guifg=#6699CC guibg=NONE guisp=NONE gui=NONE ctermfg=68 ctermbg=N
 hi rubyregexp guifg=#B18A3D guibg=NONE guisp=NONE gui=NONE ctermfg=137 ctermbg=NONE cterm=NONE
 hi operator guifg=#ffffff guibg=NONE guisp=NONE gui=NONE ctermfg=15 ctermbg=NONE cterm=NONE
 hi longlinewarning guifg=NONE guibg=#371F1C guisp=#371F1C gui=underline ctermfg=NONE ctermbg=237 cterm=underline
+
+" NeoVim 0.5 lsp stuff, mostly untested
+hi LspDiagnosticsDefaultError guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=15 ctermbg=9 cterm=NONE
+hi LspDiagnosticsDefaultWarning guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=9 ctermbg=NONE cterm=NONE
+hi LspDiagnosticsDefaultInformation guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=173 ctermbg=NONE cterm=NONE
+hi LspDiagnosticsDefaultHint guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=232 ctermbg=NONE cterm=NONE
+
+hi LspDiagnosticsSignError guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=15 ctermbg=9 cterm=NONE
+hi LspDiagnosticsSignWarning guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=9 ctermbg=NONE cterm=NONE
+hi LspDiagnosticsSignInformation guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=173 ctermbg=NONE cterm=NONE
+hi LspDiagnosticsSignHint guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=232 ctermbg=NONE cterm=NONE
