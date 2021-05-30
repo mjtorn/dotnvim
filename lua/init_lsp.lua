@@ -3,4 +3,7 @@
 -- and clean up that unreadable lua coding style.
 -- Populate the function later.
 function setup_servers()
+  python3_host_prog = vim.api.nvim_eval('g:python3_host_prog')
+  jedilsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'jedi-language-server', '')")
+  require('lspconfig').jedi_language_server.setup({cmd = {jedilsp}})
 end

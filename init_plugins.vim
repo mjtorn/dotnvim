@@ -64,7 +64,7 @@ let g:user_emmet_install_global = 0
 autocmd FileType html,css EmmetInstall
 
 " Verify some basic things are installed when working in Python
-let g:venv_reqs = ['jedi', 'flake8', 'isort', 'flake8-isort', 'pyyaml']
+let g:venv_reqs = ['jedi-language-server', 'flake8', 'isort', 'flake8-isort', 'pyyaml']
 
 " Here's to hipsterism!
 :lua require('init_lsp')
