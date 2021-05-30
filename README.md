@@ -14,6 +14,27 @@ See also `https://github.com/mjtorn/dotvim`
 
     mkdir undo
 
+### NeoVim 0.5 neophilia
+
+Most of the stuff should just work, but this is a WIP
+branch for now, so maybe not everything does.
+
+#### OmniSharp/mono
+
+Create `/etc/apt/sources.list.d/mono-official-stable.list`
+
+```
+deb https://download.mono-project.com/repo/debian stable-buster main
+```
+
+This may be the time to run `:OmniSharpInstall`, create the symlink
+
+```
+ln -s ${HOME}/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.exe ${HOME}/.local/bin/
+```
+
+and restart. The symlink doesn't work, lol, but it would be nice if it did!
+
 ## Protips
 
 These go in your working root's `.local.vim` file
