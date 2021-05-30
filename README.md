@@ -44,6 +44,12 @@ file `.clang_complete` for compiler flags/options, like this:
 -fPIC
 ```
 
+ALE gets helped by
+
+```vim
+let g:ale_cpp_clang_options = '-I/home/foo/src/libfoo-qt5/ -Isrc/ -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -std=c++11 -fPIC'
+```
+
 ### Python
 
 Should work pretty much out of the box as-is.
