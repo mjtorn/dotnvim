@@ -35,6 +35,13 @@ ln -s ${HOME}/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.exe ${HOME}/.local
 
 and restart. The symlink doesn't work, lol, but it would be nice if it did!
 
+#### Rust
+
+```
+curl -L https://github.com/rust-analyzer/rust-analyzer/releases/latest/download/rust-analyzer-x86_64-unknown-linux-gnu.gz | gunzip > ~/.local/bin/rust-analyzer
+chmod +x !$  # yolo
+```
+
 ## Protips
 
 These go in your working root's `.local.vim` file
