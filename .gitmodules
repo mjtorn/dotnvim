@@ -116,3 +116,6 @@
 [submodule "bundle/popup.nvim"]
 	path = bundle/popup.nvim
 	url = https://github.com/nvim-lua/popup.nvim.git
+[submodule "bundle/plenary.nvim"]
+	path = bundle/plenary.nvim
+	url = https://github.com/nvim-lua/plenary.nvim.git
