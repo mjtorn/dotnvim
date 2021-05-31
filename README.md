@@ -11,18 +11,23 @@ git clone git://github.com/mjtorn/dotnvim.git .config/nvim/
 
 cd .config/nvim/
 
-git submodule update --init
+git submodule init
+git submodule update --recursive --merge
 
 mkdir undo
 ```
 
 ### NeoVim 0.5 neophilia
 
+Your undo will be broken, run `rm -rf ~/.config/nvim/undo/*`
+
 Make sure you install from eg.
 
 ```
 deb http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu bionic main
 ```
+
+`sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9DBB0BE9366964F134855E2255F96FCF8231B6DD`
 
 Most of the stuff should just work, but this is a WIP
 branch for now, so maybe not everything does.
@@ -42,6 +47,8 @@ Create `/etc/apt/sources.list.d/mono-official-stable.list`
 ```
 deb https://download.mono-project.com/repo/debian stable-buster main
 ```
+
+`sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF`
 
 This may be the time to run `:OmniSharpInstall`, create the symlink
 
