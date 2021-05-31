@@ -119,3 +119,6 @@
 [submodule "bundle/plenary.nvim"]
 	path = bundle/plenary.nvim
 	url = https://github.com/nvim-lua/plenary.nvim.git
+[submodule "bundle/telescope.nvim"]
+	path = bundle/telescope.nvim
+	url = https://github.com/nvim-telescope/telescope.nvim.git
