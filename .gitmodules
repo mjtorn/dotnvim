@@ -113,3 +113,6 @@
 [submodule "bundle/nvim-compe"]
 	path = bundle/nvim-compe
 	url = https://github.com/hrsh7th/nvim-compe
+[submodule "bundle/popup.nvim"]
+	path = bundle/popup.nvim
+	url = https://github.com/nvim-lua/popup.nvim.git
