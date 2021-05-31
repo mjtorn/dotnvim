@@ -197,6 +197,9 @@ endfunction
 :source ~/.config/nvim/config/tabline.vim
 :source ~/.config/nvim/config/javacomplete.vim
 :source ~/.config/nvim/config/omnisharp.vim
+" XXX: These don't seem to work, they're here to remind me they should
+:lua require('init_lsp')
+:lua setup_servers()
 
 " EOF
 
