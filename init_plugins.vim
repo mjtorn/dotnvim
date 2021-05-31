@@ -9,14 +9,10 @@ let g:mundo_preview_bottom = 1
 let g:mundo_help = 1
 
 " Fuzzy finder
-nnoremap <C-p> :FuzzyOpen<CR>
+nnoremap <C-p> <CMD>Telescope find_files<CR>
 
-"" Play around with ack-grep
-" https://www.freecodecamp.org/news/how-to-search-project-wide-vim-ripgrep-ack/
-let g:ackprg = 'rg --vimgrep --type-not sql --smart-case'
-let g:ack_use_cword_for_empty_search = 1
-let g:ack_autoclose = 1
-nnoremap <Leader>a :Ack!<SPACE>
+" Grepper
+nnoremap <Leader>a <CMD>Telescope live_grep<CR>
 
 "" nvim-compe
 let g:compe = {}
