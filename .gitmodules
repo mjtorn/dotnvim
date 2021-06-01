@@ -119,6 +119,3 @@
 [submodule "bundle/telescope.nvim"]
 	path = bundle/telescope.nvim
 	url = https://github.com/nvim-telescope/telescope.nvim.git
-[submodule "bundle/auto-pairs"]
-	path = bundle/auto-pairs
-	url = https://github.com/LunarWatcher/auto-pairs
