@@ -122,3 +122,6 @@
 [submodule "bundle/deoplete"]
 	path = bundle/deoplete
 	url = https://github.com/Shougo/deoplete.nvim.git
+[submodule "bundle/deoplete-lsp"]
+	path = bundle/deoplete-lsp
+	url = https://github.com/deoplete-plugins/deoplete-lsp
