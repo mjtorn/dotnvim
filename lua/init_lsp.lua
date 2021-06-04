@@ -7,6 +7,8 @@ function setup_servers()
   jedilsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'jedi-language-server', '')")
   require('lspconfig').jedi_language_server.setup({cmd = {jedilsp}})
 
+  require('lsp_signature').on_attach {hint_enable = false}
+
   -- All this hackery should make magic snippets work.
   local capabilities = vim.lsp.protocol.make_client_capabilities()
   capabilities.textDocument.completion.completionItem.snippetSupport = true
