@@ -90,7 +90,6 @@ autocmd BufEnter *.java setl tabstop=4 expandtab autoindent shiftwidth=4 fileenc
 
 "" From neocomplete and http://blog.fluther.com/django-vim/
 " XXX: Is markdown really html enough to use the same completions
-autocmd FileType python setlocal omnifunc=jedi#completions
 autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
 autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
 autocmd FileType fbml set omnifunc=htmlcomplete#CompleteTags
