@@ -53,5 +53,7 @@ let g:venv_reqs = ['jedi-language-server', 'flake8', 'isort', 'flake8-isort', 'p
 
 " Here's to hipsterism!
 :lua require('init_lsp')
+:lua require('init_misc')
 :lua setup_servers()
+:lua setup_misc()
 
