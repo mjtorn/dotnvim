@@ -1,7 +1,4 @@
 function setup_misc()
-  -- Augment deoplete-lsp
-  require('lsp_signature').on_attach {hint_enable = false}
-
   -- All this hackery should make magic snippets work.
   local capabilities = vim.lsp.protocol.make_client_capabilities()
   capabilities.textDocument.completion.completionItem.snippetSupport = true
