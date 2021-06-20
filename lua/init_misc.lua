@@ -63,6 +63,7 @@ function setup_misc()
       -- Developer configurations: Not meant for general override
       buffer_previewer_maker = require'telescope.previewers'.buffer_previewer_maker
     }
-   }
+  }
+  require('telescope').load_extension('fzy_native')
 end
 
