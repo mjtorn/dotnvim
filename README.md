@@ -76,18 +76,9 @@ Nothing here now, look into
 
 ### C/C++
 
-The [clang_complete](https://github.com/Rip-Rip/clang_complete) plugin has its own
-file `.clang_complete` for compiler flags/options, like this:
-
-```
--I/home/foo/src/libfoo-qt5/
--Isrc/
--isystem /usr/include/x86_64-linux-gnu/qt5
--isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork
--isystem /usr/include/x86_64-linux-gnu/qt5/QtCore
--std=c++11
--fPIC
-```
+Nothing here now, look into
+[ccls integration](https://jdhao.github.io/2020/11/29/neovim_cpp_dev_setup/) when Debian Bullseye
+is out or I need it or whatever.
 
 ALE gets helped by
 

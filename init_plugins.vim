@@ -30,9 +30,6 @@ call deoplete#custom#var('omni', 'input_patterns', {
 " Tabs are maybe the coolest for going to definition. Maybe...
 nmap <buffer> gd <plug>DeopleteRustGoToDefinitionTab
 
-"" clang?
-let g:clang_library_path="/usr/lib/llvm-3.5/lib/"
-
 " ALE
 let g:ale_linters = {
       \ 'cpp': ['clang'],
