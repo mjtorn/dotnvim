@@ -71,14 +71,8 @@ These go in your working root's `.local.vim` file
 
 ### Java
 
-Only install python-neovim, add something to the search path (if needed)
-
-```vim
-let g:venv_reqs = ['neovim']
-let g:JavaComplete_LibsPath = './lib/Scribejava_core_3_2_0/'
-```
-
-See more at [vim-javacomplete2](https://github.com/artur-shaik/vim-javacomplete2)
+Nothing here now, look into
+[Eclipse LSP integration](https://zignar.net/2020/10/17/setup-neovim-for-java-development-2/)
 
 ### C/C++
 
