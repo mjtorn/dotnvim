@@ -19,6 +19,10 @@ nmap <Leader>N :NERDTreeTabsToggle<CR>
 let g:miniBufExplorerAutoStart = 0
 nmap <Leader>m :MBEToggleAll<CR>
 
+"" Ack like Mars Attacks
+let g:ackprg = 'rg --vimgrep --type-not sql --smart-case'
+nmap <Leader>A :Ack<Space>
+
 "" Navigate into wrapped lines as if they were real lines, but skip over them
 "" like expected
 nnoremap <expr> j v:count ? 'j' : 'gj'
