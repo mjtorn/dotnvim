@@ -31,6 +31,7 @@ call deoplete#custom#var('omni', 'input_patterns', {
 nmap <buffer> gd <plug>DeopleteRustGoToDefinitionTab
 
 " ALE
+let g:ale_enabled = 0
 let g:ale_linters = {
       \ 'cpp': ['clang'],
       \ 'cs': ['OmniSharp'],

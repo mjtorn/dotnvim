@@ -15,6 +15,7 @@ EOF
 let g:OmniSharp_server_stdio = 1
 let g:OmniSharp_server_use_mono = 1
 let g:OmniSharp_diagnostic_showid = 1
+let g:OmniSharp_diagnostic_listen = 1  " I think the default (2) updates ALE, nope
 
 let g:OmniSharp_proc_debug = 0
 
