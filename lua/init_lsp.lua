@@ -53,4 +53,20 @@ function setup_servers()
     autoimport = 'enable',
     on_attach = on_attach,
   }
+
+  -- https://github.com/neovim/nvim-lspconfig/blob/master/CONFIG.md#omnisharp
+  -- XXX: omnisharp_bin should not be hard-coded like so, the symlink should work
+  local pid = vim.fn.getpid()
+  local omnisharp_bin = "/home/mjt/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.exe"
+  require('lspconfig').omnisharp.setup({
+    cmd = { omnisharp_bin, "--languageserver" , "--hostPID", tostring(pid) };
+    on_attach = on_attach,
+    handlers = {
+         ["textDocument/publishDiagnostics"] = vim.lsp.with(
+           vim.lsp.diagnostic.on_publish_diagnostics, {
+             signs = true
+           }
+         ),
+       },
+  })
 end
