@@ -53,6 +53,10 @@ autocmd FileType html,css EmmetInstall
 " Verify some basic things are installed when working in Python
 let g:venv_reqs = ['jedi-language-server', 'flake8', 'isort', 'flake8-isort', 'pyyaml']
 
+" treesitter
+set foldmethod=expr
+set foldexpr=nvim_treesitter#foldexpr()
+
 " Here's to hipsterism!
 :lua require('init_lsp')
 :lua require('init_misc')
