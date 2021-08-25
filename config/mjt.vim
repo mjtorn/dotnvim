@@ -187,6 +187,7 @@ endfunction
 " XXX: These don't seem to work, they're here to remind me they should
 :lua require('init_lsp')
 :lua setup_servers()
+:lua require('init_treesitter')
 
 " EOF
 
