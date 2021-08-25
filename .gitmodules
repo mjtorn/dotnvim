@@ -125,3 +125,6 @@
 [submodule "bundle/telescope-fzy-native.nvim"]
 	path = bundle/telescope-fzy-native.nvim
 	url = https://github.com/nvim-telescope/telescope-fzy-native.nvim.git
+[submodule "bundle/nvim-treesitter"]
+	path = bundle/nvim-treesitter
+	url = https://github.com/nvim-treesitter/nvim-treesitter.git
