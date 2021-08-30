@@ -14,6 +14,10 @@ nnoremap <C-p> <CMD>Telescope find_files<CR>
 " Grepper
 nnoremap <Leader>a <CMD>Telescope live_grep<CR>
 
+" This seems to be an issue maybe?
+" https://github.com/nvim-telescope/telescope.nvim/issues/82
+autocmd FileType TelescopePrompt call deoplete#custom#buffer_option('auto_complete', v:false)
+
 "" some deoplete
 " https://github.com/Shougo/deoplete.nvim/blob/master/doc/deoplete.txt
 let g:deoplete#enable_at_startup = 1
