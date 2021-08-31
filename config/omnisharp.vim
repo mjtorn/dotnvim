@@ -24,6 +24,7 @@ augroup omnisharp_commands
 
   " Configure the common help thing as well
   autocmd FileType cs nmap K :OmniSharpDocumentation<CR>
+  autocmd FileType cs nmap grr :OmniSharpRename<CR>
 
   " The following commands are contextual, based on the cursor position.
   autocmd FileType cs nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)

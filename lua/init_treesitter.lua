@@ -16,6 +16,7 @@ require('nvim-treesitter.configs').setup {
     highlight_current_scope = { enable = false },
     smart_rename = {
       enable = true,
+      disable = { "c_sharp" },
       keymaps = {
         smart_rename = "grr",
       },
