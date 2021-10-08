@@ -96,7 +96,7 @@ Create a virtualenv `${HOME}/.virtualenvs/nvim-runtime` and use things from ther
 ```shell
   python3 -m venv ~/.virtualenvs/nvim-runtime
   workon nvim-runtime
-  pip install neovim jedi-language-server flake8 isort flake8-isort pyyaml
+  pip install neovim python-language-server flake8 isort flake8-isort pyyaml
 ```
 
 ### Rust
