@@ -40,7 +40,7 @@ end
 -- Populate the function later.
 function setup_servers()
   -- python
-  pylsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'pyls', 'g')")
+  pylsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'pylsp', 'g')")
   require('lspconfig').pyls.setup {
     cmd = {pylsp},
     on_attach = on_attach,
