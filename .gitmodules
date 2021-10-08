@@ -40,24 +40,12 @@
 [submodule "bundle/emmet"]
 	path = bundle/emmet
 	url = https://github.com/mattn/emmet-vim.git
-[submodule "bundle/clang_complete"]
-	path = bundle/clang_complete
-	url = https://github.com/Rip-Rip/clang_complete.git
 [submodule "bundle/vim-textobj-user"]
 	path = bundle/vim-textobj-user
 	url = https://github.com/kana/vim-textobj-user.git
 [submodule "bundle/vim-textobj-python"]
 	path = bundle/vim-textobj-python
 	url = https://github.com/bps/vim-textobj-python.git
-[submodule "bundle/deoplete"]
-	path = bundle/deoplete
-	url = https://github.com/Shougo/deoplete.nvim.git
-[submodule "bundle/deoplete-jedi"]
-	path = bundle/deoplete-jedi
-	url = https://github.com/zchee/deoplete-jedi.git
-[submodule "bundle/FastFold"]
-	path = bundle/FastFold
-	url = https://github.com/Konfekt/FastFold.git
 [submodule "bundle/markdown"]
 	path = bundle/markdown
 	url = https://github.com/plasticboy/vim-markdown.git
@@ -70,9 +58,6 @@
 [submodule "bundle/vader"]
 	path = bundle/vader
 	url = https://github.com/junegunn/vader.vim.git
-[submodule "bundle/javacomplete2"]
-	path = bundle/javacomplete2
-	url = https://github.com/artur-shaik/vim-javacomplete2.git
 [submodule "bundle/python-support"]
 	path = bundle/python-support
 	url = https://github.com/roxma/python-support.nvim.git
@@ -98,9 +83,6 @@
 [submodule "bundle/git-messenger"]
 	path = bundle/git-messenger
 	url = https://github.com/rhysd/git-messenger.vim.git
-[submodule "bundle/deoplete-rust"]
-	path = bundle/deoplete-rust
-	url = https://github.com/sebastianmarkow/deoplete-rust.git
 [submodule "bundle/rust.vim"]
 	path = bundle/rust.vim
 	url = https://github.com/rust-lang/rust.vim.git
@@ -116,3 +98,33 @@
 [submodule "bundle/neovim-fuzzy"]
 	path = bundle/neovim-fuzzy
 	url = https://github.com/cloudhead/neovim-fuzzy.git
+[submodule "bundle/nvim-lspconfig"]
+	path = bundle/nvim-lspconfig
+	url = https://github.com/neovim/nvim-lspconfig
+[submodule "bundle/popup.nvim"]
+	path = bundle/popup.nvim
+	url = https://github.com/nvim-lua/popup.nvim.git
+[submodule "bundle/plenary.nvim"]
+	path = bundle/plenary.nvim
+	url = https://github.com/nvim-lua/plenary.nvim.git
+[submodule "bundle/telescope.nvim"]
+	path = bundle/telescope.nvim
+	url = https://github.com/nvim-telescope/telescope.nvim.git
+[submodule "bundle/deoplete"]
+	path = bundle/deoplete
+	url = https://github.com/Shougo/deoplete.nvim.git
+[submodule "bundle/deoplete-lsp"]
+	path = bundle/deoplete-lsp
+	url = https://github.com/deoplete-plugins/deoplete-lsp
+[submodule "bundle/lsp_signature.nvim"]
+	path = bundle/lsp_signature.nvim
+	url = https://github.com/ray-x/lsp_signature.nvim.git
+[submodule "bundle/telescope-fzy-native.nvim"]
+	path = bundle/telescope-fzy-native.nvim
+	url = https://github.com/nvim-telescope/telescope-fzy-native.nvim.git
+[submodule "bundle/nvim-treesitter"]
+	path = bundle/nvim-treesitter
+	url = https://github.com/nvim-treesitter/nvim-treesitter.git
+[submodule "bundle/nvim-treesitter-refactor"]
+	path = bundle/nvim-treesitter-refactor
+	url = https://github.com/nvim-treesitter/nvim-treesitter-refactor.git

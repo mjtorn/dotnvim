@@ -4,6 +4,10 @@
 let g:OmniSharp_server_stdio = 1
 let g:OmniSharp_server_use_mono = 1
 let g:OmniSharp_diagnostic_showid = 1
+let g:OmniSharp_diagnostic_listen = 1  " I think the default (2) updates ALE, nope
+
+" The `#if UNITY_EDITOR` case sometimes is ok, this maybe makes it always ok
+let g:OmniSharp_highlight_groups = { 'ExcludedCode': 'Code' }
 
 let g:OmniSharp_proc_debug = 0
 
@@ -20,6 +24,7 @@ augroup omnisharp_commands
 
   " Configure the common help thing as well
   autocmd FileType cs nmap K :OmniSharpDocumentation<CR>
+  autocmd FileType cs nmap grr :OmniSharpRename<CR>
 
   " The following commands are contextual, based on the cursor position.
   autocmd FileType cs nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)

@@ -80,7 +80,7 @@ set grepprg=rg\ --vimgrep\ --type-not\ sql\ --smart-case
 
 "" Fix some file presets
 autocmd BufRead /tmp/mutt* :source ~/.vim/config/mail.vim
-autocmd BufEnter *.py setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax
+autocmd BufEnter *.py setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8
 autocmd BufEnter *ml setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8
 autocmd BufEnter *vim setl tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8
 autocmd BufEnter *.coffee setl tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8 foldmethod=indent
@@ -90,7 +90,6 @@ autocmd BufEnter *.java setl tabstop=4 expandtab autoindent shiftwidth=4 fileenc
 
 "" From neocomplete and http://blog.fluther.com/django-vim/
 " XXX: Is markdown really html enough to use the same completions
-autocmd FileType python setlocal omnifunc=jedi#completions
 autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
 autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
 autocmd FileType fbml set omnifunc=htmlcomplete#CompleteTags

@@ -98,18 +98,6 @@ endfunction
 
 nmap <Leader>n :call ToggleNumbers()<Enter>
 
-function! ToggleALEColumn()
-  if g:ale_sign_column_always == 0
-    let g:ale_sign_column_always = 1
-    echo "Always showing ALE column"
-  else
-    let g:ale_sign_column_always = 0
-    echo "Not always showing ALE column"
-  endif
-endfunction
-
-nmap <silent> <Leader>A :call ToggleALEColumn()<Enter>:e<Enter>
-
 " https://github.com/mbrochh/vim-as-a-python-ide/blob/master/.vimrc
 
 set completeopt=longest,menuone
@@ -195,8 +183,11 @@ endfunction
 :source ~/.config/nvim/config/mjtmaps.vim
 :source ~/.config/nvim/config/statusline.vim
 :source ~/.config/nvim/config/tabline.vim
-:source ~/.config/nvim/config/javacomplete.vim
 :source ~/.config/nvim/config/omnisharp.vim
+" XXX: These don't seem to work, they're here to remind me they should
+:lua require('init_lsp')
+:lua setup_servers()
+:lua require('init_treesitter')
 
 " EOF
 
