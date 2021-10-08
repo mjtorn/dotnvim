@@ -88,7 +88,16 @@ let g:ale_cpp_clang_options = '-I/home/foo/src/libfoo-qt5/ -Isrc/ -isystem /usr/
 
 ### Python
 
-Should work pretty much out of the box as-is, remember to `:PythonSupportInitPython3`.
+Ever since [python-support](https://github.com/roxma/python-support.nvim) was deprecated,
+things got different.
+
+Create a virtualenv `${HOME}/.virtualenvs/nvim-runtime` and use things from there.
+
+```shell
+  python3 -m venv ~/.virtualenvs/nvim-runtime
+  workon nvim-runtime
+  pip install neovim jedi-language-server flake8 isort flake8-isort pyyaml
+```
 
 ### Rust
 

@@ -1,7 +1,7 @@
 " vim: tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8
 
-" Set this before Pathogen just to be safe
-let g:python3_host_prog = $HOME . '/.config/nvim/bundle/python-support/autoload/nvim_py3/bin/python3'
+let g:python_support_python2_require = 0
+let g:python3_host_prog = $HOME . '/.virtualenvs/nvim-runtime/bin/python3'
 
 runtime bundle/pathogen/autoload/pathogen.vim
 call pathogen#infect()
@@ -114,9 +114,6 @@ autocmd BufRead,BufNewFile,BufEnter *.esc.txt set filetype=escoria
 
 " Local configurations
 call LoadLocalConf()
-
-" Interface with python-support.nvim
-let g:python_support_python3_requirements = extend(get(g:, 'python_support_python3_requirements', []), g:venv_reqs)
 
 "" This sources everything else I want
 :source ~/.config/nvim/config/mjt.vim

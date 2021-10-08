@@ -43,15 +43,11 @@ let g:ale_linters = {
       \ 'python': ['flake8'],
       \ 'rust': ['analyzer']
 \ }
-let g:ale_python_flake8_executable = $HOME . '/.config/nvim/bundle/python-support/autoload/nvim_py3/bin/flake8'
-let g:python_support_python2_require = 0
+let g:ale_python_flake8_executable = substitute(g:python3_host_prog, 'python3', 'flake8', 'g')
 
 " Emmet might be a bit trigger happy
 let g:user_emmet_install_global = 0
 autocmd FileType html,css EmmetInstall
-
-" Verify some basic things are installed when working in Python
-let g:venv_reqs = ['jedi-language-server', 'flake8', 'isort', 'flake8-isort', 'pyyaml']
 
 " treesitter
 set foldmethod=expr
