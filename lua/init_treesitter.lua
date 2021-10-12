@@ -3,8 +3,8 @@ require('nvim-treesitter.configs').setup {
   ignore_install = { }, -- List of parsers to ignore installing
   highlight = {
     enable = true,              -- false will disable the whole extension
-    disable = { },  -- list of language that will be disabled
-    additional_vim_regex_highlighting = {"python"},  -- https://www.reddit.com/r/neovim/comments/ok9frp/v05_treesitter_does_anyone_have_python_indent/
+    disable = { "python" },  -- list of language that will be disabled
+    -- additional_vim_regex_highlighting = {"python"},  -- https://www.reddit.com/r/neovim/comments/ok9frp/v05_treesitter_does_anyone_have_python_indent/
   },
   incremental_selection = { enable = true },
   textobjects = { enable = true },

@@ -80,7 +80,7 @@ set grepprg=rg\ --vimgrep\ --type-not\ sql\ --smart-case
 
 "" Fix some file presets
 autocmd BufRead /tmp/mutt* :source ~/.vim/config/mail.vim
-autocmd BufEnter *.py setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8
+autocmd BufEnter *.py setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 indentexpr=GetPythonIndent(v:lnum)
 autocmd BufEnter *ml setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8
 autocmd BufEnter *vim setl tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8
 autocmd BufEnter *.coffee setl tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8 foldmethod=indent
