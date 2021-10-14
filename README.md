@@ -97,6 +97,7 @@ Create a virtualenv `${HOME}/.virtualenvs/nvim-runtime` and use things from ther
   python3 -m venv ~/.virtualenvs/nvim-runtime
   workon nvim-runtime
   pip install neovim python-lsp-server flake8 isort flake8-isort pyyaml
+  pip install pyls-flake8 pyls-isort  # and whtever else
 ```
 
 ### Rust
