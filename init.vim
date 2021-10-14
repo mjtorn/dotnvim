@@ -1,7 +1,7 @@
 " vim: tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8
 
-" Set this before Pathogen just to be safe
-let g:python3_host_prog = $HOME . '/.config/nvim/bundle/python-support/autoload/nvim_py3/bin/python3'
+let g:python_support_python2_require = 0
+let g:python3_host_prog = $HOME . '/.virtualenvs/nvim-runtime/bin/python3'
 
 runtime bundle/pathogen/autoload/pathogen.vim
 call pathogen#infect()
@@ -80,7 +80,7 @@ set grepprg=rg\ --vimgrep\ --type-not\ sql\ --smart-case
 
 "" Fix some file presets
 autocmd BufRead /tmp/mutt* :source ~/.vim/config/mail.vim
-autocmd BufEnter *.py setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8
+autocmd BufEnter *.py setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 indentexpr=GetPythonIndent(v:lnum)
 autocmd BufEnter *ml setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8
 autocmd BufEnter *vim setl tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8
 autocmd BufEnter *.coffee setl tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8 foldmethod=indent
@@ -114,9 +114,6 @@ autocmd BufRead,BufNewFile,BufEnter *.esc.txt set filetype=escoria
 
 " Local configurations
 call LoadLocalConf()
-
-" Interface with python-support.nvim
-let g:python_support_python3_requirements = extend(get(g:, 'python_support_python3_requirements', []), g:venv_reqs)
 
 "" This sources everything else I want
 :source ~/.config/nvim/config/mjt.vim

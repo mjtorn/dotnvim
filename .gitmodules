@@ -58,9 +58,6 @@
 [submodule "bundle/vader"]
 	path = bundle/vader
 	url = https://github.com/junegunn/vader.vim.git
-[submodule "bundle/python-support"]
-	path = bundle/python-support
-	url = https://github.com/roxma/python-support.nvim.git
 [submodule "bundle/ALE"]
 	path = bundle/ALE
 	url = https://github.com/w0rp/ale.git
