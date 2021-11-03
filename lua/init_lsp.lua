@@ -44,7 +44,7 @@ end
 function setup_servers()
   -- python
   pylsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'pylsp', 'g')")
-  require('lspconfig').pyls.setup {
+  require('lspconfig').pylsp.setup {
     cmd = {pylsp},
     on_attach = on_attach,
   }
