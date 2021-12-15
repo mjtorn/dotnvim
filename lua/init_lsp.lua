@@ -59,7 +59,7 @@ function setup_servers()
   -- https://github.com/neovim/nvim-lspconfig/blob/master/CONFIG.md#omnisharp
   -- XXX: omnisharp_bin should not be hard-coded like so, the symlink should work
   local pid = vim.fn.getpid()
-  local omnisharp_bin = "/home/mjt/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.exe"
+  local omnisharp_bin = vim.fn.join({vim.fn.expand('$HOME'), '.cache', 'omnisharp-vim', 'omnisharp-roslyn', 'OmniSharp.exe'}, '/')
   require('lspconfig').omnisharp.setup({
     cmd = { omnisharp_bin, "--languageserver" , "--hostPID", tostring(pid) };
     on_attach = on_attach,
