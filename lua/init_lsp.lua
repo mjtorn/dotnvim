@@ -56,12 +56,19 @@ function setup_servers()
     on_attach = on_attach,
   }
 
+  ---- Doesn't cope with submodule project not having *.csproj files
+  -- csharp // `dotnet tool install --global csharp-ls`
+  -- local csharp_ls_bin = vim.fn.join({vim.fn.expand('$HOME'), '.dotnet', 'tools', 'csharp-ls'}, '/')
+  -- require('lspconfig').csharp_ls.setup {
+  --   cmd = { csharp_ls_bin },
+  -- }
+
   -- https://github.com/neovim/nvim-lspconfig/blob/master/CONFIG.md#omnisharp
   -- XXX: omnisharp_bin should not be hard-coded like so, the symlink should work
   local pid = vim.fn.getpid()
   local omnisharp_bin = vim.fn.join({vim.fn.expand('$HOME'), '.cache', 'omnisharp-vim', 'omnisharp-roslyn', 'OmniSharp.exe'}, '/')
   require('lspconfig').omnisharp.setup({
-    cmd = { omnisharp_bin, "--languageserver" , "--hostPID", tostring(pid) };
+    cmd = { omnisharp_bin, "-v", "--languageserver" , "--hostPID", tostring(pid) };
     on_attach = on_attach,
     handlers = {
          ["textDocument/publishDiagnostics"] = vim.lsp.with(
