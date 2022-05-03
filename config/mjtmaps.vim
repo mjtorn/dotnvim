@@ -4,6 +4,16 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
 
+"" Kinesis arrows starting to cause me grief
+nmap <Up>    <NOP>
+nmap <Down>  <NOP>
+nmap <Left>  <NOP>
+nmap <Right> <NOP>
+imap <Up>    <NOP>
+imap <Down>  <NOP>
+imap <Left>  <NOP>
+imap <Right> <NOP>
+
 "" Double <Leader> is a good way to prevent fiddling with timeoutlen!
 inoremap <Leader><Leader> <Leader>
 
