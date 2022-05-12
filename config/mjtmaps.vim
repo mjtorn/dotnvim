@@ -5,14 +5,29 @@ nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
 
 "" Kinesis arrows starting to cause me grief
-nmap <Up>    <NOP>
-nmap <Down>  <NOP>
-nmap <Left>  <NOP>
-nmap <Right> <NOP>
+inoremap <C-h>   <Left>
+inoremap <C-j>   <Down>
+inoremap <C-k>   <Up>
+inoremap <C-l>   <Right>
+vnoremap <C-h>   <Left>
+vnoremap <C-j>   <Down>
+vnoremap <C-k>   <Up>
+vnoremap <C-l>   <Right>
+
+" FIXME: The C-i key in insert mode should pref. not be a backspace :D
 imap <Up>    <NOP>
 imap <Down>  <NOP>
 imap <Left>  <NOP>
 imap <Right> <NOP>
+vmap <Up>    <NOP>
+vmap <Down>  <NOP>
+vmap <Left>  <NOP>
+vmap <Right> <NOP>
+
+map <Up>    <NOP>
+map <Down>  <NOP>
+map <Left>  <NOP>
+map <Right> <NOP>
 
 "" Double <Leader> is a good way to prevent fiddling with timeoutlen!
 inoremap <Leader><Leader> <Leader>
@@ -67,8 +82,17 @@ nmap ;S :source ~/.config/nvim/plugin/scratchpad.vim<Enter>
 nmap ;M :source ~/.config/nvim/config/mjt.vim<Enter>
 
 " Stolen from mbrochh's vim-as-a-python-ide talk
-vnoremap < <gv " better indentation
-vnoremap > >gv " better indentation
+" and why not map it to tab because that's easier on the hand
+vnoremap <Tab> >gv " better indentation
+vnoremap <S-Tab> <gv " better indentation
+nnoremap <Tab> >gv " better indentation
+nnoremap <S-Tab> <gv " better indentation
+" also get rid of the reflex to use > and <
+vmap > <NOP>
+vmap < <NOP>
+" FIXME: This seems to fail :/
+" nmap > <NOP>
+" nmap < <NOP>
 
 " Damian Conway's dragvisual
 vmap  <expr>  H   DVB_Drag('left')
