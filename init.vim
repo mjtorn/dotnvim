@@ -35,6 +35,11 @@ filetype plugin indent on
 
 set modeline
 
+" Neovide (and maybe others)
+set guifont=Source\ Code\ Pro:h30
+" Though this does not appear to work
+let g:neovide_cursor_vfx_mode = "pixiedust"
+
 " Do not want surprises from other input devices
 set mouse=
 
