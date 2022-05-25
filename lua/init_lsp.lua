@@ -43,9 +43,13 @@ end
 -- Populate the function later.
 function setup_servers()
   -- python
-  pylsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'pylsp', 'g')")
+  local lsputil = require('lspconfig/util')
+  local pylsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'pylsp', 'g')")
+  local venv = vim.fn.join({vim.fn.expand('$HOME'), '.virtualenvs', 'nvim-runtime'}, '/');
   require('lspconfig').pylsp.setup {
     cmd = {pylsp},
+    cmd_cwd = venv,
+    cmd_env = {VIRTUAL_ENV = venv, PATH = lsputil.path.join(venv, 'bin') .. ':' .. vim.env.PATH},
     on_attach = on_attach,
   }
 
