@@ -35,6 +35,11 @@ filetype plugin indent on
 
 set modeline
 
+" Neovide (and maybe others)
+set guifont=Source\ Code\ Pro:h30
+" Though this does not appear to work
+let g:neovide_cursor_vfx_mode = "pixiedust"
+
 " Do not want surprises from other input devices
 set mouse=
 
@@ -107,7 +112,10 @@ autocmd FileChangedShellPost *
   \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
 
 "" .esc.txt considered escoria
+autocmd BufRead,BufNewFile,BufEnter *.esc set filetype=escoria
 autocmd BufRead,BufNewFile,BufEnter *.esc.txt set filetype=escoria
+autocmd BufRead,BufNewFile,BufEnter *.isaac set filetype=escoria
+autocmd BufRead,BufNewFile,BufEnter *.isaac.txt set filetype=escoria
 
 " My defaults for plugins
 :source ~/.config/nvim/init_plugins.vim

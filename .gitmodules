@@ -58,9 +58,6 @@
 [submodule "bundle/vader"]
 	path = bundle/vader
 	url = https://github.com/junegunn/vader.vim.git
-[submodule "bundle/ALE"]
-	path = bundle/ALE
-	url = https://github.com/w0rp/ale.git
 [submodule "bundle/snowflake"]
 	path = bundle/snowflake
 	url = https://github.com/mjtorn/snowflake.nvim.git

@@ -34,17 +34,6 @@ call deoplete#custom#var('omni', 'input_patterns', {
 " Tabs are maybe the coolest for going to definition. Maybe...
 nmap <buffer> gd <plug>DeopleteRustGoToDefinitionTab
 
-" ALE
-let g:ale_enabled = 0
-let g:ale_linters = {
-      \ 'cpp': ['clang'],
-      \ 'cs': ['OmniSharp'],
-      \ 'c': ['clang'],
-      \ 'python': ['flake8'],
-      \ 'rust': ['analyzer']
-\ }
-let g:ale_python_flake8_executable = substitute(g:python3_host_prog, 'python3', 'flake8', 'g')
-
 " Emmet might be a bit trigger happy
 let g:user_emmet_install_global = 0
 autocmd FileType html,css EmmetInstall
