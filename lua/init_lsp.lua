@@ -48,7 +48,16 @@ function setup_servers()
   local venv = vim.fn.join({vim.fn.expand('$HOME'), '.virtualenvs', 'nvim-runtime'}, '/');
   require('lspconfig').pylsp.setup {
     cmd = {pylsp},
-    cmd_cwd = venv,
+    root_dir = function(fname)
+      local root_files = {
+        'pyproject.toml',
+        'setup.py',
+        'setup.cfg',
+        'requirements.txt',
+        'Pipfile',
+      }
+      return lsputil.root_pattern(unpack(root_files))(fname) or util.find_git_ancestor(fname)
+    end,
     cmd_env = {VIRTUAL_ENV = venv, PATH = lsputil.path.join(venv, 'bin') .. ':' .. vim.env.PATH},
     on_attach = on_attach,
   }
