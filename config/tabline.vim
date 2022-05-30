@@ -7,9 +7,29 @@ function! CreateTabLabel(n)
   return bufname(buflist[winnr-1])
 endfunction
 
+function! CreateTabArray()
+  let tab_titles = []
+
+  for i in range(tabpagenr('$'))
+    " The buffer (~= file) name
+    call add(tab_titles, CreateTabLabel(i + 1))
+  endfor
+
+  return tab_titles
+endfunction
+
 function! CreateTabLine()
   let s = ''
+
+  let tab_titles = CreateTabArray()
+
+  " This section should be so much smarter :D
+  let per_tab = &columns / len(tab_titles) - 4
+
   for i in range(tabpagenr('$'))
+    " Tab page number
+    let tpn = '[' . i . ']'
+
     " This determines if we are active
     if i + 1 == tabpagenr()
       let s .= '%#TabLineSel#'
@@ -17,11 +37,15 @@ function! CreateTabLine()
       let s .= '%#TabLine#'
     endif
 
-    " Tab page number
-    let s .= '[' . i . ']'
+    " Start adding things
+    let s .= tpn
 
-    " The buffer (~= file) name
-    let s .= CreateTabLabel(i + 1)
+    " This truncation thing should be so much better as well :D:D.d
+    if per_tab < len(tab_titles[i])
+      let s .= strcharpart(tab_titles[i], len(tab_titles[i]) - per_tab, per_tab)
+    else
+      let s .= tab_titles[i]
+    endif
 
     if i != tabpagenr('$')
       let s .= '%#TabLineFill#'
