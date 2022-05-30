@@ -52,9 +52,6 @@
 [submodule "bundle/riv"]
 	path = bundle/riv
 	url = https://github.com/Rykka/riv.vim.git
-[submodule "bundle/VOoM"]
-	path = bundle/VOoM
-	url = https://github.com/vim-scripts/VOoM.git
 [submodule "bundle/vader"]
 	path = bundle/vader
 	url = https://github.com/junegunn/vader.vim.git
