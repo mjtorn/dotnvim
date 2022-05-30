@@ -119,3 +119,6 @@
 [submodule "bundle/nvim-treesitter-refactor"]
 	path = bundle/nvim-treesitter-refactor
 	url = https://github.com/nvim-treesitter/nvim-treesitter-refactor.git
+[submodule "bundle/docgen"]
+	path = bundle/docgen
+	url = https://github.com/mg979/docgen.vim.git
