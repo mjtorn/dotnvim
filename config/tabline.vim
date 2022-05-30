@@ -25,26 +25,38 @@ function! CreateTabLine()
 
   " This section should be so much smarter :D
   let per_tab = &columns / len(tab_titles) - 4
-  echom ' ' . len(tab_titles) . ' / ' . &columns . ' = ' . per_tab
 
   for i in range(tabpagenr('$'))
+    " Tab page number
+    let tpn = '[' . i . ']'
+
+    " How much we show
+    let show_len = len(tab_titles[i]) - per_tab
+
+    if per_tab < len(tab_titles[i])
+      let title = strcharpart(tab_titles[i], show_len, per_tab)
+    else
+      let title = tab_titles[i]
+    endif
+
     " This determines if we are active
     if i + 1 == tabpagenr()
       let s .= '%#TabLineSel#'
     else
       let s .= '%#TabLine#'
+      if show_len < 50
+        let title = join(split(tab_titles[i], '.')[:-1], ' ')
+        let title = 'balls'
+        echom tab_titles[i]
+        echom split(tab_titles[i], '.')
+        " let title = strcharpart(tab_titles[i], show_len, per_tab)
+      endif
     endif
 
-    " Tab page number
-    let tpn = '[' . i . ']'
-
+    " Start adding things
     let s .= tpn
 
-    if per_tab < len(tab_titles[i])
-      let s .= strcharpart(tab_titles[i], len(tab_titles[i]) - per_tab, per_tab)
-    else
-      let s .= tab_titles[i]
-    endif
+    let s .= title
 
     if i != tabpagenr('$')
       let s .= '%#TabLineFill#'
