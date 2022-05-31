@@ -3,12 +3,8 @@
 " Always show the tab line - tabs are almost always desired irl
 set showtabline=2
 
-" nav
+" create
+map <Leader>t :tabnew<CR>
+
+" list
 map tt :tabs<CR>
-map tn :tabnext<CR>
-map tp :tabprev<CR>
-
-" TODO numeric navigation
-
-" EOF
-
