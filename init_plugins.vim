@@ -48,3 +48,7 @@ set foldexpr=nvim_treesitter#foldexpr()
 :lua setup_servers()
 :lua setup_misc()
 
+" It's me, Pydoc!
+let g:pydoc_cmd = 'python -m pydoc'
+let g:pydoc_open_cmd = 'split'
+
