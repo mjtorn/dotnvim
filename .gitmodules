@@ -119,3 +119,6 @@
 [submodule "bundle/nvim-cmp"]
 	path = bundle/nvim-cmp
 	url = https://github.com/hrsh7th/nvim-cmp.git
+[submodule "bundle/cmp-nvim-lsp"]
+	path = bundle/cmp-nvim-lsp
+	url = https://github.com/hrsh7th/cmp-nvim-lsp
