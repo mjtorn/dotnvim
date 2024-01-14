@@ -141,3 +141,5 @@ nmap <Leader>D <Plug>(DocGen!)
 nmap <Leader>x <Plug>(DocBox)
 nmap <Leader>X <Plug>(DocBox!)
 
+"" That floater-killer
+nmap <Esc> :call CloseFloats()<CR>
