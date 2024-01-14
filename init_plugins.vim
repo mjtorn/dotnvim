@@ -28,7 +28,8 @@ set foldexpr=nvim_treesitter#foldexpr()
 " Here's to hipsterism!
 :lua require('init_lsp')
 :lua require('init_misc')
+:lua require('init_cmp')
 :lua setup_servers()
 :lua setup_misc()
 :lua require('init_treesitter')
-
+:lua setup_cmp()
