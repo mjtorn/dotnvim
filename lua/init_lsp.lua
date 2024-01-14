@@ -8,12 +8,6 @@ local on_attach = function(client, bufnr)
   -- Enable completion triggered by <c-x><c-o>
   buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
 
-  -- Augment deoplete-lsp
-  require('lsp_signature').on_attach {hint_enable = false,
-                                        toggle_key = '<C-v>',
-                                        floating_window_above_cur_line = false,
-                                        auto_close_after = 1}
-
   -- Mappings.
   local opts = { noremap=true, silent=true }
 
