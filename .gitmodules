@@ -128,3 +128,6 @@
 [submodule "bundle/omnisharp-extended-lsp"]
 	path = bundle/omnisharp-extended-lsp
 	url = https://github.com/Hoffs/omnisharp-extended-lsp.nvim.git
+[submodule "bundle/cmp-async-path"]
+	path = bundle/cmp-async-path
+	url = https://github.com/FelipeLema/cmp-async-path.git

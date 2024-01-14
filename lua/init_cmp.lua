@@ -12,7 +12,11 @@ function setup_cmp()
     }, {
       { name = 'buffer',
         option = { keyword_length = 0 }},
-    }),
+    }, {
+      { name = 'async_path',
+        option = { trailing_slash = true }},
+    }
+    ),
     mapping = cmp.mapping.preset.insert({
       ["<C-k>"] = cmp.mapping.select_prev_item(), -- previous suggestion
       ["<C-j>"] = cmp.mapping.select_next_item(), -- next suggestion
