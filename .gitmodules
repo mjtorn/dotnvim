@@ -116,3 +116,6 @@
 [submodule "bundle/docgen"]
 	path = bundle/docgen
 	url = https://github.com/mg979/docgen.vim.git
+[submodule "bundle/nvim-cmp"]
+	path = bundle/nvim-cmp
+	url = https://github.com/hrsh7th/nvim-cmp.git
