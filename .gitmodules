@@ -101,12 +101,6 @@
 [submodule "bundle/telescope.nvim"]
 	path = bundle/telescope.nvim
 	url = https://github.com/nvim-telescope/telescope.nvim.git
-[submodule "bundle/deoplete"]
-	path = bundle/deoplete
-	url = https://github.com/Shougo/deoplete.nvim.git
-[submodule "bundle/deoplete-lsp"]
-	path = bundle/deoplete-lsp
-	url = https://github.com/deoplete-plugins/deoplete-lsp
 [submodule "bundle/lsp_signature.nvim"]
 	path = bundle/lsp_signature.nvim
 	url = https://github.com/ray-x/lsp_signature.nvim.git
