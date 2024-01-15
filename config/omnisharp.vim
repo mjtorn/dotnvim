@@ -3,13 +3,26 @@
 " This is required for Unity3D
 let g:OmniSharp_server_stdio = 1
 let g:OmniSharp_server_use_mono = 1
+let g:OmniSharp_server_use_net6 = 0  " https://github.com/OmniSharp/omnisharp-roslyn/issues/1948#issuecomment-1038914951
 let g:OmniSharp_diagnostic_showid = 1
 let g:OmniSharp_diagnostic_listen = 1  " I think the default (2) updates ALE, nope
+" YTF U NO WORK
+let g:OmniSharp_popup = 1
+" let g:OmniSharp_popup_position = 'peek'
+" let g:OmniSharp_popup_options = {
+"   \ 'highlight': 'Normal',
+"   \ 'padding': [1],
+"   \ 'border': [1],
+",   \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+"   \ 'borderhighlight': ['Special']
+"   \}
+let g:OmniSharp_server_path = '/home/mjt/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.exe'
 
 " The `#if UNITY_EDITOR` case sometimes is ok, this maybe makes it always ok
 let g:OmniSharp_highlight_groups = { 'ExcludedCode': 'Code' }
 
 let g:OmniSharp_proc_debug = 0
+" let g:OmniSharp_loglevel = 'debug'
 
 " Seems pretty much everyone uses tabs, and so far I have found no better foldmethod
 autocmd BufEnter *.cs setl tabstop=4 noexpandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=indent
