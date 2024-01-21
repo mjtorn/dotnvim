@@ -118,6 +118,7 @@ function setup_servers()
     handlers = {
       ["textDocument/definition"] = require('omnisharp_extended').handler,
     },
+    -- cmd = { '/bin/mono', omnisharp_bin, '--languageserver' , '--hostPID', tostring(pid) },
     cmd = { omnisharp_bin, '--languageserver' , '--hostPID', tostring(pid) },
 
     -- cmd = { "dotnet", "/home/mjt/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.dll" },
@@ -132,7 +133,8 @@ function setup_servers()
     -- for projects that are relevant to code that is being edited. With this
     -- setting enabled OmniSharp may load fewer projects and may thus display
     -- incomplete reference lists for symbols.
-    enable_ms_build_load_projects_on_demand = true,
+    -- enable_ms_build_load_projects_on_demand = true,
+    enable_ms_build_load_projects_on_demand = false,
 
     -- Enables support for roslyn analyzers, code fixes and rulesets.
     enable_roslyn_analyzers = false,

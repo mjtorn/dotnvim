@@ -16,7 +16,7 @@ let g:OmniSharp_popup = 1
 ",   \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
 "   \ 'borderhighlight': ['Special']
 "   \}
-let g:OmniSharp_server_path = '/home/mjt/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.exe'
+" let g:OmniSharp_server_path = '/home/mjt/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.exe'
 
 " The `#if UNITY_EDITOR` case sometimes is ok, this maybe makes it always ok
 let g:OmniSharp_highlight_groups = { 'ExcludedCode': 'Code' }
