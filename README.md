@@ -98,12 +98,26 @@ to use flake8, in which case you can skip installing all flake8 packages.
 It pulls in pycodestyle, and the best way to disable it is to never install
 it.
 
+Or an even better thing might be to `pip install python-lsp-ruff` to use
+the ruff plugin for the Python lsp.
+
+**NVIM-CMP OR UPGRADE WARNING:**
+
+The below is fine and all
+
 ```shell
   python3 -m venv ~/.virtualenvs/nvim-runtime
   workon nvim-runtime
-  pip install neovim python-lsp-server flake8 isort flake8-isort pyyaml
+  # pip install neovim python-lsp-server flake8 isort flake8-isort pyyaml
+  pip install neovim python-lsp-server python-lsp-ruff
   pip install pyls-flake8 pyls-isort  # and whtever else
 ```
+
+but basically you want the language servers in the venv you're working on.
+
+Something like deoplete-lsp would've been smarter in using these from
+the provider's venv, or maybe it's changed in later NeoVims. I don't know
+nor do I care right now.
 
 ### Rust
 
