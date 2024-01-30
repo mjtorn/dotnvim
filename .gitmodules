@@ -131,3 +131,6 @@
 [submodule "bundle/cmp-async-path"]
 	path = bundle/cmp-async-path
 	url = https://github.com/FelipeLema/cmp-async-path.git
+[submodule "bundle/cmp-nvim-lsp-signature-help"]
+	path = bundle/cmp-nvim-lsp-signature-help
+	url = https://github.com/hrsh7th/cmp-nvim-lsp-signature-help.git
