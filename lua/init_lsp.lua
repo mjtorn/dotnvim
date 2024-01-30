@@ -153,7 +153,7 @@ function setup_servers()
 
     -- Specifies whether to include preview versions of the .NET SDK when
     -- determining which version to use for project loading.
-    sdk_include_prereleases = true,
+    sdk_include_prereleases = false,
 
     -- Only run analyzers against open files when 'enableRoslynAnalyzers' is
     -- true
