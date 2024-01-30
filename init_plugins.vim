@@ -47,8 +47,5 @@ set foldexpr=nvim_treesitter#foldexpr()
 :lua require('init_misc')
 :lua setup_servers()
 :lua setup_misc()
-
-" It's me, Pydoc!
-let g:pydoc_cmd = 'python -m pydoc'
-let g:pydoc_open_cmd = 'split'
+:lua require('init_treesitter')
 
