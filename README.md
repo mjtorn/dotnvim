@@ -93,6 +93,11 @@ things got different.
 
 Create a virtualenv `${HOME}/.virtualenvs/nvim-runtime` and use things from there.
 
+Note that you may want to use `ruff-lsp`, in which case you may not want
+to use flake8, in which case you can skip installing all flake8 packages.
+It pulls in pycodestyle, and the best way to disable it is to never install
+it.
+
 ```shell
   python3 -m venv ~/.virtualenvs/nvim-runtime
   workon nvim-runtime

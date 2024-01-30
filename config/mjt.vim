@@ -184,10 +184,8 @@ endfunction
 :source ~/.config/nvim/config/statusline.vim
 :source ~/.config/nvim/config/tabline.vim
 :source ~/.config/nvim/config/omnisharp.vim
-" XXX: These don't seem to work, they're here to remind me they should
-:lua require('init_lsp')
-:lua setup_servers()
-:lua require('init_treesitter')
 
-" EOF
+" It's me, Pydoc!
+let g:pydoc_cmd = 'python -m pydoc'
+let g:pydoc_open_cmd = 'split'
 

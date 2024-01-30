@@ -47,25 +47,62 @@ function setup_servers()
   -- python
   local lsputil = require('lspconfig/util')
   local pylsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'pylsp', 'g')")
-  local venv = vim.fn.join({vim.fn.expand('$HOME'), '.virtualenvs', 'nvim-runtime'}, '/');
-  require('lspconfig').pylsp.setup {
-    cmd = {pylsp},
-    root_dir = function(fname)
-      local root_files = {
-        'pyproject.toml',
-        'setup.py',
-        'setup.cfg',
-        'requirements.txt',
-        'Pipfile',
+  local venv = vim.fn.join({vim.fn.expand('$HOME'), '.virtualenvs', 'nvim-runtime'}, '/')
+  local lspconfig = require('lspconfig')
+
+  if vim.fn.executable('ruff-lsp') == 1 then
+    lspconfig.ruff_lsp.setup {
+      root_dir = function(fname)
+        local root_files = {
+          'pyproject.toml',
+          'setup.py',
+          'setup.cfg',
+          'requirements.txt',
+          'Pipfile',
+        }
+        return lsputil.root_pattern(unpack(root_files))(fname) or lsputil.find_git_ancestor(fname)
+      end,
+      on_attach = on_attach,
+      init_options = {
+        settings = {
+          -- Any extra CLI arguments for `ruff` go here.
+          args = {
+          }
+        }
       }
-      return lsputil.root_pattern(unpack(root_files))(fname) or util.find_git_ancestor(fname)
-    end,
-    cmd_env = {VIRTUAL_ENV = venv, PATH = lsputil.path.join(venv, 'bin') .. ':' .. vim.env.PATH},
-    on_attach = on_attach,
-  }
+    }
+  end
+
+  if vim.fn.executable(pylsp) == 1 then
+    lspconfig.pylsp.setup {
+      cmd = {pylsp},
+      root_dir = function(fname)
+        local root_files = {
+          'pyproject.toml',
+          'setup.py',
+          'setup.cfg',
+          'requirements.txt',
+          'Pipfile',
+        }
+        return lsputil.root_pattern(unpack(root_files))(fname) or lsputil.find_git_ancestor(fname)
+      end,
+      settings = {
+        pylsp = {
+          plugins = {
+            pylint = { enabled = false },
+            ruff = {
+              extendSelect = { "I" },
+            },
+          },
+        },
+      },
+      cmd_env = {VIRTUAL_ENV = venv, PATH = lsputil.path.join(venv, 'bin') .. ':' .. vim.env.PATH},
+      on_attach = on_attach,
+    }
+  end
 
   -- rust
-  require('lspconfig').rust_analyzer.setup {
+  lspconfig.rust_analyzer.setup {
     capabilities = capabilities,
     autoimport = 'enable',
     on_attach = on_attach,
