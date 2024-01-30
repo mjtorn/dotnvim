@@ -15,7 +15,10 @@ function setup_cmp()
     }, {
       { name = 'async_path',
         option = { trailing_slash = true }},
+    }, {
+      { name = 'nvim_lsp_signature_help'}
     }
+
     ),
     mapping = cmp.mapping.preset.insert({
       ["<C-k>"] = cmp.mapping.select_prev_item(), -- previous suggestion
