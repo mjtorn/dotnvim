@@ -104,10 +104,10 @@ function setup_servers()
 
   ---- Doesn't cope with submodule project not having *.csproj files
   -- csharp // `dotnet tool install --global csharp-ls`
-  -- local csharp_ls_bin = vim.fn.join({vim.fn.expand('$HOME'), '.dotnet', 'tools', 'csharp-ls'}, '/')
-  -- require('lspconfig').csharp_ls.setup {
-  --   cmd = { csharp_ls_bin },
-  -- }
+  local csharp_ls_bin = vim.fn.join({vim.fn.expand('$HOME'), '.dotnet', 'tools', 'csharp-ls'}, '/')
+  lspconfig.csharp_ls.setup {
+    cmd = { csharp_ls_bin },
+  }
 
   -- https://github.com/Hoffs/omnisharp-extended-lsp.nvim
   -- XXX: but using that `--languageserver` approach just fails autocompletes and docs
