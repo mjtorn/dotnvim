@@ -38,11 +38,20 @@ end
 -- and clean up that unreadable lua coding style.
 -- Populate the function later.
 function setup_servers()
-  -- python
+  local pid = vim.fn.getpid()
+  local lspconfig = require('lspconfig')
   local lsputil = require('lspconfig/util')
+
+  local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+  -- python
   local pylsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'pylsp', 'g')")
   local venv = vim.fn.join({vim.fn.expand('$HOME'), '.virtualenvs', 'nvim-runtime'}, '/')
-  local lspconfig = require('lspconfig')
+
+  -- csharp // `dotnet tool install --global csharp-ls`
+  local csharp_ls_bin = vim.fn.join({vim.fn.expand('$HOME'), '.dotnet', 'tools', 'csharp-ls'}, '/')
+  -- XXX: but using that `--languageserver` approach just fails autocompletes and docs
+  local omnisharp_bin = vim.fn.join({vim.fn.expand('$HOME'), '.cache', 'omnisharp-vim', 'omnisharp-roslyn', 'OmniSharp.exe'}, '/')
 
   if vim.fn.executable('ruff-lsp') == 1 then
     lspconfig.ruff_lsp.setup {
@@ -103,25 +112,20 @@ function setup_servers()
   }
 
   ---- Doesn't cope with submodule project not having *.csproj files
-  -- csharp // `dotnet tool install --global csharp-ls`
-  local csharp_ls_bin = vim.fn.join({vim.fn.expand('$HOME'), '.dotnet', 'tools', 'csharp-ls'}, '/')
   lspconfig.csharp_ls.setup {
     cmd = { csharp_ls_bin },
   }
 
-  -- https://github.com/Hoffs/omnisharp-extended-lsp.nvim
-  -- XXX: but using that `--languageserver` approach just fails autocompletes and docs
-  local pid = vim.fn.getpid()
-  local omnisharp_bin = vim.fn.join({vim.fn.expand('$HOME'), '.cache', 'omnisharp-vim', 'omnisharp-roslyn', 'OmniSharp.exe'}, '/')
+  lspconfig.omnisharp.setup {
+    -- cmd = { '/bin/mono', omnisharp_bin, '--languageserver' , '--hostPID', tostring(pid) },
+    -- cmd = { "dotnet", "/home/mjt/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.dll" },
 
-  require('lspconfig').omnisharp.setup {
+    cmd = { omnisharp_bin, '--languageserver', '--hostPID', tostring(pid) };
+
+    -- https://github.com/Hoffs/omnisharp-extended-lsp.nvim
     handlers = {
       ["textDocument/definition"] = require('omnisharp_extended').handler,
     },
-    -- cmd = { '/bin/mono', omnisharp_bin, '--languageserver' , '--hostPID', tostring(pid) },
-    cmd = { omnisharp_bin, '--languageserver' , '--hostPID', tostring(pid) },
-
-    -- cmd = { "dotnet", "/home/mjt/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.dll" },
 
     -- Enables support for reading code style, naming convention and analyzer
     -- settings from .editorconfig.
