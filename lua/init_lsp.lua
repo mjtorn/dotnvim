@@ -114,6 +114,7 @@ function setup_servers()
   ---- Doesn't cope with submodule project not having *.csproj files
   lspconfig.csharp_ls.setup {
     cmd = { csharp_ls_bin },
+    on_attach = on_attach,
   }
 
   lspconfig.omnisharp.setup {
@@ -162,5 +163,7 @@ function setup_servers()
     -- Only run analyzers against open files when 'enableRoslynAnalyzers' is
     -- true
     analyze_open_documents_only = false,
+
+    on_attach = on_attach,
   }
 end
