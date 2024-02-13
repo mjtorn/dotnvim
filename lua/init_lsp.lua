@@ -121,7 +121,10 @@ function setup_servers()
     -- cmd = { '/bin/mono', omnisharp_bin, '--languageserver' , '--hostPID', tostring(pid) },
     -- cmd = { "dotnet", "/home/mjt/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.dll" },
 
-    cmd = { omnisharp_bin, '--languageserver', '--hostPID', tostring(pid) };
+    ---- Not needed, these are added by lspconfig
+    -- cmd = { omnisharp_bin, '--languageserver', '--hostPID', tostring(pid) };
+
+    cmd = { omnisharp_bin };
 
     -- https://github.com/Hoffs/omnisharp-extended-lsp.nvim
     handlers = {
