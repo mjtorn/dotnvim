@@ -31,5 +31,5 @@ set foldexpr=nvim_treesitter#foldexpr()
 :lua require('init_cmp')
 :lua setup_misc()
 :lua require('init_treesitter')
-:lua setup_cmp()
 :source ~/.config/nvim/config/omnisharp.vim
+:lua setup_cmp()
