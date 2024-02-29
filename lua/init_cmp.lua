@@ -13,7 +13,8 @@ function setup_cmp()
       { name = 'buffer',
         option = { keyword_length = 0 }},
     }, {
-      { name = 'async_path',
+      -- { name = 'async_path',
+      { name = 'path',
         option = { trailing_slash = true }},
     }
     ),
