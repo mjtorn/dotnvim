@@ -38,7 +38,7 @@ hi Todo guifg=#8f8f8f guibg=NONE guisp=NONE gui=NONE ctermfg=245 ctermbg=NONE ct
 hi Special guifg=#E18964 guibg=NONE guisp=NONE gui=NONE ctermfg=173 ctermbg=NONE cterm=NONE
 hi LineNr guifg=#3D3D3D guibg=#000000 guisp=#000000 gui=NONE ctermfg=245 ctermbg=NONE cterm=NONE
 hi StatusLine guifg=#ffffff guibg=#6c6c6c guisp=#202020 ctermfg=256 ctermbg=242 cterm=NONE
-hi Normal guifg=#f6f3e8 guibg=#000000 guisp=#000000 gui=NONE ctermfg=230 ctermbg=NONE cterm=NONE
+hi Normal guifg=#ffffd7 guibg=#000000 guisp=#000000 gui=NONE ctermfg=230 ctermbg=NONE cterm=NONE
 hi Label guifg=#6699CC guibg=NONE guisp=NONE gui=NONE ctermfg=68 ctermbg=NONE cterm=NONE
 "hi CTagsImport -- no settings --
 hi PMenuSel guifg=#000000 guibg=#cae682 guisp=#cae682 gui=NONE ctermfg=NONE ctermbg=150 cterm=NONE
@@ -48,8 +48,8 @@ hi Delimiter guifg=#00A0A0 guibg=NONE guisp=NONE gui=NONE ctermfg=37 ctermbg=NON
 hi Statement guifg=#6699CC guibg=NONE guisp=NONE gui=NONE ctermfg=68 ctermbg=NONE cterm=NONE
 hi SpellRare ctermbg=13 gui=undercurl guisp=Magenta
 "hi EnumerationValue -- no settings --
-hi Comment guifg=#7C7C7C guibg=NONE guisp=NONE gui=NONE ctermfg=lightgreen ctermbg=NONE cterm=NONE
-hi Character guifg=#99CC99 guibg=NONE guisp=NONE gui=NONE ctermfg=151 ctermbg=NONE cterm=NONE
+hi Comment guifg=#87ffaf guibg=NONE guisp=NONE gui=NONE ctermfg=lightgreen ctermbg=NONE cterm=NONE
+hi Character guifg=#afd7af guibg=NONE guisp=NONE gui=NONE ctermfg=151 ctermbg=NONE cterm=NONE
 hi Float guifg=#FF73FD guibg=NONE guisp=NONE gui=NONE ctermfg=207 ctermbg=NONE cterm=NONE
 hi Number guifg=#FF73FD guibg=NONE guisp=NONE gui=NONE ctermfg=207 ctermbg=NONE cterm=NONE
 hi Boolean guifg=#99CC99 guibg=NONE guisp=NONE gui=NONE ctermfg=151 ctermbg=NONE cterm=NONE
@@ -57,7 +57,7 @@ hi Operator guifg=#ffffff guibg=NONE guisp=NONE gui=NONE ctermfg=15 ctermbg=NONE
 hi CursorLine guifg=NONE guibg=#121212 guisp=#121212 gui=NONE ctermfg=NONE ctermbg=233 cterm=NONE
 "hi Union -- no settings --
 hi TabLineFill cterm=reverse gui=reverse
-hi Question ctermfg=121 gui=bold guifg=Green
+hi Question ctermfg=121 gui=bold guifg=#87ffaf
 hi WarningMsg guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=15 ctermbg=9 cterm=NONE
 "hi VisualNOS -- no settings --
 hi DiffDelete ctermfg=12 ctermbg=6 gui=bold guifg=Blue guibg=DarkCyan
@@ -68,8 +68,8 @@ hi Function guifg=#FFD2A7 guibg=NONE guisp=NONE gui=NONE ctermfg=223 ctermbg=NON
 hi FoldColumn ctermfg=14 ctermbg=242 guifg=Cyan guibg=Grey
 hi PreProc guifg=#96CBFE guibg=NONE guisp=NONE gui=NONE ctermfg=117 ctermbg=NONE cterm=NONE
 "hi EnumerationName -- no settings --
-hi Visual guifg=NONE guibg=#262D51 guisp=#262D51 gui=NONE ctermfg=NONE ctermbg=30 cterm=NONE
-hi MoreMsg ctermfg=121 gui=bold guifg=SeaGreen
+hi Visual guifg=NONE guibg=#008787 guisp=#262D51 gui=NONE ctermfg=NONE ctermbg=30 cterm=NONE
+hi MoreMsg ctermfg=121 gui=bold guifg=#87ffaf
 hi SpellCap ctermbg=12 gui=undercurl guisp=Blue
 hi VertSplit guifg=#202020 guibg=#202020 guisp=#202020 gui=NONE ctermfg=234 ctermbg=234 cterm=NONE
 hi Exception guifg=#6699CC guibg=NONE guisp=NONE gui=NONE ctermfg=68 ctermbg=NONE cterm=NONE
@@ -96,7 +96,7 @@ hi Structure guifg=#FFFFB6 guibg=NONE guisp=NONE gui=NONE ctermfg=229 ctermbg=NO
 hi Macro guifg=#96CBFE guibg=NONE guisp=NONE gui=NONE ctermfg=117 ctermbg=NONE cterm=NONE
 hi Underlined cterm=underline ctermfg=81 gui=underline guifg=#80a0ff
 hi DiffAdd ctermbg=4 guibg=DarkBlue
-hi TabLine cterm=underline ctermfg=15 ctermbg=242 gui=underline guibg=DarkGrey
+hi TabLine cterm=underline ctermfg=15 ctermbg=242 gui=underline guifg=#ffffff guibg=#6c6c6c
 hi cursorim guifg=NONE guibg=#90ee90 guisp=#90ee90 gui=NONE ctermfg=NONE ctermbg=120 cterm=NONE
 "hi clear -- no settings --
 hi lcursor guifg=#000000 guibg=#006400 guisp=#006400 gui=NONE ctermfg=NONE ctermbg=22 cterm=NONE
@@ -141,6 +141,9 @@ hi rubycontrol guifg=#6699CC guibg=NONE guisp=NONE gui=NONE ctermfg=68 ctermbg=N
 hi rubyregexp guifg=#B18A3D guibg=NONE guisp=NONE gui=NONE ctermfg=137 ctermbg=NONE cterm=NONE
 hi operator guifg=#ffffff guibg=NONE guisp=NONE gui=NONE ctermfg=15 ctermbg=NONE cterm=NONE
 hi longlinewarning guifg=NONE guibg=#371F1C guisp=#371F1C gui=underline ctermfg=NONE ctermbg=237 cterm=underline
+
+" This was oddly enough not defined
+hi ColorColumn ctermbg=1 guibg=#ff0131
 
 " NeoVim 0.5 lsp stuff, mostly untested
 hi LspDiagnosticsDefaultError guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=15 ctermbg=9 cterm=NONE
