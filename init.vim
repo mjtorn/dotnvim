@@ -1,7 +1,12 @@
 " vim: tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8
 
 let g:python_support_python2_require = 0
-let g:python3_host_prog = $HOME . '/.virtualenvs/nvim-runtime/bin/python3'
+
+if !has_key(environ(), "VIRTUAL_ENV")
+  let g:python3_host_prog = $HOME . '/.virtualenvs/nvim-runtime/bin/python3'
+else
+  let g:python3_host_prog = environ()["VIRTUAL_ENV"] . '/bin/python3'
+endif
 
 runtime bundle/pathogen/autoload/pathogen.vim
 call pathogen#infect()

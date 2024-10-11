@@ -46,7 +46,12 @@ function setup_servers()
 
   -- python
   local pylsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'pylsp', 'g')")
-  local venv = vim.fn.join({vim.fn.expand('$HOME'), '.virtualenvs', 'nvim-runtime'}, '/')
+  local venv
+  if vim.env.VIRTUAL_ENV then
+    venv = vim.env.VIRTUAL_ENV
+  else
+    venv = vim.fn.join({vim.fn.expand('$HOME'), '.virtualenvs', 'nvim-runtime'}, '/')
+  end
 
   -- csharp // `dotnet tool install --global csharp-ls`
   local csharp_ls_bin = vim.fn.join({vim.fn.expand('$HOME'), '.dotnet', 'tools', 'csharp-ls'}, '/')
