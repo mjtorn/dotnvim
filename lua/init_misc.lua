@@ -94,5 +94,7 @@ function setup_misc()
   }
   require('lsp_signature').setup(lsp_signature_cfg)
 
+  require('neogen').setup {}
+
 end
 
