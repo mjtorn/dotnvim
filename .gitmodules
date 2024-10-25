@@ -137,3 +137,6 @@
 [submodule "bundle/obsession"]
 	path = bundle/obsession
 	url = https://github.com/tpope/vim-obsession.git
+[submodule "bundle/neogen"]
+	path = bundle/neogen
+	url = https://github.com/danymat/neogen.git
