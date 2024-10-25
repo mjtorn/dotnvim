@@ -1,42 +1,42 @@
 [submodule "bundle/minibufexpl"]
 	path = bundle/minibufexpl
-	url = git://github.com/fholgado/minibufexpl.vim.git
+	url = https://github.com/fholgado/minibufexpl.vim.git
 [submodule "bundle/nerdtree"]
 	path = bundle/nerdtree
-	url = git://github.com/scrooloose/nerdtree.git
+	url = https://github.com/scrooloose/nerdtree.git
 [submodule "bundle/nerdtree-tabs"]
 	path = bundle/nerdtree-tabs
-	url = git://github.com/jistr/vim-nerdtree-tabs.git
+	url = https://github.com/jistr/vim-nerdtree-tabs.git
 [submodule "bundle/pathogen"]
 	path = bundle/pathogen
-	url = git://github.com/tpope/vim-pathogen.git
+	url = https://github.com/tpope/vim-pathogen.git
 [submodule "bundle/ack"]
 	path = bundle/ack
-	url = git://github.com/mileszs/ack.vim.git
+	url = https://github.com/mileszs/ack.vim.git
 [submodule "bundle/delimitmate"]
 	path = bundle/delimitmate
-	url = git://github.com/Raimondi/delimitMate.git
+	url = https://github.com/Raimondi/delimitMate.git
 [submodule "bundle/coffeescript"]
 	path = bundle/coffeescript
-	url = git://github.com/kchmck/vim-coffee-script.git
+	url = https://github.com/kchmck/vim-coffee-script.git
 [submodule "bundle/python_fn"]
 	path = bundle/python_fn
 	url = https://github.com/mjtorn/python.vim.git
 [submodule "bundle/insertlessly"]
 	path = bundle/insertlessly
-	url = git://github.com/dahu/Insertlessly.git
+	url = https://github.com/dahu/Insertlessly.git
 [submodule "bundle/surround"]
 	path = bundle/surround
 	url = https://github.com/tpope/vim-surround
 [submodule "bundle/commentary"]
 	path = bundle/commentary
-	url = git://github.com/tpope/vim-commentary.git
+	url = https://github.com/tpope/vim-commentary.git
 [submodule "bundle/repeat"]
 	path = bundle/repeat
-	url = git://github.com/tpope/vim-repeat.git
+	url = https://github.com/tpope/vim-repeat.git
 [submodule "bundle/visualstarsearch"]
 	path = bundle/visualstarsearch
-	url = git://github.com/nelstrom/vim-visual-star-search.git
+	url = https://github.com/nelstrom/vim-visual-star-search.git
 [submodule "bundle/emmet"]
 	path = bundle/emmet
 	url = https://github.com/mattn/emmet-vim.git
@@ -101,12 +101,6 @@
 [submodule "bundle/telescope.nvim"]
 	path = bundle/telescope.nvim
 	url = https://github.com/nvim-telescope/telescope.nvim.git
-[submodule "bundle/deoplete"]
-	path = bundle/deoplete
-	url = https://github.com/Shougo/deoplete.nvim.git
-[submodule "bundle/deoplete-lsp"]
-	path = bundle/deoplete-lsp
-	url = https://github.com/deoplete-plugins/deoplete-lsp
 [submodule "bundle/lsp_signature.nvim"]
 	path = bundle/lsp_signature.nvim
 	url = https://github.com/ray-x/lsp_signature.nvim.git
@@ -122,3 +116,24 @@
 [submodule "bundle/docgen"]
 	path = bundle/docgen
 	url = https://github.com/mg979/docgen.vim.git
+[submodule "bundle/nvim-cmp"]
+	path = bundle/nvim-cmp
+	url = https://github.com/hrsh7th/nvim-cmp.git
+[submodule "bundle/cmp-nvim-lsp"]
+	path = bundle/cmp-nvim-lsp
+	url = https://github.com/hrsh7th/cmp-nvim-lsp
+[submodule "bundle/cmp-buffer"]
+	path = bundle/cmp-buffer
+	url = https://github.com/hrsh7th/cmp-buffer.git
+[submodule "bundle/omnisharp-extended-lsp"]
+	path = bundle/omnisharp-extended-lsp
+	url = https://github.com/Hoffs/omnisharp-extended-lsp.nvim.git
+[submodule "bundle/cmp-async-path"]
+	path = bundle/cmp-async-path
+	url = https://github.com/FelipeLema/cmp-async-path.git
+[submodule "bundle/cmp-path"]
+	path = bundle/cmp-path
+	url = https://github.com/hrsh7th/cmp-path/
+[submodule "bundle/abolish"]
+	path = bundle/abolish
+	url = https://github.com/tpope/vim-abolish.git

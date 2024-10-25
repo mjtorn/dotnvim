@@ -1,5 +1,5 @@
 require('nvim-treesitter.configs').setup {
-  ensure_installed = { "c_sharp", "lua", "python", "rust" },
+  ensure_installed = { "c_sharp", "lua", "python", "rust", "vimdoc" },
   ignore_install = { }, -- List of parsers to ignore installing
   highlight = {
     enable = true,              -- false will disable the whole extension

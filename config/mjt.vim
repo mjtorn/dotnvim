@@ -176,6 +176,16 @@ function! Hex2dec(arg)
   return (a:arg =~? '^0x') ? a:arg + 0 : ('0x'.a:arg) + 0
 endfunction
 
+"" https://github.com/lettertwo/config/blob/0b56ed8f5b0e8c1186ca29cbf8623ed64976568e/nvim/lua/util/init.lua#L19
+"" https://github.com/lettertwo/config/blob/0b56ed8f5b0e8c1186ca29cbf8623ed64976568e/nvim/lua/config/keymaps.lua#L32
+function! CloseFloats()
+  for win in nvim_list_wins()
+    if nvim_win_get_config(win)['relative'] == 'editor'
+      call nvim_win_close(win, 0)
+    endif
+  endfor
+endfunction
+
 :source ~/.config/nvim/config/colors.vim
 :source ~/.config/nvim/config/mjthl.vim
 :source ~/.config/nvim/config/mjttab.vim
@@ -183,11 +193,8 @@ endfunction
 :source ~/.config/nvim/config/mjtmaps.vim
 :source ~/.config/nvim/config/statusline.vim
 :source ~/.config/nvim/config/tabline.vim
-:source ~/.config/nvim/config/omnisharp.vim
-" XXX: These don't seem to work, they're here to remind me they should
-:lua require('init_lsp')
-:lua setup_servers()
-:lua require('init_treesitter')
 
-" EOF
+" It's me, Pydoc!
+let g:pydoc_cmd = 'python -m pydoc'
+let g:pydoc_open_cmd = 'split'
 
