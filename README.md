@@ -17,6 +17,14 @@ git submodule update --recursive --merge
 mkdir undo
 ```
 
+### Obsession
+All you need is to kick off `:Obsession` when you're
+doing things to create `Session.vim`.
+
+Currently if no files (unfortunately this applies to
+other `argv()` too) are given, and the file exists,
+it's sourced automatically.
+
 ### NeoVim 0.5 neophilia
 
 Your undo will be broken, run `rm -rf ~/.config/nvim/undo/*`
