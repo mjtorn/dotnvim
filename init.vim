@@ -28,6 +28,14 @@ func! LoadLocalConf()
   endif
 endfunc
 
+func! LoadSession()
+  if argv() == []
+    if findfile("Session.vim") == "Session.vim"
+      source Session.vim
+    endif
+  endif
+endfunc
+
 " So vim-git works etc
 let mapleader=","
 
@@ -127,6 +135,9 @@ autocmd BufRead,BufNewFile,BufEnter *.isaac.txt set filetype=escoria
 
 " Local configurations
 call LoadLocalConf()
+
+" Local session
+call LoadSession()
 
 "" This sources everything else I want
 :source ~/.config/nvim/config/mjt.vim
