@@ -113,9 +113,6 @@
 [submodule "bundle/nvim-treesitter-refactor"]
 	path = bundle/nvim-treesitter-refactor
 	url = https://github.com/nvim-treesitter/nvim-treesitter-refactor.git
-[submodule "bundle/docgen"]
-	path = bundle/docgen
-	url = https://github.com/mg979/docgen.vim.git
 [submodule "bundle/nvim-cmp"]
 	path = bundle/nvim-cmp
 	url = https://github.com/hrsh7th/nvim-cmp.git
@@ -140,3 +137,6 @@
 [submodule "bundle/obsession"]
 	path = bundle/obsession
 	url = https://github.com/tpope/vim-obsession.git
+[submodule "bundle/neogen"]
+	path = bundle/neogen
+	url = https://github.com/danymat/neogen.git

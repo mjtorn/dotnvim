@@ -135,11 +135,11 @@ map <F9> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<
   \ . synIDattr(synID(line("."),col("."),0),"name") . "> lo<"
   \ . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<CR>
 
-"" docgen.vim
-nmap <Leader>d <Plug>(DocGen)
-nmap <Leader>D <Plug>(DocGen!)
-nmap <Leader>x <Plug>(DocBox)
-nmap <Leader>X <Plug>(DocBox!)
+"" neogen
+nmap <Leader>d :lua require('neogen').generate()<CR>
+nmap <Leader>D :lua require('neogen').generate({ type = 'class' })<CR>
+nmap <Leader>x :lua require('neogen').generate({ type = 'type' })<CR>
+nmap <Leader>X :lua require('neogen').generate({ type = 'file' })<CR>
 
 "" That floater-killer
 nmap <Esc> :call CloseFloats()<CR>
