@@ -25,6 +25,8 @@ autocmd FileType html,css EmmetInstall
 set foldmethod=expr
 set foldexpr=nvim_treesitter#foldexpr()
 
+let g:riv_python_rst_hl = 1
+
 " Here's to hipsterism!
 :lua require('init_lsp')
 :lua require('init_misc')

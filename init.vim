@@ -136,6 +136,13 @@ autocmd BufRead,BufNewFile,BufEnter *.isaac.txt set filetype=escoria
 " Local configurations
 call LoadLocalConf()
 
+" Sessions may contain RST, and have the ftplugin loaded
+" before the autoload happens, which initializes certain
+" variables, meaning we have to init riv first just in case
+" set runtimepath^=~/.config/nvim/bundle/riv/autoload
+runtime! ~/.config/nvim/bundle/riv/autoload/riv.vim
+call riv#init()
+
 " Local session
 call LoadSession()
 
