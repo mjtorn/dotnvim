@@ -10,8 +10,12 @@ function setup_cmp()
     sources = cmp.config.sources({
       { name = 'nvim_lsp' },
     }, {
-      { name = 'buffer',
-        option = { keyword_length = 0 }},
+      {
+        name = 'buffer',
+        option = {
+          keyword_length = 3,
+        }
+      },
     }, {
       -- { name = 'async_path',
       { name = 'path',
