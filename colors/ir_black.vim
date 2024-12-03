@@ -144,7 +144,7 @@ hi longlinewarning guifg=NONE guibg=#371F1C guisp=#371F1C gui=underline ctermfg=
 hi @variable guifg=NONE
 
 " This was oddly enough not defined
-hi ColorColumn ctermbg=1 guibg=#ff0131
+hi ColorColumn cterm=NONE ctermbg=1 ctermfg=0 guibg=#ff0000 guifg=#000000
 
 " NeoVim 0.5 lsp stuff, mostly untested
 hi LspDiagnosticsDefaultError guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=15 ctermbg=9 cterm=NONE
