@@ -148,7 +148,7 @@ hi StatusLineNC guifg=NONE guibg=#202020 guisp=#202020 gui=NONE ctermfg=NONE cte
 hi TabLine guifg=#ffffff guibg=#6c6c6c gui=underline ctermfg=15 ctermbg=242 cterm=underline
 " That reverse crap didn't really work, adapt explicitly from Normal
 hi TabLineFill guifg=#000000 guibg=#ffffd7 guisp=#000000 gui=NONE ctermfg=NONE ctermbg=230 cterm=NONE
-hi TabLineSel guifg=#ffffd7 guibg=#000000 gui=bold ctermfg=15 ctermbg=0 cterm=bold
+hi TabLineSel guifg=#ffffd7 guibg=#000000 gui=bold ctermfg=230 ctermbg=0 cterm=bold
 
 " NeoVim 0.5 lsp stuff, mostly untested
 hi LspDiagnosticsDefaultError guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=15 ctermbg=9 cterm=NONE
