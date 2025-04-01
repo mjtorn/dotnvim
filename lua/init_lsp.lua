@@ -44,6 +44,80 @@ function setup_servers()
 
   local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
+  vim.diagnostic.config({
+    -- Use the default configuration
+    -- virtual_lines = true
+
+    -- Alternatively, customize specific options
+    virtual_lines = {
+      -- Only show virtual line diagnostics for the current cursor line
+      current_line = true
+    }
+  })
+
+  -- Adapted from
+  -- https://gist.github.com/crwebb85/fda79b17a7df8517d5ae0a1cc7722611
+  vim.api.nvim_create_user_command('QFLspDiagnostics', function(args)
+      if args.args == 'ERROR' then
+          vim.diagnostic.setqflist({ severity = vim.diagnostic.severity.ERROR, open = false })
+      elseif args.args == 'WARN' then
+          vim.diagnostic.setqflist({ severity = vim.diagnostic.severity.WARN, open = false })
+      elseif args.args == 'HINT' then
+          vim.diagnostic.setqflist({ severity = vim.diagnostic.severity.HINT, open = false })
+      elseif args.args == 'INFO' then
+          vim.diagnostic.setqflist({ severity = vim.diagnostic.severity.INFO, open = false })
+      else
+          vim.diagnostic.setqflist({ open = false })
+      end
+  end, {
+      desc = 'Adds lsp diagnostic to the Quickfix list',
+      complete = function() return { 'ERROR', 'WARN', 'HINT', 'INFO' } end,
+      nargs = '?',
+  })
+
+  vim.api.nvim_create_user_command('LocLspDiagnostics', function(args)
+      if args.args == 'ERROR' then
+          vim.diagnostic.setloclist({ severity = vim.diagnostic.severity.ERROR, open = false })
+      elseif args.args == 'WARN' then
+          vim.diagnostic.setloclist({ severity = vim.diagnostic.severity.WARN, open = false })
+      elseif args.args == 'HINT' then
+          vim.diagnostic.setloclist({ severity = vim.diagnostic.severity.HINT, open = false })
+      elseif args.args == 'INFO' then
+          vim.diagnostic.setloclist({ severity = vim.diagnostic.severity.INFO, open = false })
+      else
+          vim.diagnostic.setloclist({ open = false })
+      end
+
+  end, {
+      desc = 'Adds lsp diagnostic to the Location list',
+      complete = function() return { 'ERROR', 'WARN', 'HINT', 'INFO' } end,
+      nargs = '?',
+  })
+
+  vim.api.nvim_create_autocmd("BufEnter", {
+    pattern = "*",
+    callback = function()
+      vim.cmd("LocLspDiagnostics")
+    end
+  })
+
+  vim.api.nvim_create_autocmd("DiagnosticChanged", {
+    pattern = "*",
+    callback = function()
+      vim.cmd("LocLspDiagnostics")
+    end
+  })
+
+  -- FIXME I think a handler might make more sense but cba wrt time now
+  -- vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
+  --   vim.lsp.diagnostic.on_publish_diagnostics,
+  --   {},
+  --   function(err, result, ctx, config)
+  --     vim.cmd("echo 'lol'")
+  --     vim.cmd("LocLspDiagnostics")
+  --   end
+  -- )
+
   -- python
   local pylsp = vim.api.nvim_eval("substitute(g:python3_host_prog, 'python3$', 'pylsp', 'g')")
   local venv
