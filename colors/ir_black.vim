@@ -20,7 +20,6 @@ hi Title guifg=#f6f3e8 guibg=NONE guisp=NONE gui=bold ctermfg=230 ctermbg=NONE c
 hi Folded guifg=#a0a8b0 guibg=#384048 guisp=#384048 gui=NONE ctermfg=103 ctermbg=238 cterm=NONE
 hi PreCondit guifg=#96CBFE guibg=NONE guisp=NONE gui=NONE ctermfg=117 ctermbg=NONE cterm=NONE
 hi Include guifg=#96CBFE guibg=NONE guisp=NONE gui=NONE ctermfg=117 ctermbg=NONE cterm=NONE
-"hi TabLineSel -- no settings --
 hi StatusLineNC guifg=NONE guibg=#202020 guisp=#202020 gui=NONE ctermfg=NONE ctermbg=NONE cterm=NONE
 "hi CTagsMember -- no settings --
 hi NonText guifg=#070707 guibg=#000000 guisp=#000000 gui=NONE ctermfg=232 ctermbg=NONE cterm=NONE
@@ -56,7 +55,6 @@ hi Boolean guifg=#99CC99 guibg=NONE guisp=NONE gui=NONE ctermfg=151 ctermbg=NONE
 hi Operator guifg=#ffffff guibg=NONE guisp=NONE gui=NONE ctermfg=15 ctermbg=NONE cterm=NONE
 hi CursorLine guifg=NONE guibg=#121212 guisp=#121212 gui=NONE ctermfg=NONE ctermbg=233 cterm=NONE
 "hi Union -- no settings --
-hi TabLineFill cterm=reverse gui=reverse
 hi Question ctermfg=121 gui=bold guifg=#87ffaf
 hi WarningMsg guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=15 ctermbg=9 cterm=NONE
 "hi VisualNOS -- no settings --
@@ -96,7 +94,6 @@ hi Structure guifg=#FFFFB6 guibg=NONE guisp=NONE gui=NONE ctermfg=229 ctermbg=NO
 hi Macro guifg=#96CBFE guibg=NONE guisp=NONE gui=NONE ctermfg=117 ctermbg=NONE cterm=NONE
 hi Underlined cterm=underline ctermfg=81 gui=underline guifg=#80a0ff
 hi DiffAdd ctermbg=4 guibg=DarkBlue
-hi TabLine cterm=underline ctermfg=15 ctermbg=242 gui=underline guifg=#ffffff guibg=#6c6c6c
 hi cursorim guifg=NONE guibg=#90ee90 guisp=#90ee90 gui=NONE ctermfg=NONE ctermbg=120 cterm=NONE
 "hi clear -- no settings --
 hi lcursor guifg=#000000 guibg=#006400 guisp=#006400 gui=NONE ctermfg=NONE ctermbg=22 cterm=NONE
@@ -145,6 +142,11 @@ hi @variable guifg=NONE
 
 " This was oddly enough not defined
 hi ColorColumn cterm=NONE ctermbg=1 ctermfg=0 guibg=#ff0000 guifg=#000000
+
+" Tab line causes grief with 0.11, group together
+hi TabLine cterm=underline ctermfg=15 ctermbg=242 gui=underline guifg=#ffffff guibg=#6c6c6c
+hi TabLineFill cterm=reverse gui=reverse
+"hi TabLineSel -- no settings --
 
 " NeoVim 0.5 lsp stuff, mostly untested
 hi LspDiagnosticsDefaultError guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=15 ctermbg=9 cterm=NONE
