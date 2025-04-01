@@ -94,14 +94,7 @@ function setup_servers()
       nargs = '?',
   })
 
-  vim.api.nvim_create_autocmd("BufEnter", {
-    pattern = "*",
-    callback = function()
-      vim.cmd("LocLspDiagnostics")
-    end
-  })
-
-  vim.api.nvim_create_autocmd("DiagnosticChanged", {
+  vim.api.nvim_create_autocmd({"BufEnter", "DiagnosticChanged"}, {
     pattern = "*",
     callback = function()
       vim.cmd("LocLspDiagnostics")
