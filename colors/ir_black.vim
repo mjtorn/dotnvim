@@ -20,7 +20,6 @@ hi Title guifg=#f6f3e8 guibg=NONE guisp=NONE gui=bold ctermfg=230 ctermbg=NONE c
 hi Folded guifg=#a0a8b0 guibg=#384048 guisp=#384048 gui=NONE ctermfg=103 ctermbg=238 cterm=NONE
 hi PreCondit guifg=#96CBFE guibg=NONE guisp=NONE gui=NONE ctermfg=117 ctermbg=NONE cterm=NONE
 hi Include guifg=#96CBFE guibg=NONE guisp=NONE gui=NONE ctermfg=117 ctermbg=NONE cterm=NONE
-hi StatusLineNC guifg=NONE guibg=#202020 guisp=#202020 gui=NONE ctermfg=NONE ctermbg=NONE cterm=NONE
 "hi CTagsMember -- no settings --
 hi NonText guifg=#070707 guibg=#000000 guisp=#000000 gui=NONE ctermfg=232 ctermbg=NONE cterm=NONE
 "hi CTagsGlobalConstant -- no settings --
@@ -36,7 +35,6 @@ hi StorageClass guifg=#FFFFB6 guibg=NONE guisp=NONE gui=NONE ctermfg=229 ctermbg
 hi Todo guifg=#8f8f8f guibg=NONE guisp=NONE gui=NONE ctermfg=245 ctermbg=NONE cterm=NONE
 hi Special guifg=#E18964 guibg=NONE guisp=NONE gui=NONE ctermfg=173 ctermbg=NONE cterm=NONE
 hi LineNr guifg=#8a8a8a guibg=#000000 guisp=#000000 gui=NONE ctermfg=245 ctermbg=NONE cterm=NONE
-hi StatusLine guifg=#ffffff guibg=#6c6c6c guisp=#202020 ctermfg=256 ctermbg=242 cterm=NONE
 hi Normal guifg=#ffffd7 guibg=#000000 guisp=#000000 gui=NONE ctermfg=230 ctermbg=NONE cterm=NONE
 hi Label guifg=#6699CC guibg=NONE guisp=NONE gui=NONE ctermfg=68 ctermbg=NONE cterm=NONE
 "hi CTagsImport -- no settings --
@@ -143,10 +141,14 @@ hi @variable guifg=NONE
 " This was oddly enough not defined
 hi ColorColumn cterm=NONE ctermbg=1 ctermfg=0 guibg=#ff0000 guifg=#000000
 
+hi StatusLine guifg=#ffffff guibg=#6c6c6c guisp=#202020 ctermfg=256 ctermbg=242 cterm=NONE
+hi StatusLineNC guifg=NONE guibg=#202020 guisp=#202020 gui=NONE ctermfg=NONE ctermbg=NONE cterm=NONE
+
 " Tab line causes grief with 0.11, group together
-hi TabLine cterm=underline ctermfg=15 ctermbg=242 gui=underline guifg=#ffffff guibg=#6c6c6c
-hi TabLineFill cterm=reverse gui=reverse
-"hi TabLineSel -- no settings --
+hi TabLine guifg=#ffffff guibg=#6c6c6c gui=underline ctermfg=15 ctermbg=242 cterm=underline
+" That reverse crap didn't really work, adapt explicitly from Normal
+hi TabLineFill guifg=#000000 guibg=#ffffd7 guisp=#000000 gui=NONE ctermfg=230 ctermbg=NONE cterm=NONE
+hi TabLineSel guifg=#ffffd7 guibg=#000000 gui=bold ctermfg=15 ctermbg=242 cterm=bold
 
 " NeoVim 0.5 lsp stuff, mostly untested
 hi LspDiagnosticsDefaultError guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=15 ctermbg=9 cterm=NONE
