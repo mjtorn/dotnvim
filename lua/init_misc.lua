@@ -1,3 +1,35 @@
+function next_location()
+    local curr_line = vim.api.nvim_win_get_cursor(0)[1]
+    local items = vim.fn.getloclist(0)
+    local idx = 0
+    local item_lnum = -1
+
+    if #items == 0 then
+      return
+    end
+
+    for i, item in ipairs(items) do
+        -- vim.cmd(":echom 'item.lnum " .. item.lnum .. " / " .. curr_line .."'")
+        if item.lnum > curr_line then
+            idx = i
+            item_lnum = item.lnum
+            break
+        end
+    end
+    -- vim.cmd(":echom 'idx first " .. idx .. "'")
+    if idx == 0 then
+        idx = 1
+    elseif idx == #items and item_lnum == curr_line + 1 then
+        idx = 1
+    else
+        idx = idx + 1
+    end
+    -- vim.cmd(":echom 'idx " .. idx .. "'")
+    vim.cmd("ll " .. idx)
+end
+
+vim.api.nvim_set_keymap("n", "gl", ":lua next_location()<CR>", { noremap = true })
+
 function setup_misc()
   -- All this hackery should make magic snippets work.
   local capabilities = vim.lsp.protocol.make_client_capabilities()
