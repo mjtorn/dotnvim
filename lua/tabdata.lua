@@ -17,6 +17,51 @@ function max_length(lines)
   return max_length
 end
 
+function get_tab_mapping()
+  local tab_mapping = {}
+  local tab_pages = vim.api.nvim_list_tabpages()
+
+  for i, tab_page in ipairs(tab_pages) do
+    local tab_number = vim.api.nvim_tabpage_get_number(tab_page)
+    tab_mapping[tab_number] = tab_page
+  end
+
+  -- print(vim.inspect(tab_mapping))
+  return tab_mapping
+end
+
+function open_prev(tabnr)
+  local mapping = get_tab_mapping()
+
+  -- The internal number must become something manageable
+  local tabord = vim.api.nvim_tabpage_get_number(tabnr)
+  local prevord = tabord - 1
+
+  if prevord == 0 then
+    prevord = #mapping
+  end
+
+  vim.api.nvim_win_close(tabdata_win, force_close)
+  tabdata_win = nil
+  tabdata(mapping[prevord])
+end
+
+function open_next(tabnr)
+  local mapping = get_tab_mapping()
+
+  -- The internal number must become something manageable
+  local tabord = vim.api.nvim_tabpage_get_number(tabnr)
+  local nextord = tabord + 1
+
+  if nextord == #mapping + 1 then
+    nextord = 1
+  end
+
+  vim.api.nvim_win_close(tabdata_win, force_close)
+  tabdata_win = nil
+  tabdata(mapping[nextord])
+end
+
 function list_buffers_in_tab(tabnr)
   local tabord = vim.api.nvim_tabpage_get_number(tabnr)
   local wins = vim.api.nvim_tabpage_list_wins(tabnr)
@@ -53,6 +98,14 @@ function tabdata(tabnr)
   local popup_buf_start = 0;
   local popup_buf_end = -1;  -- all the way to the end
 
+  -- Ensure cleanliness
+
+  if validate_winnr(tabdata_win) then
+    vim.api.nvim_win_close(tabdata_win, force_close)
+    tabdata_win = nil
+  end
+
+  -- Get to it
   local lines = list_buffers_in_tab(tabnr)
   local bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
 
@@ -72,6 +125,10 @@ function tabdata(tabnr)
 
   vim.api.nvim_win_set_option(tabdata_win, "winhl", "Normal:Normal") -- Reset highlight for normal lines
   vim.api.nvim_buf_add_highlight(bufnr, -1, "TabDataTitle", 0, 0, -1) -- Highlight title line
+
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<", ":lua open_prev(" .. tabnr .. ")<CR>", { noremap = false })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", ">", ":lua open_next(".. tabnr .. ")<CR>", { noremap = false })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "g", ":echo 'g'<CR>", { noremap = false })
 
   -- A temporary autocmd which will close the popup when moving out
   autocmd_id = vim.api.nvim_create_autocmd("CursorMoved", {
@@ -95,4 +152,4 @@ function tabdata(tabnr)
   })
 end
 
-vim.api.nvim_set_keymap("n", "<Leader>Tp", ":lua tabdata(vim.api.nvim_get_current_tabpage())<CR>", { noremap = false }) -- 0 is current
+vim.api.nvim_set_keymap("n", "<Leader>tn", ":lua tabdata(vim.api.nvim_get_current_tabpage())<CR>", { noremap = false }) -- 0 is current
