@@ -1,7 +1,8 @@
 -- vim: ts=2 sts=2 sw=2 et ai
 
+-- Some TabDataTitle highlight configuration is nice to have in the conf
+
 local tabdata_win = nil;
-vim.api.nvim_set_hl(0, "TabDataTitle", { fg = "#ff00ff", bg = "#000000" }) -- Set title highlight
 
 function validate_winnr(winnr)
   return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
@@ -17,7 +18,7 @@ function max_length(lines)
   return max_length
 end
 
-function get_tab_mapping()
+local function get_tab_mapping()
   local tab_mapping = {}
   local tab_pages = vim.api.nvim_list_tabpages()
 
@@ -41,6 +42,7 @@ function open_prev(tabnr)
     prevord = #mapping
   end
 
+  -- vim.cmd(":tabprev")
   vim.api.nvim_win_close(tabdata_win, force_close)
   tabdata_win = nil
   tabdata(mapping[prevord])
@@ -57,12 +59,24 @@ function open_next(tabnr)
     nextord = 1
   end
 
+  -- vim.cmd(":tabnext")
   vim.api.nvim_win_close(tabdata_win, force_close)
   tabdata_win = nil
   tabdata(mapping[nextord])
 end
 
-function list_buffers_in_tab(tabnr)
+function go(tabnr)
+  local mapping = get_tab_mapping()
+
+  -- The internal number must become something manageable
+  local tabord = vim.api.nvim_tabpage_get_number(tabnr)
+
+  vim.api.nvim_win_close(tabdata_win, force_close)
+  tabdata_win = nil
+  vim.cmd(":tabnext " .. tabord)
+end
+
+local function list_buffers_in_tab(tabnr)
   local tabord = vim.api.nvim_tabpage_get_number(tabnr)
   local wins = vim.api.nvim_tabpage_list_wins(tabnr)
 
@@ -88,7 +102,7 @@ end
 
 function tabdata(tabnr)
   -- This would be an internal nr
-  print(tabnr)
+  -- print(tabnr)
 
   -- These should never really be changed
   local is_listed = false;
@@ -128,7 +142,7 @@ function tabdata(tabnr)
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "<", ":lua open_prev(" .. tabnr .. ")<CR>", { noremap = false })
   vim.api.nvim_buf_set_keymap(bufnr, "n", ">", ":lua open_next(".. tabnr .. ")<CR>", { noremap = false })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "g", ":echo 'g'<CR>", { noremap = false })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "G", ":lua go(" .. tabnr .. ")<CR>", { noremap = false })
 
   -- A temporary autocmd which will close the popup when moving out
   autocmd_id = vim.api.nvim_create_autocmd("CursorMoved", {
