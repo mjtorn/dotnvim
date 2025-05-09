@@ -160,3 +160,5 @@ hi LspDiagnosticsSignError guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ct
 hi LspDiagnosticsSignWarning guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=9 ctermbg=NONE cterm=NONE
 hi LspDiagnosticsSignInformation guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=173 ctermbg=NONE cterm=NONE
 hi LspDiagnosticsSignHint guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=232 ctermbg=NONE cterm=NONE
+
+hi TabNavTitle guifg=#ff00ff guibg=#000000
