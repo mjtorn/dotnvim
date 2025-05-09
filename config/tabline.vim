@@ -28,7 +28,8 @@ function! CreateTabLine()
 
   for i in range(tabpagenr('$'))
     " Tab page number
-    let tpn = '[' . i . ']'
+    let realnum = i + 1
+    let tpn = '[' . realnum . ']'
 
     " This determines if we are active
     if i + 1 == tabpagenr()
