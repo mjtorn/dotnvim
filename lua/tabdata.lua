@@ -3,12 +3,27 @@
 local tabdata_win = nil;
 vim.api.nvim_set_hl(0, "TabDataTitle", { fg = "#ff00ff", bg = "#000000" }) -- Set title highlight
 
+function validate_winnr(winnr)
+  return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
+end
+
+function max_length(lines)
+  local max_length = 0
+
+  for _, line in ipairs(lines) do
+    max_length = math.max(max_length, #line)
+  end
+
+  return max_length
+end
+
 function list_buffers_in_tab(tabnr)
   local tabord = vim.api.nvim_tabpage_get_number(tabnr)
   local wins = vim.api.nvim_tabpage_list_wins(tabnr)
 
   local lines = {}
-  table.insert(lines, 1, string.format("Buffers in Tab %d", tabord)) -- Add title line
+  table.insert(lines, string.format("Buffers in tab %d", tabord)) -- Add title line
+  table.insert(lines, " ")  -- Newlines not welcome
 
   for _, win in ipairs(wins) do
     local bufnr = vim.api.nvim_win_get_buf(win)
@@ -26,12 +41,8 @@ function list_buffers_in_tab(tabnr)
   return lines
 end
 
-function validate_winnr(winnr)
-  return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
-end
-
-function tabdata()
-  local tabnr = vim.api.nvim_get_current_tabpage()  -- This would be an internal nr
+function tabdata(tabnr)
+  -- This would be an internal nr
   print(tabnr)
 
   -- These should never really be changed
@@ -47,12 +58,13 @@ function tabdata()
 
   vim.api.nvim_buf_set_lines(bufnr, popup_buf_start, popup_buf_end, strict_popup_lines, lines)
 
+  local width = max_length(lines)
   tabdata_win = vim.api.nvim_open_win(bufnr, autoenter, {
     relative = "editor",
-    width = 60,
-    height = 10,
-    col = (vim.opt.columns:get() - 60) / 2,
-    row = (vim.opt.lines:get() - 10) / 2,
+    width = width,
+    height = #lines,
+    col = (vim.opt.columns:get() - width) / 2,
+    row = 1,
     style = "minimal",
     border = "rounded",
     focusable = false,
@@ -83,4 +95,4 @@ function tabdata()
   })
 end
 
-vim.api.nvim_set_keymap("n", "<Leader>Tp", ":lua tabdata()<CR>", { noremap = false }) -- 0 is current
+vim.api.nvim_set_keymap("n", "<Leader>Tp", ":lua tabdata(vim.api.nvim_get_current_tabpage())<CR>", { noremap = false }) -- 0 is current
