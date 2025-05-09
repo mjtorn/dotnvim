@@ -1,6 +1,6 @@
 -- vim: ts=2 sts=2 sw=2 et ai
 
--- Some TabDataTitle highlight configuration is nice to have in the conf
+-- Some TabNavTitle highlight configuration is nice to have in the conf
 
 local tabdata_win = nil;
 
@@ -138,7 +138,7 @@ function tabdata(tabnr)
   })
 
   vim.api.nvim_win_set_option(tabdata_win, "winhl", "Normal:Normal") -- Reset highlight for normal lines
-  vim.api.nvim_buf_add_highlight(bufnr, -1, "TabDataTitle", 0, 0, -1) -- Highlight title line
+  vim.api.nvim_buf_add_highlight(bufnr, -1, "TabNavTitle", 0, 0, -1) -- Highlight title line
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "<", ":lua open_prev(" .. tabnr .. ")<CR>", { noremap = false })
   vim.api.nvim_buf_set_keymap(bufnr, "n", ">", ":lua open_next(".. tabnr .. ")<CR>", { noremap = false })

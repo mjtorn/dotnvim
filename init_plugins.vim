@@ -36,4 +36,4 @@ let g:riv_python_rst_hl = 1
 :source ~/.config/nvim/config/omnisharp.vim
 :lua setup_cmp()
 
-:lua require('tabdata')
+:lua require('tabnav')
