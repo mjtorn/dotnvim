@@ -66,6 +66,12 @@ function open_next(tabnr)
 end
 
 function go(tabnr)
+  -- The buffer opens on line 2 by default and we only have the heading before it
+  if vim.api.nvim_win_get_cursor(0)[1] > 2 then
+    print("TODO: Wouldn't it be fun to have buffer selection too?")
+    return
+  end
+
   local mapping = get_tab_mapping()
 
   -- The internal number must become something manageable
@@ -143,6 +149,7 @@ function tabdata(tabnr)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "<", ":lua open_prev(" .. tabnr .. ")<CR>", { noremap = false })
   vim.api.nvim_buf_set_keymap(bufnr, "n", ">", ":lua open_next(".. tabnr .. ")<CR>", { noremap = false })
   vim.api.nvim_buf_set_keymap(bufnr, "n", "G", ":lua go(" .. tabnr .. ")<CR>", { noremap = false })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>", ":lua go(" .. tabnr .. ")<CR>", { noremap = false })
 
   -- A temporary autocmd which will close the popup when moving out
   autocmd_id = vim.api.nvim_create_autocmd("CursorMoved", {
@@ -166,4 +173,4 @@ function tabdata(tabnr)
   })
 end
 
-vim.api.nvim_set_keymap("n", "<Leader>tn", ":lua tabdata(vim.api.nvim_get_current_tabpage())<CR>", { noremap = false }) -- 0 is current
+vim.api.nvim_set_keymap("n", "<Leader>,", ":lua tabdata(vim.api.nvim_get_current_tabpage())<CR>", { noremap = false }) -- 0 is current
