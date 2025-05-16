@@ -2,6 +2,8 @@
 
 -- Some TabNavTitle highlight configuration is nice to have in the conf
 
+vim.g.tabnav_open = 0
+
 local tabdata_win = nil;
 
 function validate_winnr(winnr)
@@ -42,7 +44,10 @@ function open_prev(tabnr)
     prevord = #mapping
   end
 
-  -- vim.cmd(":tabprev")
+  if vim.g.tabnav_open == 1 then
+    vim.cmd(":tabprev")
+  end
+
   vim.api.nvim_win_close(tabdata_win, force_close)
   tabdata_win = nil
   tabdata(mapping[prevord])
@@ -59,7 +64,10 @@ function open_next(tabnr)
     nextord = 1
   end
 
-  -- vim.cmd(":tabnext")
+  if vim.g.tabnav_open == 1 then
+    vim.cmd(":tabnext")
+  end
+
   vim.api.nvim_win_close(tabdata_win, force_close)
   tabdata_win = nil
   tabdata(mapping[nextord])
@@ -174,3 +182,4 @@ function tabdata(tabnr)
 end
 
 vim.api.nvim_set_keymap("n", "<Leader>,", ":lua tabdata(vim.api.nvim_get_current_tabpage())<CR>", { noremap = false }) -- 0 is current
+vim.api.nvim_set_keymap("n", "<Leader>;", ":lua vim.g.tabnav_open = vim.g.tabnav_open == 0 and 1 or 0<CR>", { noremap = false }) -- 0 is current
