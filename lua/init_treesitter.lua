@@ -9,9 +9,7 @@ require('nvim-treesitter.configs').setup {
   incremental_selection = { enable = true },
   textobjects = { enable = true },
   indent = { enable = true },
-}
-
-require('nvim-treesitter.configs').setup {
+  fold = { enable = true },
   refactor = {
     highlight_definitions = { enable = false },
     highlight_current_scope = { enable = false },
