@@ -140,6 +140,3 @@
 [submodule "bundle/vim-javascript"]
 	path = bundle/vim-javascript
 	url = https://github.com/pangloss/vim-javascript.git
-[submodule "bundle/nvim-treesitter-pyfold"]
-	path = bundle/nvim-treesitter-pyfold
-	url = https://github.com/eddiebergman/nvim-treesitter-pyfold.git

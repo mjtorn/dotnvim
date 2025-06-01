@@ -22,8 +22,9 @@ let g:user_emmet_install_global = 0
 autocmd FileType html,css EmmetInstall
 
 " treesitter
+" https://github.com/neovim/neovim/issues/32675#issuecomment-2690131055
 set foldmethod=expr
-set foldexpr=nvim_treesitter#foldexpr()
+set foldexpr=v:lua.vim.treesitter.foldexpr()
 
 let g:riv_python_rst_hl = 1
 
