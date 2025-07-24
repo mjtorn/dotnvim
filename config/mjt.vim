@@ -198,3 +198,7 @@ endfunction
 let g:pydoc_cmd = 'python -m pydoc'
 let g:pydoc_open_cmd = 'split'
 
+" Really force tree-sitter because opening files only through telescope rocks
+" but nothing else does
+autocmd FileType * set foldexpr=v:lua.vim.treesitter.foldexpr()
+autocmd FileType * set foldmethod=expr
