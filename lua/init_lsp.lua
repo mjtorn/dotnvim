@@ -46,14 +46,64 @@ function setup_servers()
 
   vim.diagnostic.config({
     -- Use the default configuration
-    -- virtual_lines = true
+    virtual_lines = false
 
     -- Alternatively, customize specific options
-    virtual_lines = {
-      -- Only show virtual line diagnostics for the current cursor line
-      current_line = true
-    }
+    -- virtual_lines = {
+    --   -- Only show virtual line diagnostics for the current cursor line
+    --   current_line = true
+    -- }
   })
+
+  -- This is slow
+  -- vim.api.nvim_create_autocmd("CursorHold", {
+  --   callback = function()
+  --     vim.diagnostic.open_float(nil, {
+  --       focusable = false,
+  --       scope = "line",  -- only show for the current line
+  --       close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+  --     })
+  --   end,
+  -- })
+
+  do
+    local grp = vim.api.nvim_create_augroup("LiveDiagnosticHover", { clear = true })
+    local last = { buf = nil, lnum = -1, col = -1 }
+
+    local function open_float_at_cursor()
+      -- Avoid reopening if we didn't actually move
+      local buf = vim.api.nvim_get_current_buf()
+      local pos = vim.api.nvim_win_get_cursor(0) -- {lnum, col}, 1-based lnum
+      if last.buf == buf and last.lnum == pos[1] and last.col == pos[2] then
+        return
+      end
+      last = { buf = buf, lnum = pos[1], col = pos[2] }
+
+      local opts = {
+        focusable = false,
+        close_events = { "CursorMoved", "CursorMovedI", "BufHidden", "InsertLeave", "WinScrolled" },
+        border = "rounded",
+        source = "if_many",
+        severity_sort = true,
+      }
+
+      -- Prefer showing diagnostics exactly at cursor (Neovim ≥ 0.10),
+      -- fall back to the whole line on older versions.
+      local ok = pcall(vim.diagnostic.open_float, nil, vim.tbl_extend("force", opts, { scope = "cursor" }))
+      if not ok then
+        pcall(vim.diagnostic.open_float, nil, vim.tbl_extend("force", opts, { scope = "line" }))
+      end
+    end
+
+    -- Fire on movement in normal/insert mode
+    vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+      group = grp,
+      callback = function()
+        -- Tiny debounce to reduce flicker when you hold the arrow key
+        vim.defer_fn(open_float_at_cursor, 10)
+      end,
+    })
+  end
 
   -- Adapted from
   -- https://gist.github.com/crwebb85/fda79b17a7df8517d5ae0a1cc7722611
