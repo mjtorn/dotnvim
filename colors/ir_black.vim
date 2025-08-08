@@ -162,3 +162,5 @@ hi LspDiagnosticsSignInformation guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=N
 hi LspDiagnosticsSignHint guifg=#ffffff guibg=#FF6C60 guisp=#FF6C60 gui=NONE ctermfg=232 ctermbg=NONE cterm=NONE
 
 hi TabNavTitle guifg=#ff00ff guibg=#000000
+
+highlight Red guifg=Red ctermfg=Red
