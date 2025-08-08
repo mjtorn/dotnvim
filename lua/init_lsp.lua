@@ -89,9 +89,11 @@ function setup_servers()
 
       -- Prefer showing diagnostics exactly at cursor (Neovim ≥ 0.10),
       -- fall back to the whole line on older versions.
-      local ok = pcall(vim.diagnostic.open_float, nil, vim.tbl_extend("force", opts, { scope = "cursor" }))
+      local ok, float_buf, winid = pcall(vim.diagnostic.open_float, nil, vim.tbl_extend("force", opts, { scope = "cursor" }))
       if not ok then
         pcall(vim.diagnostic.open_float, nil, vim.tbl_extend("force", opts, { scope = "line" }))
+      elseif winid and vim.api.nvim_win_is_valid(winid) then
+        vim.api.nvim_win_set_option(winid, "winhl", "FloatBorder:Red")
       end
     end
 
