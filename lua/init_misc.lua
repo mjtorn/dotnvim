@@ -107,24 +107,20 @@ function setup_misc()
     floating_window_off_x = 5, -- adjust float windows x position.
 
     floating_window_off_y = function()
-      local linenr    = vim.api.nvim_win_get_cursor(0)[1]
+      local winline = vim.fn.winline()
       local pumheight = vim.o.pumheight
-      local winline   = vim.fn.winline()
-      local winheight = vim.fn.winheight(0)
 
-      -- This is almost always something absurdly big so return 0 appears kinda fine
-      if (winheight - winline) > (pumheight + 1) then
-        return 1
+      -- Top-of-window check: do nothing, keep default
+      if winline - 1 < pumheight then
+        return 0
       end
 
-      -- This usually does not happen
-      if (winline - 1) > (pumheight + 1) then
-        local ret = -(pumheight + 1)
-        return ret
+      local winheight = vim.api.nvim_win_get_height(0)
+      if winheight - winline < pumheight then
+        return -pumheight
       end
 
-      -- Never seen this, I think
-      return 1
+      return 0
     end,
   }
   require('lsp_signature').setup(lsp_signature_cfg)
