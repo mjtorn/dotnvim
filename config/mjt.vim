@@ -198,6 +198,9 @@ endfunction
 let g:pydoc_cmd = 'python -m pydoc'
 let g:pydoc_open_cmd = 'split'
 
+" Tabnav opening tabs was a bit slow but with this new machine I'm sure it's fine.
+let g:tabnav_open = 1
+
 " Really force tree-sitter because opening files only through telescope rocks
 " but nothing else does
 autocmd FileType * set foldexpr=v:lua.vim.treesitter.foldexpr()
