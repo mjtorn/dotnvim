@@ -1,14 +1,12 @@
--- lua/edi.lua  (2025-09-03)
+-- lua/edi.lua  (pretty-toggle + indent-aware hover; codes only from JSON)
 -- EDI helper for Neovim (X12 + EDIFACT)
--- - :EdiPretty           pretty preview with nested indent
--- - Regex highlighting   tags/separators/numbers
--- - Autodetect flavors   X12 vs EDIFACT + delimiters
--- - Hover on K           segment/element/component + code-meaning (from builtins + JSON)
--- - :EdiFetchEdifactAll  downloads ALL UNECE UNCL JSON-LD (0001..9999) -> plain JSON code maps
--- - :EdiFetchStatus      shows live fetch counters + last URL saved
--- - :EdiReloadData       (re)loads JSON data_dir into runtime
+-- - :EdiPretty           toggle pretty view IN PLACE (no file edits)
+-- - :EdiFetchEdifactAll  fetch all UNECE UNCL JSON-LD -> plain JSON maps
+-- - :EdiFetchStatus      progress/status while fetching
+-- - :EdiReloadData       reload JSON dictionaries
+-- - Hover on K           works in both normal & pretty views
 --
--- Only external requirement: `curl` in PATH.
+-- External dependency: curl (for the fetcher). No jq needed.
 
 local M = {}
 local state = {
@@ -50,100 +48,89 @@ local function ensure_dir(path)
   end
 end
 local function write_json_atomically(path, tbl)
-  local data = vim.fn.json_encode(tbl)
-  if not data or #data == 0 then return false end
-  local dir = path:match("^(.*)/[^/]+$")
-  if dir then ensure_dir(dir) end
+  local data = vim.fn.json_encode(tbl); if not data or #data == 0 then return false end
+  local dir = path:match("^(.*)/[^/]+$"); if dir then ensure_dir(dir) end
   local tmp = path .. ".tmp_" .. tostring(vim.loop.hrtime())
-  local fd = vim.loop.fs_open(tmp, "w", 420) -- 0644
-  if not fd then return false end
-  local ok1 = vim.loop.fs_write(fd, data, 0)
-  vim.loop.fs_close(fd)
+  local fd = vim.loop.fs_open(tmp, "w", 420); if not fd then return false end
+  local ok1 = vim.loop.fs_write(fd, data, 0); vim.loop.fs_close(fd)
   if not ok1 then pcall(vim.loop.fs_unlink, tmp); return false end
-  pcall(vim.loop.fs_rename, tmp, path)
-  return true
+  pcall(vim.loop.fs_rename, tmp, path); return true
 end
 
--- ========== built-ins (unchanged from last drop, trimmed here for brevity) ==========
+-- ========== built-ins (segments only; NO code lists) ==========
 local BUILTIN = {
-  x12 = { segments = {
-    ISA = { title="Interchange Control Header", elements = {
-      { name="Authorization Info Qualifier", id="I01" },
-      { name="Authorization Information", id="I02" },
-      { name="Security Info Qualifier", id="I03" },
-      { name="Security Information", id="I04" },
-      { name="Interchange ID Qualifier (Sender)", id="I05" },
-      { name="Interchange Sender ID", id="I06" },
-      { name="Interchange ID Qualifier (Receiver)", id="I07" },
-      { name="Interchange Receiver ID", id="I08" },
-      { name="Interchange Date (YYMMDD)", id="I09" },
-      { name="Interchange Time (HHMM)", id="I10" },
-      { name="Standards Identifier / Repetition Sep", id="I11" },
-      { name="Interchange Control Version", id="I12" },
-      { name="Interchange Control Number", id="I13" },
-      { name="Acknowledgment Requested", id="I14" },
-      { name="Usage Indicator (T/P)", id="I15", codeset="I15" },
-      { name="Component Element Separator", id="I16" },
-    }},
-    GS = { title="Functional Group Header", elements = {
-      { name="Functional Identifier Code", id="479" },
-      { name="Application Sender's Code", id="142" },
-      { name="Application Receiver's Code", id="124" },
-      { name="Date", id="373" },
-      { name="Time", id="337" },
-      { name="Group Control Number", id="28" },
-      { name="Responsible Agency Code", id="455" },
-      { name="Version / Release / Industry ID", id="480" },
-    }},
-    ST = { title="Transaction Set Header", elements = {
-      { name="Transaction Set ID", id="143" }, { name="Control Number", id="329" },
-    }},
-    BEG = { title="Beginning Segment for PO", elements = {
-      { name="Transaction Set Purpose Code", id="353", codeset="353" },
-      { name="Purchase Order Type Code", id="92" },
-      { name="Purchase Order Number", id="324" },
-      { name="Release Number", id="328" },
-      { name="Date", id="373" },
-    }},
-    REF = { title="Reference Identification", elements = {
-      { name="Reference Qualifier", id="128", codeset="128" },
-      { name="Reference Identification", id="127" },
-      { name="Description", id="352" },
-    }},
-    DTM = { title="Date/Time Reference", elements = {
-      { name="Qualifier", id="374", codeset="374" }, { name="Date", id="373" }, { name="Time", id="337" },
-    }},
-    N1  = { title="Name", elements = {
-      { name="Entity Identifier Code", id="98", codeset="98" }, { name="Name", id="93" },
-      { name="ID Code Qualifier", id="66" }, { name="ID Code", id="67" },
-    }},
-    PO1 = { title="Baseline Item Data", elements = {
-      { name="Assigned ID", id="350" }, { name="Qty", id="330" },
-      { name="UOM", id="355", codeset="355" }, { name="Unit Price", id="212" },
-      { name="Basis of Unit Price", id="639" }, { name="Prod/Serv ID Qualifier", id="235" }, { name="Prod/Serv ID", id="234" },
-    }},
-    CTT = { title="Transaction Totals", elements = {
-      { name="Line Count", id="354" }, { name="Hash Total", id="347" },
-    }},
-    SE = { title="Transaction Set Trailer", elements = {
-      { name="Segment Count", id="96" }, { name="Control Number", id="329" },
-    }},
-    GE = { title="Functional Group Trailer", elements = {
-      { name="# of Transaction Sets", id="97" }, { name="Group Control Number", id="28" },
-    }},
-    IEA = { title="Interchange Control Trailer", elements = {
-      { name="# of Included Groups", id="I16N" }, { name="Interchange Control Number", id="I13" },
-    }},
+  x12 = {
+    segments = {
+      ISA = { title="Interchange Control Header", elements = {
+        { name="Authorization Info Qualifier", id="I01" },
+        { name="Authorization Information", id="I02" },
+        { name="Security Info Qualifier", id="I03" },
+        { name="Security Information", id="I04" },
+        { name="Interchange ID Qualifier (Sender)", id="I05" },
+        { name="Interchange Sender ID", id="I06" },
+        { name="Interchange ID Qualifier (Receiver)", id="I07" },
+        { name="Interchange Receiver ID", id="I08" },
+        { name="Interchange Date (YYMMDD)", id="I09" },
+        { name="Interchange Time (HHMM)", id="I10" },
+        { name="Standards Identifier / Repetition Sep", id="I11" },
+        { name="Interchange Control Version", id="I12" },
+        { name="Interchange Control Number", id="I13" },
+        { name="Acknowledgment Requested", id="I14" },
+        { name="Usage Indicator (T/P)", id="I15", codeset="I15" },
+        { name="Component Element Separator", id="I16" },
+      }},
+      GS = { title="Functional Group Header", elements = {
+        { name="Functional Identifier Code", id="479" },
+        { name="Application Sender's Code", id="142" },
+        { name="Application Receiver's Code", id="124" },
+        { name="Date", id="373" },
+        { name="Time", id="337" },
+        { name="Group Control Number", id="28" },
+        { name="Responsible Agency Code", id="455" },
+        { name="Version / Release / Industry ID", id="480" },
+      }},
+      ST = { title="Transaction Set Header", elements = {
+        { name="Transaction Set ID", id="143" }, { name="Control Number", id="329" },
+      }},
+      BEG = { title="Beginning Segment for PO", elements = {
+        { name="Transaction Set Purpose Code", id="353", codeset="353" },
+        { name="Purchase Order Type Code", id="92" },
+        { name="Purchase Order Number", id="324" },
+        { name="Release Number", id="328" },
+        { name="Date", id="373" },
+      }},
+      REF = { title="Reference Identification", elements = {
+        { name="Reference Qualifier", id="128", codeset="128" },
+        { name="Reference Identification", id="127" },
+        { name="Description", id="352" },
+      }},
+      DTM = { title="Date/Time Reference", elements = {
+        { name="Qualifier", id="374", codeset="374" }, { name="Date", id="373" }, { name="Time", id="337" },
+      }},
+      N1  = { title="Name", elements = {
+        { name="Entity Identifier Code", id="98", codeset="98" }, { name="Name", id="93" },
+        { name="ID Code Qualifier", id="66" }, { name="ID Code", id="67" },
+      }},
+      PO1 = { title="Baseline Item Data", elements = {
+        { name="Assigned ID", id="350" }, { name="Qty", id="330" },
+        { name="UOM", id="355", codeset="355" }, { name="Unit Price", id="212" },
+        { name="Basis of Unit Price", id="639" }, { name="Prod/Serv ID Qualifier", id="235" }, { name="Prod/Serv ID", id="234" },
+      }},
+      CTT = { title="Transaction Totals", elements = {
+        { name="Line Count", id="354" }, { name="Hash Total", id="347" },
+      }},
+      SE = { title="Transaction Set Trailer", elements = {
+        { name="Segment Count", id="96" }, { name="Control Number", id="329" },
+      }},
+      GE = { title="Functional Group Trailer", elements = {
+        { name="# of Transaction Sets", id="97" }, { name="Group Control Number", id="28" },
+      }},
+      IEA = { title="Interchange Control Trailer", elements = {
+        { name="# of Included Groups", id="I16N" }, { name="Interchange Control Number", id="I13" },
+      }},
+    },
+    codes = {}, -- no built-in codes; rely on JSON
   },
-  codes = {
-    ["98"]  = { ST="Ship To", SF="Ship From", VN="Vendor", PR="Payer", BT="Bill To", BS="Bill & Ship To", PE="Payee", SU="Supplier", RE="Responsible Party", BY="Buyer", SE="Selling Party" },
-    ["128"] = { IA="Internal Vendor Number", AB="Assembly Line", BM="Bill of Lading", PO="Purchase Order Number", CN="Carrier Ref" },
-    ["353"] = { "Cancellation","Delete","Add","Change","Replace" },
-    ["355"] = { EA="Each", LB="Pound", KG="Kilogram", CA="Case", DZ="Dozen" },
-    ["374"] = { "Date","Time","Production","Shipment","Delivery","Invoice","Effective","Expiration" },
-    ["66"]  = { "DUNS","SCAC","UCC/EAN-128","Mutually Defined" },
-    ["I15"] = { T="Test", P="Production" },
-  }},
   edifact = {
     segments = {
       UNB = { title="Interchange Header", elements = {
@@ -245,14 +232,7 @@ local BUILTIN = {
         { name="0020 Interchange control ref", id="0020" },
       }},
     },
-    codes = {
-      ["1001"] = { ["380"]="Commercial invoice", ["381"]="Credit note", ["220"]="Order", ["221"]="Blanket order", ["224"]="Project order", ["231"]="Call off order" },
-      ["2005"] = { ["137"]="Document/message date/time", ["2"]="Delivery date/time, requested", ["3"]="Invoice date/time", ["11"]="Despatch date and/or time", ["17"]="Delivery date/time, estimated" },
-      ["3035"] = { ["BY"]="Buyer", ["SU"]="Supplier", ["DP"]="Delivery party", ["IV"]="Invoicee", ["CN"]="Consignee", ["SE"]="Seller" },
-      ["1153"] = { ["ON"]="Order number (buyer)", ["AAK"]="Despatch advice number", ["DQ"]="Delivery note number", ["IV"]="Invoice number", ["CU"]="Consignment identifier" },
-      ["1225"] = { ["1"]="Cancellation", ["5"]="Replace", ["9"]="Original", ["31"]="Copy", ["43"]="Additional transmission" },
-      ["3055"] = { ["9"]="EDIFACT", ["91"]="Assigned by seller", ["92"]="Assigned by buyer", ["ZZZ"]="Mutually defined" },
-    },
+    codes = {}, -- no built-in codes; rely on JSON
   },
 }
 
@@ -410,28 +390,53 @@ local function apply_syntax(bufnr, cfg)
   vim.api.nvim_buf_set_option(bufnr, "filetype", (cfg.flavor == "x12") and "x12" or "edifact")
 end
 
-local function open_preview_win(text, title)
-  vim.cmd("vsplit")
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_win_set_buf(0, buf)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(text, "\n", { plain = true }))
-  vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
-  vim.api.nvim_buf_set_option(buf, "modifiable", false)
-  vim.api.nvim_buf_set_option(buf, "modified", false)
-  vim.api.nvim_buf_set_name(buf, title or "EDI Preview")
-  return buf
-end
+-- ========== pretty toggle (in-place) ==========
+local function edi_pretty_toggle()
+  local win = vim.api.nvim_get_current_win()
+  local cur = vim.api.nvim_win_get_buf(win)
+  local st = vim.w.edi_pretty_state
 
-local function edi_pretty()
-  local srcbuf = vim.api.nvim_get_current_buf()
-  local cfg = detect_edi(srcbuf)
-  local text = buf_text(srcbuf)
+  -- if currently on pretty buffer for this window -> restore source
+  if st and vim.api.nvim_buf_is_valid(st.source) and vim.api.nvim_buf_is_valid(st.pretty)
+     and cur == st.pretty then
+    vim.api.nvim_win_set_buf(win, st.source)
+    pcall(vim.api.nvim_buf_delete, st.pretty, { force = true })
+    vim.w.edi_pretty_state = nil
+    return
+  end
+
+  -- build pretty text from current buffer and swap it in
+  local cfg = detect_edi(cur)
+  local text = buf_text(cur)
   local pretty = pretty_text(text, cfg)
-  local buf = open_preview_win(pretty, "EDI Pretty")
-  apply_syntax(buf, cfg)
+  local pbuf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(pbuf, 0, -1, false, vim.split(pretty, "\n", { plain = true }))
+  vim.api.nvim_buf_set_option(pbuf, "buftype", "nofile")
+  vim.api.nvim_buf_set_option(pbuf, "bufhidden", "wipe")
+  vim.api.nvim_buf_set_option(pbuf, "swapfile", false)
+  vim.api.nvim_buf_set_option(pbuf, "modifiable", false)
+  vim.api.nvim_buf_set_name(pbuf, "[EDI Pretty] " .. (vim.api.nvim_buf_get_name(cur):match("[^/]+$") or ""))
+
+  apply_syntax(pbuf, cfg)
+  vim.api.nvim_win_set_buf(win, pbuf)
+
+  -- buffer-local 'q' to toggle back
+  vim.keymap.set("n", "q", function()
+    local w = vim.api.nvim_get_current_win()
+    local s = vim.w.edi_pretty_state
+    if s and vim.api.nvim_buf_is_valid(s.source) then
+      vim.api.nvim_win_set_buf(w, s.source)
+    end
+    if s and vim.api.nvim_buf_is_valid(s.pretty) then
+      pcall(vim.api.nvim_buf_delete, s.pretty, { force = true })
+    end
+    vim.w.edi_pretty_state = nil
+  end, { buffer = pbuf, nowait = true, silent = true })
+
+  vim.w.edi_pretty_state = { source = cur, pretty = pbuf }
 end
 
--- ========== hover ==========
+-- ========== hover (indent-aware so it works in pretty buffer) ==========
 local function split_with_ranges(s, sep, release)
   if not sep or sep == "" then return { { text = s, s = 0, e = #s - 1 } } end
   local parts, cur, start = {}, {}, 0
@@ -458,17 +463,31 @@ end
 local function current_segment_at_cursor(cfg)
   local _, col = unpack(vim.api.nvim_win_get_cursor(0))
   local line = vim.api.nvim_get_current_line()
-  if cfg.seg == "\n" or cfg.seg == "\r\n" then return trim(line), 0, #line - 1 end
-  local segs = split_with_ranges(line, cfg.seg, cfg.release)
-  for _, p in ipairs(segs) do if col >= p.s and col <= p.e then return trim(p.text), p.s, p.e end end
-  return trim(line), 0, #line - 1
+
+  -- If the actual segment terminator for this flavor is on the line, use delimiter-based detection
+  if (cfg.seg == "\r\n" and line:find("\r\n", 1, true))
+     or (cfg.seg ~= "\r\n" and cfg.seg ~= "\n" and line:find(esc_lua_pattern(cfg.seg))) then
+    local segs = split_with_ranges(line, cfg.seg, cfg.release)
+    for _, p in ipairs(segs) do
+      if col >= p.s and col <= p.e then
+        return trim(p.text), p.s, p.e
+      end
+    end
+    return trim(line), 0, #line - 1
+  end
+
+  -- Otherwise (pretty view: one segment per line with indent) -> be indent-aware
+  local first_non_ws = line:find("%S")
+  local indent_col = first_non_ws and (first_non_ws - 1) or #line
+  local seg = line:sub(indent_col + 1)
+  return trim(seg), indent_col, #line - 1
 end
 
 local function deep_copy(x) return vim.deepcopy(x) end
 local function get_dict(flavor)
   local dict = deep_copy(BUILTIN[flavor] or {})
   merge_tables(dict.segments or {}, state.data[flavor].segments or {})
-  merge_tables(dict.codes or {}, state.data[flavor].codes or {})
+  merge_tables(dict.codes or {}, state.data[flavor].codes or {}) -- only JSON contributes codes now
   if state.cfg.dict_overrides and state.cfg.dict_overrides[flavor] then merge_tables(dict, state.cfg.dict_overrides[flavor]) end
   return dict
 end
@@ -491,7 +510,7 @@ local function codelist_lookup(flavor, codeset_id, code)
   local dict = get_dict(flavor)
   local codes = dict.codes and dict.codes[codeset_id]
   if not codes then return nil end
-  return codes[code] or codes[tonumber(code) or code]
+  return codes[code] or codes[tostring(code)] or codes[tonumber(code) or code]
 end
 
 local function build_doc(cfg, seg, seg_s, _seg_e)
@@ -588,22 +607,16 @@ function M.hover()
   show_float(lines)
 end
 
--- ========== EDIFACT UNCL fetcher (ALL) ==========
--- The UNECE JSON-LD uses several patterns:
---   - many UNCLs: nodes have "rdf:value": <code> and "rdfs:comment": <text>
---   - some:       "notation" (or skos:notation) and "prefLabel"/"rdfs:label"
--- we normalize all of these.
+-- ========== fetcher (unchanged from last working version) ==========
+-- Robust JSON-LD parser for UNCL; logs saved IDs and progress.
 local fetcher = {
   running = false, pool = 4, active = 0, next_id = 1, max_id = 9999,
-  done = 0, saved = 0,
-  last_saved = nil, last_url = nil, last_count = 0,
+  done = 0, saved = 0, last_saved = nil, last_url = nil, last_count = 0,
 }
-
 local function parse_textish(obj)
   if type(obj) == "string" then return obj end
   if type(obj) ~= "table" then return nil end
   if obj[1] ~= nil then
-    -- find English first, then first
     for _, v in ipairs(obj) do
       if type(v)=="table" and ((v["@language"]=="en") or (v["language"]=="en")) and (v["@value"] or v["value"]) then
         return v["@value"] or v["value"]
@@ -616,7 +629,6 @@ local function parse_textish(obj)
   end
   return obj["@value"] or obj["value"] or obj["@id"] or obj["id"] or nil
 end
-
 local function parse_code(obj)
   if type(obj) == "string" or type(obj) == "number" then return tostring(obj) end
   if type(obj) ~= "table" then return nil end
@@ -627,56 +639,41 @@ local function parse_code(obj)
   end
   return obj["@value"] or obj["value"] or obj["@id"] or obj["id"] or nil
 end
-
 local function collect_codes_from_node(node, out)
   if type(node) ~= "table" then return end
-  -- primary patterns
   local code = node["rdf:value"] or node["value"] or node["rdf:Value"]
                or node["notation"] or node["skos:notation"]
   local desc = node["rdfs:comment"] or node["comment"] or node["skos:definition"]
                or node["prefLabel"] or node["skos:prefLabel"] or node["rdfs:label"] or node["label"]
-
-  -- sometimes the code is nested in an ID like "uncl1001:Certificate_of_conformity" (we ignore those)
   if code and desc then
-    local k = parse_code(code)
-    local v = parse_textish(desc)
+    local k = parse_code(code); local v = parse_textish(desc)
     if k and v and out[k] == nil then out[k] = v end
   end
-  for _, v in pairs(node) do
-    if type(v) == "table" then collect_codes_from_node(v, out) end
-  end
+  for _, v in pairs(node) do if type(v) == "table" then collect_codes_from_node(v, out) end end
 end
-
 local function jsonld_to_map(txt)
   local ok, obj = pcall(vim.fn.json_decode, txt)
   if not ok or not obj then return nil end
-  local out = {}
-  collect_codes_from_node(obj, out)
+  local out = {}; collect_codes_from_node(obj, out)
   if not next(out) and type(obj)=="table" and obj["@graph"] and type(obj["@graph"])=="table" then
     for _, n in ipairs(obj["@graph"]) do collect_codes_from_node(n, out) end
   end
   return next(out) and out or nil
 end
-
 local function fetch_url(url, cb)
   local stdout = {}
   local job = vim.fn.jobstart({ "curl", "-fsSL", url }, {
     stdout_buffered = true,
     on_stdout = function(_, data, _) if data then table.insert(stdout, table.concat(data, "\n")) end end,
     on_stderr = function() end,
-    on_exit = function(_, code)
-      local body = table.concat(stdout, "")
-      cb(code == 0, body)
-    end,
+    on_exit = function(_, code) cb(code == 0, table.concat(stdout, "")) end,
   })
   if job <= 0 then cb(false, nil) end
 end
-
 local function save_map(id, base_dir, map)
   local path = string.format("%s/edifact/codes/%d.json", base_dir, id)
   return write_json_atomically(path, map)
 end
-
 local function fetch_one(id, base_dir, on_done)
   local url = string.format("https://service.unece.org/trade/uncefact/vocabulary/uncl%04d.jsonld", id)
   fetch_url(url, function(ok, body)
@@ -685,10 +682,8 @@ local function fetch_one(id, base_dir, on_done)
       if map and next(map) then
         if save_map(id, base_dir, map) then
           fetcher.saved = fetcher.saved + 1
-          fetcher.last_saved = id
-          fetcher.last_url = url
-          fetcher.last_count = 0
-          for _ in pairs(map) do fetcher.last_count = fetcher.last_count + 1 end
+          fetcher.last_saved = id; fetcher.last_url = url
+          fetcher.last_count = 0; for _ in pairs(map) do fetcher.last_count = fetcher.last_count + 1 end
           vim.schedule(function()
             vim.notify(string.format("edi: saved UNCL %04d (%d entries) -> edifact/codes/%d.json", id, fetcher.last_count, id), vim.log.levels.INFO)
           end)
@@ -699,15 +694,13 @@ local function fetch_one(id, base_dir, on_done)
     on_done(false)
   end)
 end
-
 local timer = nil
 local function pump_queue()
   if not fetcher.running then return end
   while fetcher.active < fetcher.pool and fetcher.next_id <= fetcher.max_id do
     local id = fetcher.next_id; fetcher.next_id = id + 1; fetcher.active = fetcher.active + 1
     fetch_one(id, state.cfg.data_dir, function(_saved)
-      fetcher.done = fetcher.done + 1
-      fetcher.active = fetcher.active - 1
+      fetcher.done = fetcher.done + 1; fetcher.active = fetcher.active - 1
       if fetcher.done % 50 == 0 then
         vim.schedule(function()
           local msg = string.format("edi: progress %d/%d, saved %d%s",
@@ -721,7 +714,6 @@ local function pump_queue()
         if timer then timer:stop(); timer:close(); timer = nil end
         vim.schedule(function()
           vim.notify(string.format("edi: EDIFACT fetch complete. Saved %d code lists.", fetcher.saved), vim.log.levels.INFO)
-          -- auto-reload
           state.data = { x12={segments={},codes={}}, edifact={segments={},codes={}} }
           pcall(try_load_data_dir)
           vim.notify("edi: data reloaded", vim.log.levels.INFO)
@@ -730,20 +722,16 @@ local function pump_queue()
     end)
   end
 end
-
 local function start_fetch_all()
-  if fetcher.running then
-    vim.notify("edi: fetch already running", vim.log.levels.WARN); return
-  end
+  if fetcher.running then vim.notify("edi: fetch already running", vim.log.levels.WARN); return end
   fetcher.running, fetcher.active = true, 0
   fetcher.next_id, fetcher.max_id, fetcher.done, fetcher.saved = 1, 9999, 0, 0
   fetcher.last_saved, fetcher.last_url, fetcher.last_count = nil, nil, 0
   ensure_dir(state.cfg.data_dir .. "/edifact/codes")
   vim.notify("edi: starting EDIFACT UNCL fetch (0001..9999)", vim.log.levels.INFO)
-  -- gentle cadence to avoid hammering the endpoint
   if timer then timer:stop(); timer:close(); timer = nil end
   timer = vim.loop.new_timer()
-  timer:start(0, 150, function() vim.schedule(pump_queue) end) -- 150ms tick
+  timer:start(0, 150, function() vim.schedule(pump_queue) end)
 end
 
 -- ========== filetype & autocmds ==========
@@ -764,7 +752,9 @@ function M.setup(opts)
   if opts and type(opts)=="table" then merge_tables(state.cfg, opts) end
   pcall(try_load_data_dir)
 
-  vim.api.nvim_create_user_command("EdiPretty", edi_pretty, { desc="Preview indented EDI (X12/EDIFACT)" })
+  -- Toggle pretty in place
+  vim.api.nvim_create_user_command("EdiPretty", edi_pretty_toggle, { desc="Toggle pretty view (in place)" })
+
   vim.api.nvim_create_user_command("EdiReloadData", function()
     state.data = { x12={segments={},codes={}}, edifact={segments={},codes={}} }
     pcall(try_load_data_dir)
@@ -773,7 +763,6 @@ function M.setup(opts)
 
   vim.api.nvim_create_user_command("EdiFetchEdifactAll", function() start_fetch_all() end,
     { desc = "Download ALL UNECE UNCL (0001..9999) into data_dir/edifact/codes" })
-
   vim.api.nvim_create_user_command("EdiFetchStatus", function()
     local msg = string.format("running=%s pool=%d active=%d next=%d done=%d saved=%d last=%s(%d) url=%s",
       tostring(fetcher.running), fetcher.pool, fetcher.active, fetcher.next_id, fetcher.done, fetcher.saved,
@@ -792,7 +781,12 @@ function M.setup(opts)
         { buffer = args.buf, desc = "EDI: hover segment/element/component" })
     end,
   })
-  vim.api.nvim_create_autocmd("VimLeavePre", { group = grp, callback = close_float })
+  vim.api.nvim_create_autocmd("VimLeavePre", { group = grp, callback = function()
+    -- close float & clean any pretty buffers
+    if vim.w.edi_pretty_state and vim.api.nvim_buf_is_valid(vim.w.edi_pretty_state.pretty) then
+      pcall(vim.api.nvim_buf_delete, vim.w.edi_pretty_state.pretty, { force = true })
+    end
+  end })
 end
 
 return M
