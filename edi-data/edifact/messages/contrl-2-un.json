@@ -1,0 +1,55 @@
+{
+  "message": "CONTRL",
+  "directory": "UN/EDIFACT (e.g., D.21A family)",
+  "notes": "CONTRL reports syntax/functional errors for UNA/UNB/UNZ (UCI), groups (UCF), messages/packages (UCM) and segments/elements (UCS/UCD).",
+  "segment_groups": [
+    {
+      "id": 0,
+      "name": "Header",
+      "segments": ["UNH", "UCI"],
+      "children": [
+        {
+          "id": 1,
+          "name": "UCM-SG2 (message/package response) — only if no groups in subject interchange",
+          "starts": ["UCM"],
+          "max": 999999,
+          "children": [
+            {
+              "id": 2,
+              "name": "UCS-UCD (segment & data element error details)",
+              "starts": ["UCS"],
+              "max": 999999,
+              "children": [],
+              "segments": ["UCS", "UCD"]
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "UCF-SG4 (group response) — used if subject interchange has groups",
+          "starts": ["UCF"],
+          "max": 999999,
+          "children": [
+            {
+              "id": 4,
+              "name": "UCM-SG5 (message/package response within group)",
+              "starts": ["UCM"],
+              "max": 999999,
+              "children": [
+                {
+                  "id": 5,
+                  "name": "UCS-UCD (segment & element error details)",
+                  "starts": ["UCS"],
+                  "max": 999999,
+                  "children": [],
+                  "segments": ["UCS", "UCD"]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
