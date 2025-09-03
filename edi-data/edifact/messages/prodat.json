@@ -1,0 +1,217 @@
+{
+  "message": "PRODAT",
+  "directory": "UN/EDIFACT D.97A (Ediel IG v4r0A 2025-03-14)",
+  "notes": "Ediel extends SG8 to 99,999 repetitions.",
+  "segment_groups": [
+    {
+      "id": 0,
+      "name": "Header/Footer",
+      "segments": ["UNH", "BGM", "DTM", "ALI", "IMD", "FTX", "PGI", "UNT"],
+      "children": [
+        {
+          "id": 1,
+          "name": "TRU-DTM",
+          "starts": ["TRU"],
+          "max": 10,
+          "children": [],
+          "segments": ["TRU", "DTM"]
+        },
+        {
+          "id": 2,
+          "name": "RCS-PIA",
+          "starts": ["RCS"],
+          "max": 10,
+          "children": [],
+          "segments": ["RCS", "PIA"]
+        },
+        {
+          "id": 3,
+          "name": "RFF-DTM",
+          "starts": ["RFF"],
+          "max": 99,
+          "children": [],
+          "segments": ["RFF", "DTM"]
+        },
+        {
+          "id": 4,
+          "name": "NAD-(SG5,SG6)",
+          "starts": ["NAD"],
+          "max": 99,
+          "children": [
+            {
+              "id": 5,
+              "name": "CTA-COM",
+              "starts": ["CTA"],
+              "max": 5,
+              "children": [],
+              "segments": ["CTA", "COM"]
+            },
+            {
+              "id": 6,
+              "name": "RFF-DTM",
+              "starts": ["RFF"],
+              "max": 5,
+              "children": [],
+              "segments": ["RFF", "DTM"]
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "name": "CCI-CAV-MEA",
+          "starts": ["CCI"],
+          "max": 999,
+          "children": [],
+          "segments": ["CCI", "CAV", "MEA"]
+        },
+        {
+          "id": 8,
+          "name": "LIN… (detail root)",
+          "starts": ["LIN"],
+          "max": 99999,
+          "segments": ["LIN", "PIA", "DTM", "MEA", "HAN", "DOC", "FTX", "PGI"],
+          "children": [
+            {
+              "id": 9,
+              "name": "IMD-FTX",
+              "starts": ["IMD"],
+              "max": 10,
+              "children": [],
+              "segments": ["IMD", "FTX"]
+            },
+            {
+              "id": 10,
+              "name": "TRU-DTM",
+              "starts": ["TRU"],
+              "max": 10,
+              "children": [],
+              "segments": ["TRU", "DTM"]
+            },
+            {
+              "id": 11,
+              "name": "RCS-PIA",
+              "starts": ["RCS"],
+              "max": 10,
+              "children": [],
+              "segments": ["RCS", "PIA"]
+            },
+            {
+              "id": 12,
+              "name": "QTY-DTM",
+              "starts": ["QTY"],
+              "max": 10,
+              "children": [],
+              "segments": ["QTY", "DTM"]
+            },
+            {
+              "id": 13,
+              "name": "PRI-CUX-RNG",
+              "starts": ["PRI"],
+              "max": 5,
+              "children": [],
+              "segments": ["PRI", "CUX", "RNG"]
+            },
+            {
+              "id": 14,
+              "name": "CCI-CAV-MEA",
+              "starts": ["CCI"],
+              "max": 999,
+              "children": [],
+              "segments": ["CCI", "CAV", "MEA"]
+            },
+            {
+              "id": 15,
+              "name": "ALI-PCD",
+              "starts": ["ALI"],
+              "max": 999,
+              "children": [],
+              "segments": ["ALI", "PCD"]
+            },
+            {
+              "id": 16,
+              "name": "RFF-DTM",
+              "starts": ["RFF"],
+              "max": 99,
+              "children": [],
+              "segments": ["RFF", "DTM"]
+            },
+            {
+              "id": 17,
+              "name": "NAD-RFF-QTY (party for product)",
+              "starts": ["NAD"],
+              "max": 99,
+              "children": [
+                {
+                  "id": 18,
+                  "name": "CTA-COM",
+                  "starts": ["CTA"],
+                  "max": 5,
+                  "children": [],
+                  "segments": ["CTA", "COM"]
+                }
+              ],
+              "segments": ["NAD", "RFF", "QTY"]
+            },
+            {
+              "id": 19,
+              "name": "DGS-QTY-FTX",
+              "starts": ["DGS"],
+              "max": 10,
+              "children": [],
+              "segments": ["DGS", "QTY", "FTX"]
+            },
+            {
+              "id": 20,
+              "name": "PAC-MEA-QTY-HAN-PCI",
+              "starts": ["PAC"],
+              "max": 5,
+              "children": [],
+              "segments": ["PAC", "MEA", "QTY", "HAN", "PCI"]
+            },
+            {
+              "id": 21,
+              "name": "HYN-PIA-QTY-FTX",
+              "starts": ["HYN"],
+              "max": 999,
+              "children": [],
+              "segments": ["HYN", "PIA", "QTY", "FTX"]
+            },
+            {
+              "id": 22,
+              "name": "RFF-DTM",
+              "starts": ["RFF"],
+              "max": 999,
+              "children": [],
+              "segments": ["RFF", "DTM"]
+            },
+            {
+              "id": 23,
+              "name": "CCI-CAV-MEA",
+              "starts": ["CCI"],
+              "max": 99,
+              "children": [],
+              "segments": ["CCI", "CAV", "MEA"]
+            },
+            {
+              "id": 24,
+              "name": "NAD-PIA-QTY",
+              "starts": ["NAD"],
+              "max": 99,
+              "children": [],
+              "segments": ["NAD", "PIA", "QTY"]
+            },
+            {
+              "id": 25,
+              "name": "CCI-CAV-MEA",
+              "starts": ["CCI"],
+              "max": 99,
+              "children": [],
+              "segments": ["CCI", "CAV", "MEA"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

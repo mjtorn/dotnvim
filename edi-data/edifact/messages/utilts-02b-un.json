@@ -1,0 +1,124 @@
+{
+  "message": "UTILTS",
+  "directory": "UN/EDIFACT D.02B (Ediel IG 2010-02-15; diagram shows D.01C core)",
+  "segment_groups": [
+    {
+      "id": 0,
+      "name": "Header/Footer",
+      "segments": ["UNH", "BGM", "DTM", "MKS", "PRC", "CNT", "UNT"],
+      "children": [
+        {
+          "id": 1,
+          "name": "RFF-DTM",
+          "starts": ["RFF"],
+          "max": 9,
+          "children": [],
+          "segments": ["RFF", "DTM"]
+        },
+        {
+          "id": 2,
+          "name": "NAD-(RFF) with contacts in SG3",
+          "starts": ["NAD"],
+          "max": 99,
+          "children": [
+            {
+              "id": 3,
+              "name": "CTA-COM",
+              "starts": ["CTA"],
+              "max": 9,
+              "children": [],
+              "segments": ["CTA", "COM"]
+            }
+          ],
+          "segments": ["NAD", "RFF"]
+        },
+        {
+          "id": 4,
+          "name": "CUX-DTM-STS (header currencies/status)",
+          "starts": ["CUX"],
+          "max": 99,
+          "children": [],
+          "segments": ["CUX", "DTM", "STS"]
+        },
+        {
+          "id": 5,
+          "name": "IDE… (time series header)",
+          "starts": ["IDE"],
+          "max": 99999,
+          "segments": [
+            "IDE","LOC","NAD","ALI","LIN","PIA","IMD","DTM","PRC",
+            "STS","AGR","MEA","FTX"
+          ],
+          "children": [
+            {
+              "id": 6,
+              "name": "RFF-DTM (refs for series)",
+              "starts": ["RFF"],
+              "max": 99,
+              "children": [],
+              "segments": ["RFF", "DTM"]
+            },
+            {
+              "id": 7,
+              "name": "CCI-CAV (series characteristics)",
+              "starts": ["CCI"],
+              "max": 99,
+              "children": [],
+              "segments": ["CCI", "CAV"]
+            },
+            {
+              "id": 8,
+              "name": "SEQ… (observation sequence)",
+              "starts": ["SEQ"],
+              "max": 99999,
+              "children": [
+                {
+                  "id": 9,
+                  "name": "CCI-CAV (observation/register attributes)",
+                  "starts": ["CCI"],
+                  "max": 99,
+                  "children": [],
+                  "segments": ["CCI", "CAV"]
+                },
+                {
+                  "id": 10,
+                  "name": "PRI-CUX (calculation price)",
+                  "starts": ["PRI"],
+                  "max": 9,
+                  "children": [],
+                  "segments": ["PRI", "CUX"]
+                },
+                {
+                  "id": 11,
+                  "name": "QTY-DTM-STS (quantities for observation)",
+                  "starts": ["QTY"],
+                  "max": 99,
+                  "children": [],
+                  "segments": ["QTY", "DTM", "STS"]
+                },
+                {
+                  "id": 12,
+                  "name": "CCI-CAV (meter time frame per quantity) [may be removed per IG note]",
+                  "starts": ["CCI"],
+                  "max": 99,
+                  "children": [],
+                  "segments": ["CCI", "CAV"]
+                },
+                {
+                  "id": 13,
+                  "name": "PRI-CUX (price at observation)",
+                  "starts": ["PRI"],
+                  "max": 9,
+                  "children": [],
+                  "segments": ["PRI", "CUX"]
+                }
+              ],
+              "segments": ["DTM", "RFF", "MOA", "PCD"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

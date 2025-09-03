@@ -1,0 +1,54 @@
+{
+  "message": "APERAK",
+  "directory": "UN/EDIFACT D.96A (Ediel IG 2010-02-15)",
+  "notes": "Ediel increases SG4 repetitions beyond UNSM (up to 9 in newer directories).",
+  "segment_groups": [
+    {
+      "id": 0,
+      "name": "Header/Footer",
+      "segments": ["UNH", "BGM", "DTM", "UNT"],
+      "children": [
+        {
+          "id": 1,
+          "name": "RFF-DTM",
+          "starts": ["RFF"],
+          "max": 1,
+          "children": []
+        },
+        {
+          "id": 2,
+          "name": "NAD-CTA-COM",
+          "starts": ["NAD"],
+          "max": 4,
+          "children": [
+            {
+              "id": 2.1,
+              "name": "CTA-COM",
+              "starts": ["CTA"],
+              "max": 9,
+              "children": [],
+              "segments": ["CTA", "COM"]
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "ERC-FTX",
+          "starts": ["ERC"],
+          "max": 999,
+          "children": [],
+          "segments": ["ERC", "FTX"]
+        },
+        {
+          "id": 4,
+          "name": "RFF-FTX",
+          "starts": ["RFF"],
+          "max": 4,
+          "children": [],
+          "segments": ["RFF", "FTX"]
+        }
+      ]
+    }
+  ]
+}
+
