@@ -127,5 +127,6 @@ function setup_misc()
 
   require('neogen').setup {}
 
+  require('edi').setup {}
 end
 
