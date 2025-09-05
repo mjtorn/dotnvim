@@ -131,7 +131,8 @@ local function detect_edi(bufnr)
   local head = buf_text(bufnr):sub(1,4000)
   local has_ISA = head:find("ISA",1,true)
   local has_UNB = head:find("UNB",1,true)
-  if (has_UNB and not has_ISA) or (head:find("UNH",1,true) and head:find("'%s*U")) then
+  local has_UNA = head:find("UNA",1,true)
+  if has_UNB or has_UNA then
     return { flavor="edifact", seg="'", elem="+", comp=":", release="?" }
   end
   local seg="~"; if head:find("\r\n",1,true) then seg="\r\n" elseif head:find("\n",1,true) then seg="\n" end
@@ -273,18 +274,46 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   local elems=split_with_ranges(seg, cfg.elem, cfg.release)
   local tag=(elems[1] and elems[1].text) and elems[1].text:gsub("^%s+",""):gsub("%s+$","") or seg
   local _,col=unpack(vim.api.nvim_win_get_cursor(0)); local rel_col=col-seg_s
-  local elem_idx,comp_idx,elem_val,comp_val=0,0,nil,nil
-  for i=2,#elems do
-    local p=elems[i]
-    if rel_col>=p.s and rel_col<=p.e then
-      elem_idx=i-1; elem_val=p.text
-      if cfg.comp and #cfg.comp>0 and p.text:find(esc(cfg.comp),1,false) then
-        local comps=split_with_ranges(p.text,cfg.comp,cfg.release); local rel=rel_col-p.s
-        for j,c in ipairs(comps) do if rel>=c.s and rel<=c.e then comp_idx=j; comp_val=c.text; break end end
-      end
-      break
+
+  -- robust picking even when cursor is on a separator
+  local function pick_elem_at_cursor(tokens, rel)
+    for i=2,#tokens do
+      local p=tokens[i]
+      if rel>=p.s and rel<=p.e then return i-1, p end
     end
+    for i=2,#tokens do
+      local p=tokens[i]
+      if rel < p.s then return i-1, p end
+    end
+    if #tokens >= 2 then
+      return (#tokens-1), tokens[#tokens]
+    end
+    return 0, nil
   end
+
+  local elem_idx, elem_piece = pick_elem_at_cursor(elems, rel_col)
+  local elem_val = elem_piece and elem_piece.text or nil
+
+  local comp_idx, comp_val = 0, nil
+  if elem_piece and cfg.comp and #cfg.comp>0 and elem_piece.text:find(esc(cfg.comp),1,false) then
+    local comps = split_with_ranges(elem_piece.text, cfg.comp, cfg.release)
+    local rel_comp = rel_col - elem_piece.s
+    local function pick_comp_at_cursor(ctokens, rel2)
+      for j=1,#ctokens do
+        local c = ctokens[j]
+        if rel2>=c.s and rel2<=c.e then return j, c end
+      end
+      for j=1,#ctokens do
+        local c = ctokens[j]
+        if rel2 < c.s then return j, c end
+      end
+      return #ctokens, ctokens[#ctokens]
+    end
+    local comp_piece
+    comp_idx, comp_piece = pick_comp_at_cursor(comps, rel_comp)
+    comp_val = comp_piece and comp_piece.text or nil
+  end
+
   local info=resolve_element_info(cfg.flavor, tag, elem_idx, comp_idx)
   local seg_title = info and info.seg and info.seg.title or "Segment"
   local elem_name = info and info.elem and info.elem.name or nil
@@ -877,8 +906,12 @@ local function maybe_set_ft()
   local cfg=detect_edi(b)
   if name:match("%.x12$") or name:match("%.edifact$") or name:match("%.edi$") then
     apply_syntax(b,cfg)
-  else
-    local src=buf_text(b); if src:find("^%s*ISA") or src:find("^%s*UNB") then apply_syntax(b,cfg) end
+    return
+  end
+  local src=buf_text(b)
+  -- also trigger on UNA so EDIFACT buffers get K mapping immediately
+  if src:find("^%s*ISA") or src:find("^%s*UNB") or src:find("^%s*UNA") then
+    apply_syntax(b,cfg)
   end
 end
 
@@ -960,4 +993,3 @@ function M.setup(opts)
 end
 
 return M
-
