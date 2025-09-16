@@ -74,7 +74,9 @@ local function load_json(path)
 end
 
 -- ---------------------------------------------------------------------------
--- Data loading (segments & code lists)
+-- Data loading (segments & code lists). Segment titles have a small builtin
+-- to have something even without external JSON; code meanings come only from
+-- JSON under data_dir/{edifact|x12}/codes/<id>.json
 -- ---------------------------------------------------------------------------
 local BUILTIN = {
   edifact = { segments = {
@@ -99,11 +101,13 @@ local function try_load_data_dir()
   local base = state.cfg.data_dir
   state.data = { x12={segments={},codes={}}, edifact={segments={},codes={}} }
 
+  -- optional extended segment metadata
   local x12_seg = load_json(base.."/x12/segments.json")
   local edf_seg = load_json(base.."/edifact/segments.json")
   state.data.x12.segments = x12_seg or {}
   state.data.edifact.segments = edf_seg or {}
 
+  -- code lists
   for _,fl in ipairs({ "x12","edifact" }) do
     local dir = base.."/"..fl.."/codes"
     local h = vim.loop.fs_scandir(dir)
@@ -207,6 +211,9 @@ end
 -- ---------------------------------------------------------------------------
 -- Hover (raw & pretty)
 -- ---------------------------------------------------------------------------
+-- split_with_ranges: returns tokens with 0-based [s,e] (inclusive).
+-- For empty fields (consecutive separators), e < s. That's OK; selection logic
+-- relies primarily on token starts (s) and the next token's start.
 local function split_with_ranges(s, sep, release)
   if not sep or sep=="" then return {{text=s,s=0,e=#s-1}} end
   local parts,cur,start={}, {}, 0
@@ -218,9 +225,13 @@ local function split_with_ranges(s, sep, release)
       table.insert(cur,ch); if nxt~="" then table.insert(cur,nxt) end
       i=i+((nxt~="") and 2 or 1)
     elseif ch==sep then
-      local piece=table.concat(cur); table.insert(parts,{text=piece,s=start,e=i-2})
-      cur,start={},i; i=i+1
-    else table.insert(cur,ch); i=i+1 end
+      local piece=table.concat(cur)
+      table.insert(parts,{text=piece,s=start,e=i-2})
+      cur,start={},i -- start is 0-based col for the char AFTER this separator
+      i=i+1
+    else
+      table.insert(cur,ch); i=i+1
+    end
   end
   local piece=table.concat(cur); table.insert(parts,{text=piece,s=start,e=n-1})
   return parts
@@ -228,19 +239,19 @@ end
 
 -- Choose the segment under cursor; on the segment separator, prefer the previous segment
 local function current_segment_at_cursor(cfg)
-  local _,col=unpack(vim.api.nvim_win_get_cursor(0))
+  local _,col=unpack(vim.api.nvim_win_get_cursor(0)) -- 0-based col
   local line = vim.api.nvim_get_current_line()
 
-  -- If the physical line contains multiple segments (e.g., EDIFACT with "'"), split and choose prev on separator
+  -- Multi-segment physical line (e.g., EDIFACT using "'")
   if (cfg.seg=="\r\n" and line:find("\r\n",1,true)) or (cfg.seg~="\r\n" and cfg.seg~="\n" and line:find(esc(cfg.seg))) then
     local segs = split_with_ranges(line, cfg.seg, cfg.release)
-    -- First pass: inside token (treat start boundary as NOT inside, so separators pick previous)
+    -- First, try inside a segment (INCLUSIVE at start)
     for _,p in ipairs(segs) do
-      if col > p.s and col <= p.e then return trim(p.text), p.s, p.e end
+      if col >= p.s and col <= p.e then return trim(p.text), p.s, p.e end
     end
-    -- Second pass: boundary handling → previous piece on separator
+    -- Boundary: if we're on a separator, select the previous segment
     for i,p in ipairs(segs) do
-      if col <= p.s then
+      if col < p.s then
         if i>1 then
           local prev = segs[i-1]; return trim(prev.text), prev.s, prev.e
         else
@@ -252,17 +263,23 @@ local function current_segment_at_cursor(cfg)
     local last = segs[#segs]; return trim(last.text), last.s, last.e
   end
 
-  -- Pretty view (one segment per line): return trimmed line content as segment
+  -- Pretty view (one segment per line)
   local bol=line:find("%S"); local indent=(bol and bol-1) or #line
   local seg=line:sub(indent+1); return trim(seg), indent, #line-1
 end
 
 local function get_dict(flavor)
   local dict = vim.deepcopy(BUILTIN[flavor] or {})
+
+  -- ensure tables exist before merging
   dict.segments = dict.segments or {}
   dict.codes    = dict.codes    or {}
+
+  -- merge user data loaded from ~/.config/nvim/edi-data
   merge(dict.segments, state.data[flavor].segments or {})
   merge(dict.codes,    state.data[flavor].codes    or {})
+
+  -- optional overrides
   local ov = state.cfg.dict_overrides and state.cfg.dict_overrides[flavor] or nil
   if ov then
     if ov.segments then merge(dict.segments, ov.segments) end
@@ -297,19 +314,23 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   local tag=(elems[1] and elems[1].text) and elems[1].text:gsub("^%s+",""):gsub("%s+$","") or seg
   local _,col=unpack(vim.api.nvim_win_get_cursor(0)); local rel_col=col-seg_s
 
-  -- robust element picking; on a separator, prefer the previous element (and return 0 before first)
+  -- robust element picking; on a '+' separator, prefer the previous element.
+  -- indexes: element #1 is elems[2] (elems[1] is the tag)
   local function pick_elem_at_cursor(tokens, rel)
+    -- inside current element (INCLUSIVE at start)
     for i=2,#tokens do
       local p=tokens[i]
-      if rel > p.s and rel <= p.e then return i-1, p end
+      if rel >= p.s and rel <= p.e then return i-1, p end
     end
+    -- on separator before element i: choose previous (i-1), before first → 0
     for i=2,#tokens do
       local p=tokens[i]
-      if rel <= p.s then
+      if rel < p.s then
         if i==2 then return 0, nil end
-        return i-2+1, tokens[i-1] -- previous element
+        return (i-1)-1+1, tokens[i-1]  -- i-1 index & piece of previous
       end
     end
+    -- after last element → last
     if #tokens >= 2 then
       return (#tokens-1), tokens[#tokens]
     end
@@ -324,18 +345,20 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
     local comps = split_with_ranges(elem_piece.text, cfg.comp, cfg.release)
     local rel_comp = rel_col - elem_piece.s
     local function pick_comp_at_cursor(ctokens, rel2)
-      -- choose component under cursor; on a separator, prefer previous; before first → index 0
+      -- inside (INCLUSIVE at start)
       for j=1,#ctokens do
         local c = ctokens[j]
-        if rel2 > c.s and rel2 <= c.e then return j, c end
+        if rel2 >= c.s and rel2 <= c.e then return j, c end
       end
+      -- on ':' separator before component j → choose previous (j-1), before first → 0
       for j=1,#ctokens do
         local c = ctokens[j]
-        if rel2 <= c.s then
+        if rel2 < c.s then
           if j==1 then return 0, nil end
           return j-1, ctokens[j-1]
         end
       end
+      -- after last component → last
       return #ctokens, ctokens[#ctokens]
     end
     local comp_piece
@@ -421,6 +444,7 @@ vim.api.nvim_set_hl(0,"EdiScopeSG",{link="Type"})
 
 local ns_anno = vim.api.nvim_create_namespace("edi-anno")
 
+-- end-of-line labels
 local function put_label(buf, lnum, chunks, prio)
   vim.api.nvim_buf_set_extmark(buf, ns_anno, lnum, 0, {
     virt_text = chunks,
@@ -429,6 +453,7 @@ local function put_label(buf, lnum, chunks, prio)
   })
 end
 
+-- message signature to printable short string (e.g. "APERAK-04A")
 local function msg_sig_label(sig)
   if not sig or not sig.type then return nil end
   if sig.release and #sig.release>0 then return sig.type.."-"..sig.release end
@@ -720,6 +745,7 @@ local function annotate_pretty(buf)
   clear_annotations(buf)
   local nodes, _ = build_tree(buf)
 
+  -- standard scopes
   for _,n in ipairs(nodes) do
     local hl = (n.type=="interchange" and "EdiScopeInterchange") or (n.type=="group" and "EdiScopeGroup") or "EdiScopeMessage"
     put_label(buf, n.s-1, { { "⟪ "..n.title.." ⟫", hl } })
@@ -727,6 +753,7 @@ local function annotate_pretty(buf)
   end
   vim.b.edi_tree = nodes
 
+  -- SG inside messages
   for _,n in ipairs(nodes) do
     if n.type == "message" then
       local cfg = detect_edi(buf)
@@ -801,6 +828,7 @@ local function edi_pretty_toggle()
   vim.api.nvim_win_set_buf(win, pbuf)
   annotate_pretty(pbuf)
 
+  -- Jumps
   vim.keymap.set({"n"}, "]m", function() jump_to(1,"message") end, {buffer=pbuf, desc="next message"})
   vim.keymap.set({"n"}, "[m", function() jump_to(-1,"message") end, {buffer=pbuf, desc="prev message"})
   vim.keymap.set({"n"}, "]g", function() jump_to(1,"group") end, {buffer=pbuf, desc="next group"})
@@ -808,12 +836,14 @@ local function edi_pretty_toggle()
   vim.keymap.set({"n"}, "]i", function() jump_to(1,"interchange") end, {buffer=pbuf, desc="next interchange"})
   vim.keymap.set({"n"}, "[i", function() jump_to(-1,"interchange") end, {buffer=pbuf, desc="prev interchange"})
 
+  -- Text-objects (visual + operator-pending) — pretty buffer only
   for _,which in ipairs({{"m","message"},{"g","group"},{"i","interchange"}}) do
     local key, kind = which[1], which[2]
     vim.keymap.set({"x","o"}, "i"..key, function() select_node_lines(kind,false) end, {buffer=pbuf, desc="inner "..kind})
     vim.keymap.set({"x","o"}, "a"..key, function() select_node_lines(kind,true)  end, {buffer=pbuf, desc="around "..kind})
   end
 
+  -- 'q' to return
   vim.keymap.set("n","q", function()
     local s = vim.w.edi_pretty_state
     if s and vim.api.nvim_buf_is_valid(s.source) then vim.api.nvim_win_set_buf(win, s.source) end
@@ -836,7 +866,6 @@ local function parse_textish(o) if type(o)=="string" then return o end
       if type(v)=="string" then return v end
     end
     local v=o[1]; if type(v)=="table" then return v["@value"] or v["value"] or v["@id"] or v["id"] end
-    return nil
   end
   return o["@value"] or o["value"] or o["@id"] or o["id"] or nil
 end
@@ -942,6 +971,7 @@ local function maybe_set_ft()
   end
 end
 
+-- helper: show which schema matched (or best candidate)
 local function cmd_sg_which()
   local m = vim.b.edi_schema_match
   if m and m.path then
@@ -961,6 +991,7 @@ local function cmd_sg_which()
   end
 end
 
+-- dump normalized SGs the annotator sees
 local function cmd_sg_dump()
   local buf = vim.api.nvim_get_current_buf()
   local nodes, cfg = build_tree(buf)
@@ -1012,7 +1043,7 @@ function M.setup(opts)
   })
   vim.api.nvim_create_autocmd("VimLeavePre",{group=grp, callback=function()
     if vim.w.edi_pretty_state and vim.api.nvim_buf_is_valid(vim.w.edi_pretty_state.pretty) then
-      pcall(vim.api.nvim_buf_delete,vim.w.edi_pretty_state.pretty,{force=true})
+      pcall(vim.api.nvim_buf_delete, vim.w.edi_pretty_state.pretty,{force=true})
     end
   end})
 end
