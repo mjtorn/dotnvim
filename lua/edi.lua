@@ -242,12 +242,24 @@ local function current_segment_at_cursor(cfg)
   local seg=line:sub(indent+1); return trim(seg), indent, #line-1
 end
 
-local function deep_copy(x) return vim.deepcopy(x) end
 local function get_dict(flavor)
-  local dict = deep_copy(BUILTIN[flavor] or {})
-  merge(dict.segments or {}, state.data[flavor].segments or {})
-  merge(dict.codes or {}, state.data[flavor].codes or {})
-  if state.cfg.dict_overrides and state.cfg.dict_overrides[flavor] then merge(dict, state.cfg.dict_overrides[flavor]) end
+  local dict = vim.deepcopy(BUILTIN[flavor] or {})
+
+  -- ensure tables exist before merging
+  dict.segments = dict.segments or {}
+  dict.codes    = dict.codes    or {}
+
+  -- merge user data loaded from ~/.config/nvim/edi-data
+  merge(dict.segments, state.data[flavor].segments or {})
+  merge(dict.codes,    state.data[flavor].codes    or {})
+
+  -- optional overrides
+  local ov = state.cfg.dict_overrides and state.cfg.dict_overrides[flavor] or nil
+  if ov then
+    if ov.segments then merge(dict.segments, ov.segments) end
+    if ov.codes    then merge(dict.codes,    ov.codes)    end
+    merge(dict, ov)
+  end
   return dict
 end
 
@@ -265,7 +277,8 @@ end
 
 local function codelist_lookup(flavor, id, code)
   if not id or not code then return nil end
-  local dict=get_dict(flavor); local set=dict.codes and dict.codes[id]
+  local dict = get_dict(flavor)
+  local set  = (dict.codes and (dict.codes[id] or dict.codes[tostring(id)] or dict.codes[tonumber(id) or id])) or nil
   if not set then return nil end
   return set[code] or set[tostring(code)] or set[tonumber(code) or code]
 end
@@ -299,13 +312,20 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
     local comps = split_with_ranges(elem_piece.text, cfg.comp, cfg.release)
     local rel_comp = rel_col - elem_piece.s
     local function pick_comp_at_cursor(ctokens, rel2)
+      -- choose component under cursor; on a separator, prefer the previous component (consistent with elements)
       for j=1,#ctokens do
         local c = ctokens[j]
         if rel2>=c.s and rel2<=c.e then return j, c end
       end
       for j=1,#ctokens do
         local c = ctokens[j]
-        if rel2 < c.s then return j, c end
+        if rel2 < c.s then
+          if j > 1 then
+            return j-1, ctokens[j-1]
+          else
+            return j, c
+          end
+        end
       end
       return #ctokens, ctokens[#ctokens]
     end
@@ -320,6 +340,7 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   local comp_name = info and info.comp and info.comp.name or nil
   local codeset   = info and info.codeset or nil
   local code_value = comp_val or elem_val
+  if code_value then code_value = trim(code_value) end
   local code_meaning = codelist_lookup(cfg.flavor, codeset, code_value)
 
   local lines={}
@@ -407,11 +428,15 @@ local function msg_sig_label(sig)
   return sig.type
 end
 
+local function split_with_ranges2(s, sep, release)
+  return split_with_ranges(s, sep, release)
+end
+
 local function parse_message_sig(line, cfg)
-  local elems = split_with_ranges(line, cfg.elem, cfg.release)
+  local elems = split_with_ranges2(line, cfg.elem, cfg.release)
   local s009 = elems[3] and elems[3].text or nil
   if not s009 or not cfg.comp then return nil end
-  local c = split_with_ranges(s009, cfg.comp, cfg.release)
+  local c = split_with_ranges2(s009, cfg.comp, cfg.release)
   local mtype = c[1] and trim(c[1].text) or nil
   local ver   = c[2] and trim(c[2].text) or nil
   local rel   = c[3] and trim(c[3].text) or nil
