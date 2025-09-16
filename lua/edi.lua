@@ -553,6 +553,15 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   local _, col = unpack(vim.api.nvim_win_get_cursor(0))
   local rel_col = col - seg_s
 
+  -- Bias left if cursor is exactly on an element separator so we resolve to the previous element.
+  do
+    local ch = seg:sub(rel_col + 1, rel_col + 1)
+    if ch == cfg.elem then
+      rel_col = rel_col - 1
+      if rel_col < 0 then rel_col = 0 end
+    end
+  end
+
   -- robust element picking; on a '+' separator, prefer the previous element.
   -- indexes: element #1 is elems[2] (elems[1] is the tag)
   local function pick_elem_at_cursor(tokens, rel)
@@ -587,6 +596,16 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   if elem_piece and cfg.comp and #cfg.comp > 0 and elem_piece.text:find(esc(cfg.comp), 1, false) then
     local comps = split_with_ranges(elem_piece.text, cfg.comp, cfg.release)
     local rel_comp = rel_col - elem_piece.s
+
+    -- Bias left if cursor is exactly on a component separator so we resolve to the previous component.
+    do
+      local ch2 = elem_piece.text:sub(rel_comp + 1, rel_comp + 1)
+      if ch2 == cfg.comp then
+        rel_comp = rel_comp - 1
+        if rel_comp < 0 then rel_comp = 0 end
+      end
+    end
+
     local function pick_comp_at_cursor(ctokens, rel2)
       -- inside (INCLUSIVE at start)
       for j = 1, #ctokens do
