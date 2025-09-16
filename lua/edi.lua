@@ -74,9 +74,7 @@ local function load_json(path)
 end
 
 -- ---------------------------------------------------------------------------
--- Data loading (segments & code lists). Segment titles have a small builtin
--- to have something even without external JSON; code meanings come only from
--- JSON under data_dir/{edifact|x12}/codes/<id>.json
+-- Data loading (segments & code lists)
 -- ---------------------------------------------------------------------------
 local BUILTIN = {
   edifact = { segments = {
@@ -101,13 +99,11 @@ local function try_load_data_dir()
   local base = state.cfg.data_dir
   state.data = { x12={segments={},codes={}}, edifact={segments={},codes={}} }
 
-  -- optional extended segment metadata
   local x12_seg = load_json(base.."/x12/segments.json")
   local edf_seg = load_json(base.."/edifact/segments.json")
   state.data.x12.segments = x12_seg or {}
   state.data.edifact.segments = edf_seg or {}
 
-  -- code lists
   for _,fl in ipairs({ "x12","edifact" }) do
     local dir = base.."/"..fl.."/codes"
     local h = vim.loop.fs_scandir(dir)
@@ -230,30 +226,43 @@ local function split_with_ranges(s, sep, release)
   return parts
 end
 
+-- Choose the segment under cursor; on the segment separator, prefer the previous segment
 local function current_segment_at_cursor(cfg)
   local _,col=unpack(vim.api.nvim_win_get_cursor(0))
   local line = vim.api.nvim_get_current_line()
+
+  -- If the physical line contains multiple segments (e.g., EDIFACT with "'"), split and choose prev on separator
   if (cfg.seg=="\r\n" and line:find("\r\n",1,true)) or (cfg.seg~="\r\n" and cfg.seg~="\n" and line:find(esc(cfg.seg))) then
     local segs = split_with_ranges(line, cfg.seg, cfg.release)
-    for _,p in ipairs(segs) do if col>=p.s and col<=p.e then return trim(p.text), p.s, p.e end end
-    return trim(line),0,#line-1
+    -- First pass: inside token (treat start boundary as NOT inside, so separators pick previous)
+    for _,p in ipairs(segs) do
+      if col > p.s and col <= p.e then return trim(p.text), p.s, p.e end
+    end
+    -- Second pass: boundary handling → previous piece on separator
+    for i,p in ipairs(segs) do
+      if col <= p.s then
+        if i>1 then
+          local prev = segs[i-1]; return trim(prev.text), prev.s, prev.e
+        else
+          return trim(p.text), p.s, p.e
+        end
+      end
+    end
+    -- Fallback: last segment
+    local last = segs[#segs]; return trim(last.text), last.s, last.e
   end
+
+  -- Pretty view (one segment per line): return trimmed line content as segment
   local bol=line:find("%S"); local indent=(bol and bol-1) or #line
   local seg=line:sub(indent+1); return trim(seg), indent, #line-1
 end
 
 local function get_dict(flavor)
   local dict = vim.deepcopy(BUILTIN[flavor] or {})
-
-  -- ensure tables exist before merging
   dict.segments = dict.segments or {}
   dict.codes    = dict.codes    or {}
-
-  -- merge user data loaded from ~/.config/nvim/edi-data
   merge(dict.segments, state.data[flavor].segments or {})
   merge(dict.codes,    state.data[flavor].codes    or {})
-
-  -- optional overrides
   local ov = state.cfg.dict_overrides and state.cfg.dict_overrides[flavor] or nil
   if ov then
     if ov.segments then merge(dict.segments, ov.segments) end
@@ -288,15 +297,18 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   local tag=(elems[1] and elems[1].text) and elems[1].text:gsub("^%s+",""):gsub("%s+$","") or seg
   local _,col=unpack(vim.api.nvim_win_get_cursor(0)); local rel_col=col-seg_s
 
-  -- robust picking even when cursor is on a separator
+  -- robust element picking; on a separator, prefer the previous element (and return 0 before first)
   local function pick_elem_at_cursor(tokens, rel)
     for i=2,#tokens do
       local p=tokens[i]
-      if rel>=p.s and rel<=p.e then return i-1, p end
+      if rel > p.s and rel <= p.e then return i-1, p end
     end
     for i=2,#tokens do
       local p=tokens[i]
-      if rel < p.s then return i-1, p end
+      if rel <= p.s then
+        if i==2 then return 0, nil end
+        return i-2+1, tokens[i-1] -- previous element
+      end
     end
     if #tokens >= 2 then
       return (#tokens-1), tokens[#tokens]
@@ -312,19 +324,16 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
     local comps = split_with_ranges(elem_piece.text, cfg.comp, cfg.release)
     local rel_comp = rel_col - elem_piece.s
     local function pick_comp_at_cursor(ctokens, rel2)
-      -- choose component under cursor; on a separator, prefer the previous component (consistent with elements)
+      -- choose component under cursor; on a separator, prefer previous; before first → index 0
       for j=1,#ctokens do
         local c = ctokens[j]
-        if rel2>=c.s and rel2<=c.e then return j, c end
+        if rel2 > c.s and rel2 <= c.e then return j, c end
       end
       for j=1,#ctokens do
         local c = ctokens[j]
-        if rel2 < c.s then
-          if j > 1 then
-            return j-1, ctokens[j-1]
-          else
-            return j, c
-          end
+        if rel2 <= c.s then
+          if j==1 then return 0, nil end
+          return j-1, ctokens[j-1]
         end
       end
       return #ctokens, ctokens[#ctokens]
@@ -412,7 +421,6 @@ vim.api.nvim_set_hl(0,"EdiScopeSG",{link="Type"})
 
 local ns_anno = vim.api.nvim_create_namespace("edi-anno")
 
--- end-of-line labels
 local function put_label(buf, lnum, chunks, prio)
   vim.api.nvim_buf_set_extmark(buf, ns_anno, lnum, 0, {
     virt_text = chunks,
@@ -421,7 +429,6 @@ local function put_label(buf, lnum, chunks, prio)
   })
 end
 
--- message signature to printable short string (e.g. "APERAK-04A")
 local function msg_sig_label(sig)
   if not sig or not sig.type then return nil end
   if sig.release and #sig.release>0 then return sig.type.."-"..sig.release end
@@ -713,7 +720,6 @@ local function annotate_pretty(buf)
   clear_annotations(buf)
   local nodes, _ = build_tree(buf)
 
-  -- standard scopes
   for _,n in ipairs(nodes) do
     local hl = (n.type=="interchange" and "EdiScopeInterchange") or (n.type=="group" and "EdiScopeGroup") or "EdiScopeMessage"
     put_label(buf, n.s-1, { { "⟪ "..n.title.." ⟫", hl } })
@@ -721,7 +727,6 @@ local function annotate_pretty(buf)
   end
   vim.b.edi_tree = nodes
 
-  -- SG inside messages
   for _,n in ipairs(nodes) do
     if n.type == "message" then
       local cfg = detect_edi(buf)
@@ -796,7 +801,6 @@ local function edi_pretty_toggle()
   vim.api.nvim_win_set_buf(win, pbuf)
   annotate_pretty(pbuf)
 
-  -- Jumps
   vim.keymap.set({"n"}, "]m", function() jump_to(1,"message") end, {buffer=pbuf, desc="next message"})
   vim.keymap.set({"n"}, "[m", function() jump_to(-1,"message") end, {buffer=pbuf, desc="prev message"})
   vim.keymap.set({"n"}, "]g", function() jump_to(1,"group") end, {buffer=pbuf, desc="next group"})
@@ -804,14 +808,12 @@ local function edi_pretty_toggle()
   vim.keymap.set({"n"}, "]i", function() jump_to(1,"interchange") end, {buffer=pbuf, desc="next interchange"})
   vim.keymap.set({"n"}, "[i", function() jump_to(-1,"interchange") end, {buffer=pbuf, desc="prev interchange"})
 
-  -- Text-objects (visual + operator-pending) — pretty buffer only
   for _,which in ipairs({{"m","message"},{"g","group"},{"i","interchange"}}) do
     local key, kind = which[1], which[2]
     vim.keymap.set({"x","o"}, "i"..key, function() select_node_lines(kind,false) end, {buffer=pbuf, desc="inner "..kind})
     vim.keymap.set({"x","o"}, "a"..key, function() select_node_lines(kind,true)  end, {buffer=pbuf, desc="around "..kind})
   end
 
-  -- 'q' to return
   vim.keymap.set("n","q", function()
     local s = vim.w.edi_pretty_state
     if s and vim.api.nvim_buf_is_valid(s.source) then vim.api.nvim_win_set_buf(win, s.source) end
@@ -940,7 +942,6 @@ local function maybe_set_ft()
   end
 end
 
--- helper: show which schema matched (or best candidate)
 local function cmd_sg_which()
   local m = vim.b.edi_schema_match
   if m and m.path then
@@ -960,7 +961,6 @@ local function cmd_sg_which()
   end
 end
 
--- dump normalized SGs the annotator sees
 local function cmd_sg_dump()
   local buf = vim.api.nvim_get_current_buf()
   local nodes, cfg = build_tree(buf)
