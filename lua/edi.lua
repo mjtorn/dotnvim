@@ -553,22 +553,35 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   local _, col = unpack(vim.api.nvim_win_get_cursor(0))
   local rel_col = col - seg_s
 
-  -- Bias left if cursor is exactly on an element separator so we resolve to the previous element.
+  -- robust separator biasing:
+  -- * first '+' in a run → bias left (previous element)
+  -- * 2nd-or-later '+' in a run → stay (select the empty element between)
   do
     local ch = seg:sub(rel_col + 1, rel_col + 1)
     if ch == cfg.elem then
-      rel_col = rel_col - 1
-      if rel_col < 0 then rel_col = 0 end
+      local prev = seg:sub(rel_col, rel_col)
+      if prev ~= cfg.elem then
+        rel_col = rel_col - 1
+        if rel_col < 0 then rel_col = 0 end
+      end
     end
   end
 
-  -- robust element picking; on a '+' separator, prefer the previous element.
+  -- robust element picking; honors empty fields (tokens with e < s)
   -- indexes: element #1 is elems[2] (elems[1] is the tag)
   local function pick_elem_at_cursor(tokens, rel)
     -- inside current element (INCLUSIVE at start)
     for i = 2, #tokens do
       local p = tokens[i]
       if rel >= p.s and rel <= p.e then
+        return i - 1, p
+      end
+    end
+    -- NEW: handle zero-width element exactly under cursor (between consecutive '+')
+    for i = 2, #tokens do
+      local p = tokens[i]
+      local nxt = tokens[i + 1]
+      if p.e < p.s and rel >= p.s and (not nxt or rel < nxt.s) then
         return i - 1, p
       end
     end
@@ -579,7 +592,7 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
         if i == 2 then
           return 0, nil
         end
-        return (i - 1) - 1 + 1, tokens[i - 1] -- i-1 index & piece of previous
+        return (i - 1), tokens[i - 1]
       end
     end
     -- after last element → last
@@ -597,12 +610,15 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
     local comps = split_with_ranges(elem_piece.text, cfg.comp, cfg.release)
     local rel_comp = rel_col - elem_piece.s
 
-    -- Bias left if cursor is exactly on a component separator so we resolve to the previous component.
+    -- component-level bias: same rule as elements (see above)
     do
       local ch2 = elem_piece.text:sub(rel_comp + 1, rel_comp + 1)
       if ch2 == cfg.comp then
-        rel_comp = rel_comp - 1
-        if rel_comp < 0 then rel_comp = 0 end
+        local prev2 = elem_piece.text:sub(rel_comp, rel_comp)
+        if prev2 ~= cfg.comp then
+          rel_comp = rel_comp - 1
+          if rel_comp < 0 then rel_comp = 0 end
+        end
       end
     end
 
@@ -611,6 +627,14 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
       for j = 1, #ctokens do
         local c = ctokens[j]
         if rel2 >= c.s and rel2 <= c.e then
+          return j, c
+        end
+      end
+      -- NEW: handle zero-width component under cursor (::)
+      for j = 1, #ctokens do
+        local c = ctokens[j]
+        local nxt = ctokens[j + 1]
+        if c.e < c.s and rel2 >= c.s and (not nxt or rel2 < nxt.s) then
           return j, c
         end
       end
@@ -637,7 +661,7 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   local elem_name = info and info.elem and info.elem.name or nil
   local comp_name = info and info.comp and info.comp.name or nil
   local codeset = info and info.codeset or nil
-  local code_value = comp_val or elem_val
+  local code_value = (comp_val or elem_val)
   if code_value then
     code_value = trim(code_value)
   end
@@ -659,13 +683,17 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   if code_value and code_meaning then
     table.insert(lines, string.format("Code: %s — %s", code_value, code_meaning))
   end
-  if comp_val then
-    table.insert(lines, "Value: " .. comp_val)
-  elseif elem_val then
-    table.insert(lines, "Value: " .. elem_val)
+  -- Always show Value: for elements/components (even when empty) so descriptions are discoverable
+  if elem_idx > 0 then
+    if comp_idx > 0 then
+      table.insert(lines, "Value: " .. (comp_val or ""))
+    else
+      table.insert(lines, "Value: " .. (elem_val or ""))
+    end
   else
     table.insert(lines, "Segment: " .. seg)
   end
+
   local path =
     (elem_idx == 0) and tag or
     (comp_idx > 0 and string.format("%s[%d].%d", tag, elem_idx, comp_idx) or string.format("%s[%d]", tag, elem_idx))
