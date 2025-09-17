@@ -249,6 +249,40 @@ local BUILTIN = {
   }
 }
 
+-- ---------------------------------------------------------------------------
+-- Built-in message schemas (used if no JSON file is found)
+-- ---------------------------------------------------------------------------
+local BUILTIN_SCHEMAS = {
+  edifact = {
+    -- APERAK D.04A UN (covers assoc variants like E5SE5A)
+    ["APERAK:04A:UN"] = {
+      groups = {
+        { id = "SG1", name = "REFERENCE",  starts = {"RFF"} },
+        { id = "SG2", name = "PARTY",      starts = {"NAD"} },
+        {
+          id = "SG3", name = "APPLICATION ERROR",
+          starts = {"ERC"},
+          children = {
+            { id = "SG3-FTX", name = "TEXT",       starts = {"FTX"} },
+            { id = "SG3-RFF", name = "REFERENCE",  starts = {"RFF"} },
+          }
+        },
+      }
+    },
+  }
+}
+
+local function builtin_schema_key(sig)
+  if not sig or not sig.type then return nil end
+  local t = (sig.type or ""):upper()
+  local r = (sig.release or ""):upper()
+  local a = (sig.agency or ""):upper()
+  if t == "" then return nil end
+  if r ~= "" and a ~= "" then return string.format("%s:%s:%s", t, r, a) end
+  if r ~= "" then return string.format("%s:%s", t, r) end
+  return t
+end
+
 local function try_load_data_dir()
   local base = state.cfg.data_dir
   state.data = {x12 = {segments = {}, codes = {}}, edifact = {segments = {}, codes = {}}}
@@ -942,7 +976,7 @@ local function clear_annotations(buf)
 end
 
 -- ---------------------------------------------------------------------------
--- Schema normalization (permissive)
+-- Schema normalization (permissive) + schema discovery + heuristic inference
 -- ---------------------------------------------------------------------------
 local function is_array(t)
   if type(t) ~= "table" then
@@ -1091,6 +1125,44 @@ local function scan_json_candidates(root, stems)
   return nil
 end
 
+-- Heuristic SG inference -----------------------------------------------------
+local COMMON_HEADS = {
+  NAD = true, RFF = true, LIN = true, ERC = true, LOC = true, TAX = true
+}
+
+local function infer_schema_from_lines(sig, lines)
+  if not sig or not sig.type then return nil end
+  local t = (sig.type or ""):upper()
+  local groups = {}
+
+  local function add(id, name, starts, children)
+    table.insert(groups, { id = id, name = name, starts = starts, children = children or {} })
+  end
+
+  if t == "APERAK" then
+    add("SG1", "REFERENCE", {"RFF"})
+    add("SG2", "PARTY", {"NAD"})
+    add("SG3", "APPLICATION ERROR", {"ERC"}, {
+      { id = "SG3-FTX", name = "TEXT",       starts = {"FTX"} },
+      { id = "SG3-RFF", name = "REFERENCE",  starts = {"RFF"} },
+    })
+    return { groups = groups }
+  end
+
+  local seen = {}
+  for _, ln in ipairs(lines or {}) do
+    local tag = ln:gsub("^%s+", ""):match("^([A-Z][A-Z0-9]+)")
+    if tag and COMMON_HEADS[tag] then seen[tag] = true end
+  end
+  local idx = 1
+  for tag, _ in pairs(seen) do
+    add(string.format("SG%d", idx), tag .. " GROUP", {tag})
+    idx = idx + 1
+  end
+  return next(groups) and { groups = groups } or nil
+end
+-- End heuristic inference ----------------------------------------------------
+
 local function try_load_schema(sig)
   if not sig or not sig.type then
     return nil
@@ -1101,6 +1173,18 @@ local function try_load_schema(sig)
   local a = (sig.agency or ""):upper()
   local x = (sig.assoc or ""):upper()
 
+  -- Try built-in schemas first (exact → relaxed)
+  do
+    local k = builtin_schema_key(sig) -- e.g. "APERAK:04A:UN"
+    local b = BUILTIN_SCHEMAS.edifact[k]
+      or (r ~= "" and BUILTIN_SCHEMAS.edifact[string.format("%s:%s", t, r)])
+      or BUILTIN_SCHEMAS.edifact[t]
+    if b and b.groups then
+      return vim.deepcopy(b), "[builtin:" .. (k or t) .. "]"
+    end
+  end
+
+  -- On-disk lookup
   local candidates = {}
   if r ~= "" and a ~= "" and x ~= "" then
     table.insert(candidates, string.format("%s-%s-%s-%s", t, r, a, x))
@@ -1123,6 +1207,7 @@ local function try_load_schema(sig)
       end
     end
   end
+
   return nil
 end
 
@@ -1175,8 +1260,16 @@ local function annotate_sg_in_message(buf, node, cfg)
     end
     state.schema_cache[cache_key] = schema
   end
+
+  -- If no schema available, try heuristic inference per message lines
   if schema == false or not (schema and schema.groups) then
-    return
+    local msg_lines = {}
+    for i = 1, #lines do msg_lines[i] = lines[i] end
+    local inferred = infer_schema_from_lines(sig, msg_lines)
+    if not inferred or not inferred.groups then
+      return
+    end
+    schema = inferred
   end
 
   local function tag_of(line)
@@ -1651,7 +1744,8 @@ local function pump()
                   fetcher.done,
                   fetcher.max_id,
                   fetcher.saved,
-                  fetcher.last_saved and string.format("%04d", fetcher.last_saved) or "-"
+                  fetcher.last_saved and string.format("%04d", fetcher.last_saved) or "-",
+                  fetcher.last_count or 0
                 ),
                 vim.log.levels.INFO
               )
@@ -1787,15 +1881,16 @@ local function cmd_sg_dump_schema()
 
   local js, path = try_load_schema(sig or {})
   if not js then
-    return vim.notify("edi: no schema found", vim.log.levels.WARN)
+    -- try inference just to show something
+    local all = vim.api.nvim_buf_get_lines(buf, msg.s - 1, msg.e, false)
+    js = infer_schema_from_lines(sig, all)
+    path = "[inferred]"
   end
-  js = normalize_schema(js)
+  js = normalize_schema(js) or js
   if not js or not js.groups then
     return vim.notify("edi: schema has no groups after normalization", vim.log.levels.WARN)
   end
 
-  -- Dump groups in pre-order (parent before children). If a group has multiple
-  -- starting segments, emit one line per start so alternatives are explicit.
   local function rec(gs, d)
     for _, g in ipairs(gs) do
       local indent = string.rep("  ", d)
