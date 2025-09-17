@@ -6,7 +6,7 @@
 --   Text-objects          im/am  ig/ag  ii/ai  (pretty view)
 --   SG annotations        from JSON schema (case-insensitive; groups/segment_groups)
 --   :EdiSgWhichSchema     show which SG schema matched (or the best candidate)
---   :EdiSgDump            dump normalized SG tree the annotator sees
+--   :EdiSgDumpSchema      dump normalized SG tree the annotator sees
 --   :EdiFetchEdifactAll   fetch UNCL 0001..9999 code lists (JSON-LD → flat map)
 --   :EdiFetchStatus, :EdiReloadData
 
@@ -1765,7 +1765,7 @@ local function cmd_sg_which_schema()
 end
 
 -- dump normalized SGs the annotator sees
-local function cmd_sg_dump()
+local function cmd_sg_dump_schema()
   local buf = vim.api.nvim_get_current_buf()
   local nodes, cfg = build_tree(buf)
   local msg = nil
@@ -1864,7 +1864,7 @@ function M.setup(opts)
     {}
   )
   vim.api.nvim_create_user_command("EdiSgWhichSchema", cmd_sg_which_schema, {desc = "Show which SG schema file matched"})
-  vim.api.nvim_create_user_command("EdiSgDump", cmd_sg_dump, {desc = "Dump normalized SG tree"})
+  vim.api.nvim_create_user_command("EdiSgDumpSchema", cmd_sg_dump_schema, {desc = "Dump normalized SG tree"})
 
   local grp = vim.api.nvim_create_augroup("edi-core", {clear = true})
   vim.api.nvim_create_autocmd({"BufReadPost", "BufNewFile"}, {group = grp, callback = maybe_set_ft})
