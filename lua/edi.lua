@@ -5,7 +5,7 @@
 --   Jumps                 ]m/[m  ]g/[g  ]i/[i   (message/group/interchange)
 --   Text-objects          im/am  ig/ag  ii/ai  (pretty view)
 --   SG annotations        from JSON schema (case-insensitive; groups/segment_groups)
---   :EdiSgWhich           show which SG schema matched (or the best candidate)
+--   :EdiSgWhichSchema     show which SG schema matched (or the best candidate)
 --   :EdiSgDump            dump normalized SG tree the annotator sees
 --   :EdiFetchEdifactAll   fetch UNCL 0001..9999 code lists (JSON-LD → flat map)
 --   :EdiFetchStatus, :EdiReloadData
@@ -1700,7 +1700,7 @@ local function maybe_set_ft()
 end
 
 -- helper: show which schema matched (or best candidate)
-local function cmd_sg_which()
+local function cmd_sg_which_schema()
   local m = vim.b.edi_schema_match
   if m and m.path then
     vim.notify(
@@ -1820,7 +1820,7 @@ function M.setup(opts)
     end,
     {}
   )
-  vim.api.nvim_create_user_command("EdiSgWhich", cmd_sg_which, {desc = "Show which SG schema file matched"})
+  vim.api.nvim_create_user_command("EdiSgWhichSchema", cmd_sg_which_schema, {desc = "Show which SG schema file matched"})
   vim.api.nvim_create_user_command("EdiSgDump", cmd_sg_dump, {desc = "Dump normalized SG tree"})
 
   local grp = vim.api.nvim_create_augroup("edi-core", {clear = true})
