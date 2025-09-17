@@ -128,6 +128,15 @@ local function load_json(path)
   return dec
 end
 
+-- Make a Vim regex that matches the literal string `s` using very-nomagic.
+-- We only need to escape the delimiter `/` and `\` itself.
+local function vim_regex_literal(s)
+  if not s or s == "" then
+    return ""
+  end
+  return "\\V" .. vim.fn.escape(s, [[\/]])
+end
+
 -- ---------------------------------------------------------------------------
 -- Data loading (segments & code lists) — JSON only
 -- Segment titles have a small builtin → REMOVED: code meanings come only from JSON
@@ -285,12 +294,12 @@ local function apply_syntax(buf, cfg)
     vim.cmd("syntax enable")
     vim.cmd("silent! syntax clear EdiSegmentTag EdiSep EdiCompSep EdiRelease EdiNum")
     vim.cmd([[syntax match EdiSegmentTag "^\s*\zs[A-Z][A-Z0-9]\{1,5\}\ze\>"]])
-    vim.cmd("execute 'syntax match EdiSep /" .. esc(cfg.elem) .. "/'")
+    vim.cmd(("execute 'syntax match EdiSep /%s/'"):format(vim_regex_literal(cfg.elem)))
     if cfg.comp and #cfg.comp > 0 then
-      vim.cmd("execute 'syntax match EdiCompSep /" .. esc(cfg.comp) .. "/'")
+      vim.cmd(("execute 'syntax match EdiCompSep /%s/'"):format(vim_regex_literal(cfg.comp)))
     end
     if cfg.release and #cfg.release > 0 then
-      vim.cmd("execute 'syntax match EdiRelease /" .. esc(cfg.release) .. "/'")
+      vim.cmd(("execute 'syntax match EdiRelease /%s/'"):format(vim_regex_literal(cfg.release)))
     end
     vim.cmd([[syntax match EdiNum "\v(^|[^A-Z0-9])\zs\d+(\.\d+)?\ze([^A-Z0-9]|$)"]])
   end)
@@ -840,25 +849,34 @@ local function strtoupper_list(lst)
   return out
 end
 
+-- Normalize one group node:
+-- * keep id/name
+-- * starts: explicit starts OR infer from first element of "segments"
+-- * children: normalize recursively
+-- * segments: preserve declared sequence (uppercased) for disambiguation
 local function norm_group_obj(g, key_hint)
   if type(g) == "string" then
-    return {id = key_hint or g, name = key_hint or g, starts = {g:upper()}, children = {}}
+    return {id = key_hint or g, name = key_hint or g, starts = {g:upper()}, children = {}, segments = {g:upper()}}
   end
   local o = {}
   -- IDs may be numbers (e.g., 2.1); always stringify
   o.id = (g.id ~= nil) and tostring(g.id) or key_hint
   o.name = g.name or g.title or g.description
 
-  local starts = g.starts or g.start or g.head or g.begin or g.trigger
-  if type(starts) == "string" then
-    starts = {starts}
+  local segs = {}
+  if type(g.segments) == "table" then
+    for _, s in ipairs(g.segments) do
+      if type(s) == "string" then table.insert(segs, s:upper()) end
+      if type(s) == "table" and type(s.tag) == "string" then table.insert(segs, s.tag:upper()) end
+    end
   end
-  if (not starts) and type(g.segments) == "table" and #g.segments > 0 then
-    local first = g.segments[1]
-    if type(first) == "string" then
-      starts = {first}
-    elseif type(first) == "table" and type(first.tag) == "string" then
-      starts = {first.tag}
+  o.segments = segs
+
+  local starts = g.starts or g.start or g.head or g.begin or g.trigger
+  if type(starts) == "string" then starts = {starts} end
+  if (not starts) or (#strtoupper_list(starts) == 0) then
+    if #segs > 0 then
+      starts = {segs[1]}
     end
   end
   o.starts = strtoupper_list(starts or {})
@@ -1011,6 +1029,46 @@ local function build_peer_map(groups)
   return map, all
 end
 
+-- NEW: choose the best-matching group among candidates that share the same start tag.
+-- Uses the declared "segments" sequence from JSON (if present) to disambiguate cases like
+-- RFF-DTM vs RFF-FTX. Scores by longest prefix match of the sequence starting at 'idx'.
+local function choose_best_group(lines, idx, candidates, tag_of)
+  local function score(g)
+    local seq = g.segments or {}
+    if #seq == 0 then
+      -- no explicit sequence → minimal score; still a candidate
+      return 1
+    end
+    if seq[1] ~= tag_of(lines[idx] or "") then
+      return -1
+    end
+    local s = 1
+    local j = idx + 1
+    for k = 2, #seq do
+      local t = tag_of(lines[j] or "")
+      if t == seq[k] then
+        s = s + 1
+        j = j + 1
+      else
+        break
+      end
+    end
+    return s
+  end
+
+  local best, bscore = nil, -1
+  for _, g in ipairs(candidates or {}) do
+    local sc = score(g)
+    if sc > bscore then
+      best, bscore = g, sc
+    elseif sc == bscore and best and ( #(g.segments or {}) > #(best.segments or {}) ) then
+      -- tie-breaker: prefer the longer declared sequence
+      best = g
+    end
+  end
+  return best
+end
+
 local function annotate_sg_in_message(buf, node, cfg)
   local lines = vim.api.nvim_buf_get_lines(buf, node.s - 1, node.e, false)
   if #lines == 0 then
@@ -1062,26 +1120,40 @@ local function annotate_sg_in_message(buf, node, cfg)
         goto continue
       end
 
-      local g_found = nil
+      -- collect all groups that can start with this tag
+      local cands = {}
       for _, g in ipairs(groups) do
         if peer_map[g][tag] then
-          g_found = g
-          break
+          table.insert(cands, g)
         end
       end
+
+      local g_found = nil
+      if #cands == 1 then
+        g_found = cands[1]
+      elseif #cands > 1 then
+        -- disambiguate using the declared "segments" sequence (JSON).
+        g_found = choose_best_group(lines, i, cands, tag_of)
+      end
+
       if not g_found then
         i = i + 1
       else
         local open_lnum = i
         i = i + 1
+
+        -- Recurse into children starting immediately after opener.
         if g_found.children and #g_found.children > 0 then
           i = annotate_level(i, end_idx, g_found.children)
         end
+
+        -- Walk until next sibling start (including same start tag) or UNT (message end).
         while i <= end_idx do
           local t2 = tag_of(lines[i] or "")
           if t2 == "UNT" or all_peer_starts[t2] then
             break
           end
+          -- If a child's start appears here, let the child layer claim it.
           if g_found.children and #g_found.children > 0 then
             local _, child_all = build_peer_map(g_found.children)
             if child_all[t2] then
@@ -1106,6 +1178,8 @@ local function annotate_sg_in_message(buf, node, cfg)
 
         put_label(buf, node.s - 2 + open_lnum, {{"⟪ " .. label .. " ⟫", "EdiScopeSG"}})
         put_label(buf, node.s - 2 + close_lnum, {{"⟪ /" .. label .. " ⟫", "EdiScopeSG"}})
+        -- NOTE: we intentionally do NOT advance i here; the while-loop will see the next
+        -- sibling start (possibly the same tag, e.g., multiple ERC/RFF) and open again.
       end
       ::continue::
     end
