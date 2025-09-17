@@ -577,7 +577,7 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
         return i - 1, p
       end
     end
-    -- NEW: handle zero-width element exactly under cursor (between consecutive '+')
+    -- handle zero-width element exactly under cursor (between consecutive '+')
     for i = 2, #tokens do
       local p = tokens[i]
       local nxt = tokens[i + 1]
@@ -630,7 +630,7 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
           return j, c
         end
       end
-      -- NEW: handle zero-width component under cursor (::)
+      -- handle zero-width component under cursor (::)
       for j = 1, #ctokens do
         local c = ctokens[j]
         local nxt = ctokens[j + 1]
@@ -841,9 +841,36 @@ local function parse_message_sig(line, cfg)
   }
 end
 
-local function build_tree(buf)
+-- Read one segment per line regardless of physical layout in buffer.
+-- In pretty buffers, each line already holds a single segment.
+-- In raw EDIFACT buffers (segment sep like "'") or X12 (~, \n, \r\n), we
+-- split physical lines by the segment separator so downstream code sees
+-- a normalized list of "logical lines".
+local function read_logical_lines(buf)
   local cfg = detect_edi(buf)
-  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  local phys = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  local out = {}
+  for _, line in ipairs(phys) do
+    local raw = trim((line or ""):gsub("^%s+", ""))
+    if raw ~= "" then
+      if cfg.seg == "\n" or cfg.seg == "\r\n" then
+        table.insert(out, raw)
+      else
+        local segs = split_segments(raw, cfg.seg, cfg.release)
+        for _, s in ipairs(segs) do
+          local one = trim(s)
+          if one ~= "" then
+            table.insert(out, one)
+          end
+        end
+      end
+    end
+  end
+  return out, cfg
+end
+
+local function build_tree(buf)
+  local lines, cfg = read_logical_lines(buf)
   local stack, nodes = {}, {}
   for i, line in ipairs(lines) do
     local raw = trim(line:gsub("^%s+", ""))
@@ -1714,7 +1741,11 @@ local function cmd_sg_which_schema()
   local sig = nil
   for _, n in ipairs(nodes) do
     if n.type == "message" then
-      sig = n.sig or parse_message_sig(vim.api.nvim_buf_get_lines(buf, n.s - 1, n.s, false)[1] or "", cfg)
+      sig = n.sig
+      if not sig then
+        local lines, _ = read_logical_lines(buf)
+        sig = parse_message_sig(lines[n.s] or "", cfg)
+      end
       break
     end
   end
@@ -1748,7 +1779,12 @@ local function cmd_sg_dump()
     return vim.notify("edi: no message node found", vim.log.levels.WARN)
   end
 
-  local sig = msg.sig or parse_message_sig((vim.api.nvim_buf_get_lines(buf, msg.s - 1, msg.s, false)[1] or ""), cfg)
+  local sig = msg.sig
+  if not sig then
+    local lines, _ = read_logical_lines(buf)
+    sig = parse_message_sig((lines[msg.s] or ""), cfg)
+  end
+
   local js, path = try_load_schema(sig or {})
   if not js then
     return vim.notify("edi: no schema found", vim.log.levels.WARN)
@@ -1758,12 +1794,19 @@ local function cmd_sg_dump()
     return vim.notify("edi: schema has no groups after normalization", vim.log.levels.WARN)
   end
 
+  -- Dump groups in pre-order (parent before children). If a group has multiple
+  -- starting segments, emit one line per start so alternatives are explicit.
   local function rec(gs, d)
     for _, g in ipairs(gs) do
-      print(
-        string.rep("  ", d) ..
-          (g.id or "SG?") .. " starts=[" .. table.concat(g.starts or {}, ",") .. "]  " .. (g.name or "")
-      )
+      local indent = string.rep("  ", d)
+      local starts = g.starts or {}
+      if #starts == 0 then
+        print(indent .. (g.id or "SG?") .. " starts=[]  " .. (g.name or ""))
+      else
+        for _, s in ipairs(starts) do
+          print(indent .. (g.id or "SG?") .. " starts=[" .. s .. "]  " .. (g.name or ""))
+        end
+      end
       rec(g.children or {}, d + 1)
     end
   end
