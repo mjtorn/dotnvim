@@ -1,14 +1,25 @@
 -- lua/edi.lua — EDIFACT/X12 helper for Neovim
 -- Features
 --   :EdiPretty            toggle logical-lines view IN PLACE (q to return)
---   Hover on K            segment/element/component + code meaning (from JSON)
+--   Hover on K            segment/element/component + code meaning (from JSON only)
 --   Jumps                 ]m/[m  ]g/[g  ]i/[i   (message/group/interchange)
 --   Text-objects          im/am  ig/ag  ii/ai  (pretty view)
---   SG annotations        from JSON schema (case-insensitive; groups/segment_groups)
+--   SG annotations        from JSON schema files ONLY (no built-ins, no heuristics)
 --   :EdiSgWhichSchema     show which SG schema matched (or the best candidate)
 --   :EdiSgDumpSchema      dump normalized SG tree the annotator sees
 --   :EdiFetchEdifactAll   fetch UNCL 0001..9999 code lists (JSON-LD → flat map)
 --   :EdiFetchStatus, :EdiReloadData
+--
+-- JSON layout expected under:  ~/.config/nvim/edi-data
+--   edifact/
+--     segments.json              -- segment metadata (titles, elements/components, codesets)
+--     codes/<ID>.json            -- UNCL code lists, flat { "xxx": "Meaning", ... }
+--     messages/
+--       APERAK-96A-UN-EDIEL.json -- message SG schema(s)
+--       APERAK/APERAK-96A-UN-EDIEL.json (also supported)
+--   x12/ (optional, same idea)
+--
+-- This build has NO BUILTIN dictionaries: everything comes from your JSON files.
 
 local M = {}
 
@@ -22,7 +33,7 @@ local state = {
   augroup = nil,
   cfg = {
     data_dir = vim.fn.stdpath("config") .. "/edi-data",
-    dict_overrides = {},
+    dict_overrides = {}, -- optional user overrides merged on top of loaded JSON
     hover = {
       max_width = 96,
       close_events = {
@@ -38,6 +49,7 @@ local state = {
     },
     annotate = true
   },
+  -- Data containers are populated only from on-disk JSON; no built-ins remain.
   data = {x12 = {segments = {}, codes = {}}, edifact = {segments = {}, codes = {}}},
   schema_cache = {} -- key "TYPE:REL:AGY:ASSOC" → schema or false
 }
@@ -117,183 +129,21 @@ local function load_json(path)
 end
 
 -- ---------------------------------------------------------------------------
--- Data loading (segments & code lists). Segment titles have a small builtin
--- to have something even without external JSON; code meanings come only from
--- JSON under data_dir/{edifact|x12}/codes/<id>.json
+-- Data loading (segments & code lists) — JSON only
+-- Segment titles have a small builtin → REMOVED: code meanings come only from JSON
+-- under data_dir/{edifact|x12}/codes/<id>.json
 -- ---------------------------------------------------------------------------
-local BUILTIN = {
-  edifact = {
-    segments = {
-      UNB = {
-        title = "Interchange Header",
-        elements = {
-          {name = "S001 Syntax identifier"},
-          {name = "S002 Interchange sender"},
-          {name = "S003 Interchange recipient"},
-          {name = "S004 Date/time of preparation"},
-          {name = "0020 Interchange control reference", id = "0020"},
-          {name = "S005 Recipient's reference/password"},
-          {name = "0026 Application reference", id = "0026"},
-          {name = "0029 Processing priority code", id = "0029"},
-          {name = "0031 Acknowledgement request", id = "0031"},
-          {name = "0032 Interchange agreement identifier", id = "0032"},
-          {name = "0035 Test indicator", id = "0035"}
-        }
-      },
-      UNH = {
-        title = "Message Header",
-        elements = {
-          {name = "0062 Message reference number", id = "0062"},
-          {
-            name = "S009 Message identifier",
-            components = {
-              {name = "0065 Message type", id = "0065"},
-              {name = "0052 Version", id = "0052"},
-              {name = "0054 Release", id = "0054"},
-              {name = "0051 Agency", id = "0051"},
-              {name = "0057 Association code", id = "0057"}
-            }
-          },
-          {name = "0068 Common access reference", id = "0068"},
-          {name = "S010 Status of transfer"}
-        }
-      },
-      BGM = {
-        title = "Beginning of message",
-        elements = {
-          {
-            name = "C002 Document/message name",
-            components = {
-              {name = "1001 Document name code", id = "1001"},
-              {name = "1131 Code list ID", id = "1131"},
-              {name = "3055 Code list agency", id = "3055"},
-              {name = "1000 Document name", id = "1000"}
-            }
-          },
-          {name = "C106 Document message ID"},
-          {name = "1225 Message function, coded", id = "1225"},
-          {name = "4343 Response type, coded", id = "4343"}
-        }
-      },
-      DTM = {
-        title = "Date/time/period",
-        elements = {
-          {
-            name = "C507 Date/time/period",
-            components = {
-              {name = "2005 Qualifier", id = "2005"},
-              {name = "2380 Date/time/period", id = "2380"},
-              {name = "2379 Format qualifier", id = "2379"}
-            }
-          }
-        }
-      },
-      RFF = {
-        title = "Reference",
-        elements = {
-          {
-            name = "C506 Reference",
-            components = {
-              {name = "1153 Reference qualifier", id = "1153"},
-              {name = "1154 Reference number", id = "1154"},
-              {name = "1156 Line number", id = "1156"},
-              {name = "4000 Reference version", id = "4000"}
-            }
-          }
-        }
-      },
-      NAD = {
-        title = "Name and address",
-        elements = {
-          {name = "3035 Party qualifier", id = "3035"},
-          {name = "C082 Party identification"},
-          {name = "C058 Name and address"},
-          {name = "C080 Party name"},
-          {name = "C059 Street"},
-          {name = "3164 City", id = "3164"},
-          {name = "3251 Postcode", id = "3251"},
-          {name = "3207 Country", id = "3207"}
-        }
-      },
-      ERC = {
-        title = "Application Error Information",
-        elements = {
-          {
-            name = "C901 Application error detail",
-            components = {
-              {name = "9321 Application error identification", id = "9321"},
-              {name = "1131 Code list ID", id = "1131"},
-              {name = "3055 Agency", id = "3055"}
-            }
-          }
-        }
-      },
-      FTX = {title = "Free text"},
-      LIN = {title = "Line item"},
-      QTY = {title = "Quantity"},
-      PRI = {title = "Price details"},
-      MOA = {title = "Monetary amount"},
-      UNT = {title = "Message Trailer"},
-      UNZ = {title = "Interchange Trailer"}
-    }
-  },
-  x12 = {
-    segments = {
-      ISA = {title = "Interchange Control Header"},
-      GS = {title = "Functional Group Header"},
-      ST = {title = "Transaction Set Header"},
-      SE = {title = "Transaction Set Trailer"},
-      GE = {title = "Functional Group Trailer"},
-      IEA = {title = "Interchange Control Trailer"}
-    }
-  }
-}
-
--- ---------------------------------------------------------------------------
--- Built-in message schemas (used if no JSON file is found)
--- ---------------------------------------------------------------------------
-local BUILTIN_SCHEMAS = {
-  edifact = {
-    -- APERAK D.04A UN (covers assoc variants like E5SE5A)
-    ["APERAK:04A:UN"] = {
-      groups = {
-        { id = "SG1", name = "REFERENCE",  starts = {"RFF"} },
-        { id = "SG2", name = "PARTY",      starts = {"NAD"} },
-        {
-          id = "SG3", name = "APPLICATION ERROR",
-          starts = {"ERC"},
-          children = {
-            { id = "SG3-FTX", name = "TEXT",       starts = {"FTX"} },
-            { id = "SG3-RFF", name = "REFERENCE",  starts = {"RFF"} },
-          }
-        },
-      }
-    },
-  }
-}
-
-local function builtin_schema_key(sig)
-  if not sig or not sig.type then return nil end
-  local t = (sig.type or ""):upper()
-  local r = (sig.release or ""):upper()
-  local a = (sig.agency or ""):upper()
-  if t == "" then return nil end
-  if r ~= "" and a ~= "" then return string.format("%s:%s:%s", t, r, a) end
-  if r ~= "" then return string.format("%s:%s", t, r) end
-  return t
-end
-
 local function try_load_data_dir()
   local base = state.cfg.data_dir
   state.data = {x12 = {segments = {}, codes = {}}, edifact = {segments = {}, codes = {}}}
 
-  -- optional extended segment metadata
+  -- optional extended segment metadata (titles/elements/components/codesets)
   local x12_seg = load_json(base .. "/x12/segments.json")
   local edf_seg = load_json(base .. "/edifact/segments.json")
   state.data.x12.segments = x12_seg or {}
   state.data.edifact.segments = edf_seg or {}
 
-  -- code lists
+  -- code lists (flat maps)
   for _, fl in ipairs({"x12", "edifact"}) do
     local dir = base .. "/" .. fl .. "/codes"
     local h = vim.loop.fs_scandir(dir)
@@ -320,7 +170,6 @@ end
 -- ---------------------------------------------------------------------------
 local function detect_edi(bufnr)
   local head = buf_text(bufnr):sub(1, 4000)
-  local has_ISA = head:find("ISA", 1, true)
   local has_UNB = head:find("UNB", 1, true)
   local has_UNA = head:find("UNA", 1, true)
   if has_UNB or has_UNA then
@@ -390,9 +239,9 @@ end
 -- Pretty printer & syntax
 -- ---------------------------------------------------------------------------
 local X12_PUSH = {ISA = true, GS = true, ST = true}
-local X12_POP = {IEA = true, GE = true, SE = true}
+local X12_POP  = {IEA = true, GE = true, SE = true}
 local EDI_PUSH = {UNB = true, UNG = true, UNH = true}
-local EDI_POP = {UNZ = true, UNE = true, UNT = true}
+local EDI_POP  = {UNZ = true, UNE = true, UNT = true}
 
 local function compute_indent(tag, flavor, depth)
   local d = depth
@@ -428,26 +277,23 @@ end
 
 local function apply_syntax(buf, cfg)
   vim.api.nvim_set_hl(0, "EdiSegmentTag", {link = "Label"})
-  vim.api.nvim_set_hl(0, "EdiSep", {link = "Delimiter"})
-  vim.api.nvim_set_hl(0, "EdiCompSep", {link = "Delimiter"})
-  vim.api.nvim_set_hl(0, "EdiRelease", {link = "SpecialChar"})
-  vim.api.nvim_set_hl(0, "EdiNum", {link = "Number"})
-  vim.api.nvim_buf_call(
-    buf,
-    function()
-      vim.cmd("syntax enable")
-      vim.cmd("silent! syntax clear EdiSegmentTag EdiSep EdiCompSep EdiRelease EdiNum")
-      vim.cmd([[syntax match EdiSegmentTag "^\s*\zs[A-Z][A-Z0-9]\{1,5\}\ze\>"]])
-      vim.cmd("execute 'syntax match EdiSep /" .. esc(cfg.elem) .. "/'")
-      if cfg.comp and #cfg.comp > 0 then
-        vim.cmd("execute 'syntax match EdiCompSep /" .. esc(cfg.comp) .. "/'")
-      end
-      if cfg.release and #cfg.release > 0 then
-        vim.cmd("execute 'syntax match EdiRelease /" .. esc(cfg.release) .. "/'")
-      end
-      vim.cmd([[syntax match EdiNum "\v(^|[^A-Z0-9])\zs\d+(\.\d+)?\ze([^A-Z0-9]|$)"]])
+  vim.api.nvim_set_hl(0, "EdiSep",        {link = "Delimiter"})
+  vim.api.nvim_set_hl(0, "EdiCompSep",    {link = "Delimiter"})
+  vim.api.nvim_set_hl(0, "EdiRelease",    {link = "SpecialChar"})
+  vim.api.nvim_set_hl(0, "EdiNum",        {link = "Number"})
+  vim.api.nvim_buf_call(buf, function()
+    vim.cmd("syntax enable")
+    vim.cmd("silent! syntax clear EdiSegmentTag EdiSep EdiCompSep EdiRelease EdiNum")
+    vim.cmd([[syntax match EdiSegmentTag "^\s*\zs[A-Z][A-Z0-9]\{1,5\}\ze\>"]])
+    vim.cmd("execute 'syntax match EdiSep /" .. esc(cfg.elem) .. "/'")
+    if cfg.comp and #cfg.comp > 0 then
+      vim.cmd("execute 'syntax match EdiCompSep /" .. esc(cfg.comp) .. "/'")
     end
-  )
+    if cfg.release and #cfg.release > 0 then
+      vim.cmd("execute 'syntax match EdiRelease /" .. esc(cfg.release) .. "/'")
+    end
+    vim.cmd([[syntax match EdiNum "\v(^|[^A-Z0-9])\zs\d+(\.\d+)?\ze([^A-Z0-9]|$)"]])
+  end)
   vim.api.nvim_buf_set_option(buf, "filetype", (cfg.flavor == "x12") and "x12" or "edifact")
 end
 
@@ -467,10 +313,7 @@ local function split_with_ranges(s, sep, release)
     local ch = s:sub(i, i)
     if release and ch == release then
       local nxt = (i < n) and s:sub(i + 1, i + 1) or ""
-      table.insert(cur, ch)
-      if nxt ~= "" then
-        table.insert(cur, nxt)
-      end
+      table.insert(cur, ch); if nxt ~= "" then table.insert(cur, nxt) end
       i = i + ((nxt ~= "") and 2 or 1)
     elseif ch == sep then
       local piece = table.concat(cur)
@@ -478,8 +321,7 @@ local function split_with_ranges(s, sep, release)
       cur, start = {}, i -- start is 0-based col for the char AFTER this separator
       i = i + 1
     else
-      table.insert(cur, ch)
-      i = i + 1
+      table.insert(cur, ch); i = i + 1
     end
   end
   local piece = table.concat(cur)
@@ -527,26 +369,15 @@ local function current_segment_at_cursor(cfg)
   return trim(seg), indent, #line - 1
 end
 
+-- Build dictionaries strictly from JSON (+ optional overrides)
 local function get_dict(flavor)
-  local dict = vim.deepcopy(BUILTIN[flavor] or {})
-
-  -- ensure tables exist before merging
-  dict.segments = dict.segments or {}
-  dict.codes = dict.codes or {}
-
-  -- merge user data loaded from ~/.config/nvim/edi-data
+  local dict = {segments = {}, codes = {}}
   merge(dict.segments, state.data[flavor].segments or {})
-  merge(dict.codes, state.data[flavor].codes or {})
-
-  -- optional overrides
+  merge(dict.codes,    state.data[flavor].codes    or {})
   local ov = state.cfg.dict_overrides and state.cfg.dict_overrides[flavor] or nil
   if ov then
-    if ov.segments then
-      merge(dict.segments, ov.segments)
-    end
-    if ov.codes then
-      merge(dict.codes, ov.codes)
-    end
+    if ov.segments then merge(dict.segments, ov.segments) end
+    if ov.codes    then merge(dict.codes,    ov.codes)    end
     merge(dict, ov)
   end
   return dict
@@ -691,7 +522,7 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   end
 
   local info = resolve_element_info(cfg.flavor, tag, elem_idx, comp_idx)
-  local seg_title = info and info.seg and info.seg.title or "Segment"
+  local seg_title = info and info.seg and info.seg.title or nil
   local elem_name = info and info.elem and info.elem.name or nil
   local comp_name = info and info.comp and info.comp.name or nil
   local codeset = info and info.codeset or nil
@@ -768,12 +599,12 @@ local function show_float(lines)
       maxw = #l
     end
   end
-  local width = math.min(state.cfg.hover.max_width or 96, math.max(30, maxw + 2))
+  local width  = math.min(state.cfg.hover.max_width or 96, math.max(30, maxw + 2))
   local height = math.min(20, #lines)
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.api.nvim_buf_set_option(buf, "modifiable", false)
-  vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
+  vim.api.nvim_buf_set_option(buf, "bufhidden",   "wipe")
   local win =
     vim.api.nvim_open_win(
     buf,
@@ -797,8 +628,8 @@ local function show_float(lines)
     vim.api.nvim_create_autocmd(ev, {group = state.augroup, callback = close_float})
   end
   vim.keymap.set("n", "<Esc>", close_float, {buffer = buf, nowait = true, silent = true})
-  vim.keymap.set("n", "q", close_float, {buffer = buf, nowait = true, silent = true})
-  vim.keymap.set("n", "<CR>", close_float, {buffer = buf, nowait = true, silent = true})
+  vim.keymap.set("n", "q",     close_float, {buffer = buf, nowait = true, silent = true})
+  vim.keymap.set("n", "<CR>",  close_float, {buffer = buf, nowait = true, silent = true})
 end
 
 function M.hover()
@@ -819,12 +650,12 @@ function M.hover()
 end
 
 -- ---------------------------------------------------------------------------
--- Pretty annotations: standard scopes + SG from schema
+-- Pretty annotations: standard scopes + SG from schema (JSON only)
 -- ---------------------------------------------------------------------------
 vim.api.nvim_set_hl(0, "EdiScopeInterchange", {link = "Title"})
-vim.api.nvim_set_hl(0, "EdiScopeGroup", {link = "PreProc"})
-vim.api.nvim_set_hl(0, "EdiScopeMessage", {link = "Identifier"})
-vim.api.nvim_set_hl(0, "EdiScopeSG", {link = "Type"})
+vim.api.nvim_set_hl(0, "EdiScopeGroup",       {link = "PreProc"})
+vim.api.nvim_set_hl(0, "EdiScopeMessage",     {link = "Identifier"})
+vim.api.nvim_set_hl(0, "EdiScopeSG",          {link = "Type"})
 
 local ns_anno = vim.api.nvim_create_namespace("edi-anno")
 
@@ -976,7 +807,7 @@ local function clear_annotations(buf)
 end
 
 -- ---------------------------------------------------------------------------
--- Schema normalization (permissive) + schema discovery + heuristic inference
+-- Schema normalization (permissive) + on-disk discovery (JSONs only)
 -- ---------------------------------------------------------------------------
 local function is_array(t)
   if type(t) ~= "table" then
@@ -1014,7 +845,8 @@ local function norm_group_obj(g, key_hint)
     return {id = key_hint or g, name = key_hint or g, starts = {g:upper()}, children = {}}
   end
   local o = {}
-  o.id = g.id or key_hint
+  -- IDs may be numbers (e.g., 2.1); always stringify
+  o.id = (g.id ~= nil) and tostring(g.id) or key_hint
   o.name = g.name or g.title or g.description
 
   local starts = g.starts or g.start or g.head or g.begin or g.trigger
@@ -1125,44 +957,6 @@ local function scan_json_candidates(root, stems)
   return nil
 end
 
--- Heuristic SG inference -----------------------------------------------------
-local COMMON_HEADS = {
-  NAD = true, RFF = true, LIN = true, ERC = true, LOC = true, TAX = true
-}
-
-local function infer_schema_from_lines(sig, lines)
-  if not sig or not sig.type then return nil end
-  local t = (sig.type or ""):upper()
-  local groups = {}
-
-  local function add(id, name, starts, children)
-    table.insert(groups, { id = id, name = name, starts = starts, children = children or {} })
-  end
-
-  if t == "APERAK" then
-    add("SG1", "REFERENCE", {"RFF"})
-    add("SG2", "PARTY", {"NAD"})
-    add("SG3", "APPLICATION ERROR", {"ERC"}, {
-      { id = "SG3-FTX", name = "TEXT",       starts = {"FTX"} },
-      { id = "SG3-RFF", name = "REFERENCE",  starts = {"RFF"} },
-    })
-    return { groups = groups }
-  end
-
-  local seen = {}
-  for _, ln in ipairs(lines or {}) do
-    local tag = ln:gsub("^%s+", ""):match("^([A-Z][A-Z0-9]+)")
-    if tag and COMMON_HEADS[tag] then seen[tag] = true end
-  end
-  local idx = 1
-  for tag, _ in pairs(seen) do
-    add(string.format("SG%d", idx), tag .. " GROUP", {tag})
-    idx = idx + 1
-  end
-  return next(groups) and { groups = groups } or nil
-end
--- End heuristic inference ----------------------------------------------------
-
 local function try_load_schema(sig)
   if not sig or not sig.type then
     return nil
@@ -1173,18 +967,6 @@ local function try_load_schema(sig)
   local a = (sig.agency or ""):upper()
   local x = (sig.assoc or ""):upper()
 
-  -- Try built-in schemas first (exact → relaxed)
-  do
-    local k = builtin_schema_key(sig) -- e.g. "APERAK:04A:UN"
-    local b = BUILTIN_SCHEMAS.edifact[k]
-      or (r ~= "" and BUILTIN_SCHEMAS.edifact[string.format("%s:%s", t, r)])
-      or BUILTIN_SCHEMAS.edifact[t]
-    if b and b.groups then
-      return vim.deepcopy(b), "[builtin:" .. (k or t) .. "]"
-    end
-  end
-
-  -- On-disk lookup
   local candidates = {}
   if r ~= "" and a ~= "" and x ~= "" then
     table.insert(candidates, string.format("%s-%s-%s-%s", t, r, a, x))
@@ -1207,7 +989,6 @@ local function try_load_schema(sig)
       end
     end
   end
-
   return nil
 end
 
@@ -1260,16 +1041,8 @@ local function annotate_sg_in_message(buf, node, cfg)
     end
     state.schema_cache[cache_key] = schema
   end
-
-  -- If no schema available, try heuristic inference per message lines
   if schema == false or not (schema and schema.groups) then
-    local msg_lines = {}
-    for i = 1, #lines do msg_lines[i] = lines[i] end
-    local inferred = infer_schema_from_lines(sig, msg_lines)
-    if not inferred or not inferred.groups then
-      return
-    end
-    schema = inferred
+    return
   end
 
   local function tag_of(line)
@@ -1740,12 +1513,13 @@ local function pump()
             function()
               vim.notify(
                 string.format(
-                  "edi: %d/%d saved %d last=%s",
+                  "edi: %d/%d saved %d last=%s(%d) url=%s",
                   fetcher.done,
                   fetcher.max_id,
                   fetcher.saved,
-                  fetcher.last_saved and string.format("%04d", fetcher.last_saved) or "-",
-                  fetcher.last_count or 0
+                  fetcher.last_saved and string.format("%04d", fetcher.last_saved) or "none",
+                  fetcher.last_count or 0,
+                  fetcher.last_url or "n/a"
                 ),
                 vim.log.levels.INFO
               )
@@ -1881,16 +1655,15 @@ local function cmd_sg_dump_schema()
 
   local js, path = try_load_schema(sig or {})
   if not js then
-    -- try inference just to show something
-    local all = vim.api.nvim_buf_get_lines(buf, msg.s - 1, msg.e, false)
-    js = infer_schema_from_lines(sig, all)
-    path = "[inferred]"
+    return vim.notify("edi: no schema found", vim.log.levels.WARN)
   end
-  js = normalize_schema(js) or js
+  js = normalize_schema(js)
   if not js or not js.groups then
     return vim.notify("edi: schema has no groups after normalization", vim.log.levels.WARN)
   end
 
+  -- Dump groups in pre-order (parent before children). If a group has multiple
+  -- starting segments, emit one line per start so alternatives are explicit.
   local function rec(gs, d)
     for _, g in ipairs(gs) do
       local indent = string.rep("  ", d)
@@ -1959,7 +1732,7 @@ function M.setup(opts)
     {}
   )
   vim.api.nvim_create_user_command("EdiSgWhichSchema", cmd_sg_which_schema, {desc = "Show which SG schema file matched"})
-  vim.api.nvim_create_user_command("EdiSgDumpSchema", cmd_sg_dump_schema, {desc = "Dump normalized SG tree"})
+  vim.api.nvim_create_user_command("EdiSgDumpSchema",  cmd_sg_dump_schema,  {desc = "Dump normalized SG tree"})
 
   local grp = vim.api.nvim_create_augroup("edi-core", {clear = true})
   vim.api.nvim_create_autocmd({"BufReadPost", "BufNewFile"}, {group = grp, callback = maybe_set_ft})
