@@ -1077,23 +1077,24 @@ local function choose_best_group(lines, idx, candidates, tag_of)
   return best
 end
 
+-- annotate SGs inside a message node
 local function annotate_sg_in_message(buf, node, cfg)
+  -- We only add EOL labels at the exact lines where a segment-group STARTS
+  -- (as defined by schema.groups[*].starts). No closing labels.
+
   local lines = vim.api.nvim_buf_get_lines(buf, node.s - 1, node.e, false)
   if #lines == 0 then
     return
   end
 
+  -- Extract (and cache) the message signature so we can pick the right schema
   local sig = node.sig or parse_message_sig(lines[1] or "", cfg)
-  local cache_key =
-    table.concat(
-    {
-      sig and sig.type or "",
-      sig and sig.release or "",
-      sig and sig.agency or "",
-      sig and sig.assoc or ""
-    },
-    ":"
-  )
+  local cache_key = table.concat({
+    sig and sig.type or "",
+    sig and sig.release or "",
+    sig and sig.agency or "",
+    sig and sig.assoc or ""
+  }, ":")
 
   local schema = state.schema_cache[cache_key]
   local schema_path = nil
@@ -1115,90 +1116,138 @@ local function annotate_sg_in_message(buf, node, cfg)
     return (line:gsub("^%s+", ""):match("^([A-Z][A-Z0-9]+)"))
   end
 
+  -- Build a per-level index of starters so we can quickly see "is this a sibling start?"
+  local function build_peer_map(groups)
+    local by_tag, all = {}, {}
+    for _, g in ipairs(groups or {}) do
+      for _, s in ipairs(g.starts or {}) do
+        by_tag[s] = by_tag[s] or {}
+        table.insert(by_tag[s], g)
+        all[s] = true
+      end
+    end
+    return by_tag, all
+  end
+
+  -- Choose best group for a given starter by looking at declared "segments" sequence
+  local function choose_best_group(lines_, idx, candidates, tag_of_)
+    local function score(g)
+      local seq = g.segments or {}
+      if #seq == 0 then
+        -- no explicit sequence → still allow as a weak match
+        return 1
+      end
+      if seq[1] ~= tag_of_(lines_[idx] or "") then
+        return -1
+      end
+      local s = 1
+      local j = idx + 1
+      for k = 2, #seq do
+        local t = tag_of_(lines_[j] or "")
+        if t == seq[k] then
+          s = s + 1
+          j = j + 1
+        else
+          break
+        end
+      end
+      return s
+    end
+
+    local best, bscore = nil, -1
+    for _, g in ipairs(candidates or {}) do
+      local sc = score(g)
+      if sc > bscore then
+        best, bscore = g, sc
+      elseif sc == bscore and best and (#(g.segments or {}) > #(best.segments or {})) then
+        best = g
+      end
+    end
+    return best
+  end
+
+  -- Recursively annotate a level (parent before children). We only place a label
+  -- at the opening line; dedenting/closure is implied by the next sibling start.
   local function annotate_level(start_idx, end_idx, groups)
     if not groups or #groups == 0 then
       return start_idx
     end
 
-    -- Index once per level: much more robust than using the table object as a key
     local by_tag, all_peer_starts = build_peer_map(groups)
     local i = start_idx
 
     while i <= end_idx do
-      local tag = tag_of(lines[i] or "")
-      if not tag then
+      local this_tag = tag_of(lines[i] or "")
+      if not this_tag then
         i = i + 1
         goto continue
       end
 
-      -- collect all groups that can start with this tag at this level
-      local cands = by_tag[tag] or {}
-
+      local candidates = by_tag[this_tag] or {}
       local g_found = nil
-      if #cands == 1 then
-        g_found = cands[1]
-      elseif #cands > 1 then
-        -- Disambiguate e.g. RFF-DTM vs RFF-FTX with declared `segments` sequence
-        g_found = choose_best_group(lines, i, cands, tag_of)
+      if #candidates == 1 then
+        g_found = candidates[1]
+      elseif #candidates > 1 then
+        g_found = choose_best_group(lines, i, candidates, tag_of)
       end
 
       if not g_found then
         i = i + 1
       else
         local open_lnum = i
+        local start_tag = this_tag  -- the concrete triggering starter we saw on this line
         i = i + 1
 
-        -- Recurse into children immediately after opener.
+        -- Allow children to claim immediate lines after the opener
         if g_found.children and #g_found.children > 0 then
           i = annotate_level(i, end_idx, g_found.children)
         end
 
-        -- Walk until next sibling start (incl. same start tag) or UNT (message end).
-        -- NB: we don't advance past the next sibling; we return to the top
-        --     so the while-loop can consider that sibling as a new opener.
+        -- Walk forward until message end or next sibling starter; children are handled inline
         while i <= end_idx do
           local t2 = tag_of(lines[i] or "")
           if t2 == "UNT" or all_peer_starts[t2] then
             break
           end
-
-          -- If a child's start appears here, let the child layer claim it.
           if g_found.children and #g_found.children > 0 then
+            -- If a child's start appears here, descend to the child level
             local _, child_all = build_peer_map(g_found.children)
             if child_all[t2] then
               i = annotate_level(i, end_idx, g_found.children)
-              goto loop_cont
+              goto advance
             end
           end
-
+          ::advance::
           i = i + 1
-          ::loop_cont::
         end
 
-        local close_lnum = math.max(open_lnum, i - 1)
-
+        -- Label the *start* of this SG with a clear marker including the triggering start tag.
         local base
         if g_found.id and g_found.name then
           base = g_found.id .. " " .. g_found.name
         else
           base = g_found.id or g_found.name or "SG"
         end
-
         local mshort = msg_sig_label(sig)
-        local label = mshort and (base .. " — " .. mshort) or base
-
-        put_label(buf, node.s - 2 + open_lnum, {{"⟪ " .. label .. " ⟫", "EdiScopeSG"}})
-        put_label(buf, node.s - 2 + close_lnum, {{"⟪ /" .. label .. " ⟫", "EdiScopeSG"}})
-        -- do not increment i here; next loop iteration will consider the sibling (or UNT)
+        local label = base
+        if mshort then
+          label = label .. " — " .. mshort
+        end
+        -- Explicitly show "start=<TAG>" so it's obvious which segment opened the group
+        put_label(
+          buf,
+          node.s - 2 + open_lnum,
+          {{"⟪ SG " .. label .. "  (start=" .. tostring(start_tag) .. ") ⟫", "EdiScopeSG"}},
+          125
+        )
+        -- Do not increment i here; the loop resumes at the next sibling (or UNT).
       end
-
       ::continue::
     end
     return i
   end
 
-  -- If the schema is wrapped in a single container group (like "Header/Footer"),
-  -- treat that container as transparent and annotate its children directly.
+  -- Treat a single transparent container (like "Header/Footer") as pass-through
   local top_groups = schema.groups
   if type(top_groups) == "table" and #top_groups == 1 then
     local only = top_groups[1]
