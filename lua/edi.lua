@@ -1310,12 +1310,29 @@ local function annotate_sg_in_message(buf, node, cfg)
   end
 
   -- Reuse the walker to only emit opener labels
+  -- De-duplicate only *consecutive* duplicates of the same SG opener.
+  local last_key, last_ln = nil, -1
+  local function gkey(g, start_tag)
+    return tostring(g.id or "?") .. "|" .. (g.name or "") .. "|" .. (start_tag or "")
+  end
+
   compute_sg_extra_indent(
     lines,
     1,
     #lines,
     top_groups,
     function(open_i, g, start_tag)
+      local key = gkey(g, start_tag)
+
+      -- If same opener as the previous one and immediately consecutive, skip.
+      if last_key == key and open_i == last_ln + 1 then
+        last_ln = open_i        -- <-- advance even when skipping to keep the run
+        dbg("annotate: skip consecutive dup@", open_i, key)
+        return
+      end
+
+      -- New run (or different SG): label and update tracking.
+      last_key, last_ln = key, open_i
       local base = (g.id and g.name) and (g.id .. " " .. g.name) or (g.id or g.name or "SG")
       local mshort = msg_sig_label(sig)
       local label = mshort and (base .. " — " .. mshort) or base
