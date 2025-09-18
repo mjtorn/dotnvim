@@ -47,7 +47,8 @@ local state = {
         "TermEnter"
       }
     },
-    annotate = true
+    annotate = true,
+    debug = false -- enable verbose SG debug with :EdiDebugOn / :EdiDebugOff
   },
   -- Data containers are populated only from on-disk JSON; no built-ins remain.
   data = {x12 = {segments = {}, codes = {}}, edifact = {segments = {}, codes = {}}},
@@ -57,6 +58,19 @@ local state = {
 -- ---------------------------------------------------------------------------
 -- Utils
 -- ---------------------------------------------------------------------------
+
+-- Debug helper
+local function dbg(...)
+  if state.cfg.debug then
+    vim.notify("edi: " .. table.concat(vim.tbl_map(tostring, {...}), " "), vim.log.levels.INFO)
+  end
+end
+
+-- Strip indent + return tag (safe on pretty text)
+local function tag_of_text(line)
+  return (line:gsub("^%s+", ""):match("^([A-Z][A-Z0-9]+)"))
+end
+
 local function buf_text(bufnr)
   return table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")
 end
@@ -1077,17 +1091,197 @@ local function choose_best_group(lines, idx, candidates, tag_of)
   return best
 end
 
--- annotate SGs inside a message node
-local function annotate_sg_in_message(buf, node, cfg)
-  -- We only add EOL labels at the exact lines where a segment-group STARTS
-  -- (as defined by schema.groups[*].starts). No closing labels.
+-- Build a per-level index of starters so we can quickly see "is this a sibling start?"
+local function _build_peer_map(groups)
+  local by_tag, all = {}, {}
+  for _, g in ipairs(groups or {}) do
+    for _, s in ipairs(g.starts or {}) do
+      by_tag[s] = by_tag[s] or {}
+      table.insert(by_tag[s], g)
+      all[s] = true
+    end
+  end
+  return by_tag, all
+end
 
-  local lines = vim.api.nvim_buf_get_lines(buf, node.s - 1, node.e, false)
-  if #lines == 0 then
-    return
+-- Disambiguate groups that share the same starter using declared "segments"
+local function _choose_best_group(lines, idx, candidates)
+  local function score(g)
+    local seq = g.segments or {}
+    if #seq == 0 then return 1 end
+    if seq[1] ~= tag_of_text(lines[idx] or "") then
+      return -1
+    end
+    local s = 1
+    local j = idx + 1
+    for k = 2, #seq do
+      local t = tag_of_text(lines[j] or "")
+      if t == seq[k] then
+        s = s + 1
+        j = j + 1
+      else
+        break
+      end
+    end
+    return s
+  end
+  local best, bscore = nil, -1
+  for _, g in ipairs(candidates or {}) do
+    local sc = score(g)
+    if sc > bscore or (sc == bscore and best and #(g.segments or {}) > #(best.segments or {})) then
+      best, bscore = g, sc
+    end
+  end
+  return best
+end
+
+-- Compute extra indentation per line (within a message), and (optionally) call cb_open(line_idx, group, start_tag)
+local function compute_sg_extra_indent(lines, start_idx, end_idx, groups, cb_open)
+  local extra = {} -- 1-based relative to 'lines' array passed in
+  local function add_range(s, e, delta)
+    for i = s, e do
+      extra[i] = (extra[i] or 0) + delta
+    end
   end
 
-  -- Extract (and cache) the message signature so we can pick the right schema
+  local function walk_level(i, j, level_groups)
+    if not level_groups or #level_groups == 0 then
+      return i
+    end
+    local by_tag, all_peer_starts = _build_peer_map(level_groups)
+
+    while i <= j do
+      local tag = tag_of_text(lines[i] or "")
+      if not tag then i = i + 1 goto cont end
+
+      local cands = by_tag[tag] or {}
+      local g_found = (#cands == 1) and cands[1] or (#cands > 1 and _choose_best_group(lines, i, cands) or nil)
+
+      if not g_found then
+        i = i + 1
+      else
+        local open_i = i
+        dbg("SG open at", open_i, "tag", tag, "id", g_found.id or "?", "name", g_found.name or "?")
+        i = i + 1
+
+        -- children immediately after opener
+        if g_found.children and #g_found.children > 0 then
+          i = walk_level(i, j, g_found.children)
+        end
+
+        -- find end of this group's span (next peer start or UNT)
+        local span_end = j
+        while i <= j do
+          local t2 = tag_of_text(lines[i] or "")
+          if t2 == "UNT" or all_peer_starts[t2] then
+            span_end = i - 1
+            break
+          end
+          -- If a child start shows up here, let child layer claim it
+          if g_found.children and #g_found.children > 0 then
+            local _, child_all = _build_peer_map(g_found.children)
+            if child_all[t2] then
+              i = walk_level(i, j, g_found.children)
+              goto loop_continue
+            end
+          end
+          i = i + 1
+          ::loop_continue::
+        end
+
+        -- indent everything inside the group (excluding the opener and sibling boundary)
+        if span_end >= open_i + 1 then
+          add_range(open_i + 1, span_end, 1)
+        end
+
+        -- notify opener (for EOL labels)
+        if cb_open then
+          cb_open(open_i, g_found, tag)
+        end
+      end
+      ::cont::
+    end
+    return i
+  end
+
+  walk_level(start_idx, end_idx, groups)
+  return extra
+end
+
+-- Re-indent pretty buffer lines inside messages according to SG nesting (dedent at next sibling start).
+local function apply_sg_indentation(pbuf)
+  local nodes, cfg = build_tree(pbuf)
+  local any = false
+
+  -- For each message node, load schema and compute per-line extra indents; then rewrite those lines.
+  for _, n in ipairs(nodes) do
+    if n.type == "message" then
+      local lines = vim.api.nvim_buf_get_lines(pbuf, n.s - 1, n.e, false)
+      if #lines > 0 then
+        -- Resolve schema (same logic as annotator)
+        local sig = n.sig or parse_message_sig(lines[1] or "", cfg)
+        local cache_key = table.concat({
+          sig and sig.type or "",
+          sig and sig.release or "",
+          sig and sig.agency or "",
+          sig and sig.assoc or ""
+        }, ":")
+
+        local schema = state.schema_cache[cache_key]
+        if schema == nil then
+          local js = nil
+          js = select(1, try_load_schema(sig or {}))
+          schema = js or false
+          state.schema_cache[cache_key] = schema
+        end
+        if schema ~= false and schema and schema.groups then
+          local top_groups = schema.groups
+          if type(top_groups) == "table" and #top_groups == 1 and type(top_groups[1].children) == "table" and #top_groups[1].children > 0 then
+            top_groups = top_groups[1].children
+          end
+
+          -- compute extra indent, and also capture openers for labeling (we'll still label later in annotate_pretty)
+          local opener_marks = {}
+          local extra = compute_sg_extra_indent(
+            lines,
+            1,
+            #lines,
+            top_groups,
+            function(open_i, g, start_tag)
+              table.insert(opener_marks, {lnum = open_i, g = g, tag = start_tag})
+            end
+          )
+
+          -- rewrite lines with extra indentation (two spaces per level, matching your pretty_text)
+          local rewritten = {}
+          for i, line in ipairs(lines) do
+            local bol = line:find("%S") or (#line + 1)
+            local current_indent = bol - 1
+            local add = (extra[i] or 0)
+            if add > 0 then any = true end
+            rewritten[i] = string.rep(" ", current_indent + add * 2) .. line:sub(bol)
+          end
+          vim.api.nvim_buf_set_lines(pbuf, n.s - 1, n.e, false, rewritten)
+
+          -- lightweight debug
+          if state.cfg.debug then
+            dbg("SG indent applied to message lines", n.s, "…", n.e, "openers", #opener_marks)
+          end
+        else
+          dbg("no SG schema for message at lines", n.s, "…", n.e)
+        end
+      end
+    end
+  end
+
+  return any
+end
+
+-- annotate SGs inside a message node (EOL labels only; indentation handled elsewhere)
+local function annotate_sg_in_message(buf, node, cfg)
+  local lines = vim.api.nvim_buf_get_lines(buf, node.s - 1, node.e, false)
+  if #lines == 0 then return end
+
   local sig = node.sig or parse_message_sig(lines[1] or "", cfg)
   local cache_key = table.concat({
     sig and sig.type or "",
@@ -1100,170 +1294,37 @@ local function annotate_sg_in_message(buf, node, cfg)
   local schema_path = nil
   if schema == nil then
     local js, path = try_load_schema(sig or {})
-    if js then
-      schema = js
-      schema_path = path
-    else
-      schema = false
-    end
+    if js then schema = js schema_path = path else schema = false end
     state.schema_cache[cache_key] = schema
   end
   if schema == false or not (schema and schema.groups) then
+    dbg("annotate: no schema")
     return
   end
 
-  local function tag_of(line)
-    return (line:gsub("^%s+", ""):match("^([A-Z][A-Z0-9]+)"))
-  end
-
-  -- Build a per-level index of starters so we can quickly see "is this a sibling start?"
-  local function build_peer_map(groups)
-    local by_tag, all = {}, {}
-    for _, g in ipairs(groups or {}) do
-      for _, s in ipairs(g.starts or {}) do
-        by_tag[s] = by_tag[s] or {}
-        table.insert(by_tag[s], g)
-        all[s] = true
-      end
-    end
-    return by_tag, all
-  end
-
-  -- Choose best group for a given starter by looking at declared "segments" sequence
-  local function choose_best_group(lines_, idx, candidates, tag_of_)
-    local function score(g)
-      local seq = g.segments or {}
-      if #seq == 0 then
-        -- no explicit sequence → still allow as a weak match
-        return 1
-      end
-      if seq[1] ~= tag_of_(lines_[idx] or "") then
-        return -1
-      end
-      local s = 1
-      local j = idx + 1
-      for k = 2, #seq do
-        local t = tag_of_(lines_[j] or "")
-        if t == seq[k] then
-          s = s + 1
-          j = j + 1
-        else
-          break
-        end
-      end
-      return s
-    end
-
-    local best, bscore = nil, -1
-    for _, g in ipairs(candidates or {}) do
-      local sc = score(g)
-      if sc > bscore then
-        best, bscore = g, sc
-      elseif sc == bscore and best and (#(g.segments or {}) > #(best.segments or {})) then
-        best = g
-      end
-    end
-    return best
-  end
-
-  -- Recursively annotate a level (parent before children). We only place a label
-  -- at the opening line; dedenting/closure is implied by the next sibling start.
-  local function annotate_level(start_idx, end_idx, groups)
-    if not groups or #groups == 0 then
-      return start_idx
-    end
-
-    local by_tag, all_peer_starts = build_peer_map(groups)
-    local i = start_idx
-
-    while i <= end_idx do
-      local this_tag = tag_of(lines[i] or "")
-      if not this_tag then
-        i = i + 1
-        goto continue
-      end
-
-      local candidates = by_tag[this_tag] or {}
-      local g_found = nil
-      if #candidates == 1 then
-        g_found = candidates[1]
-      elseif #candidates > 1 then
-        g_found = choose_best_group(lines, i, candidates, tag_of)
-      end
-
-      if not g_found then
-        i = i + 1
-      else
-        local open_lnum = i
-        local start_tag = this_tag  -- the concrete triggering starter we saw on this line
-        i = i + 1
-
-        -- Allow children to claim immediate lines after the opener
-        if g_found.children and #g_found.children > 0 then
-          i = annotate_level(i, end_idx, g_found.children)
-        end
-
-        -- Walk forward until message end or next sibling starter; children are handled inline
-        while i <= end_idx do
-          local t2 = tag_of(lines[i] or "")
-          if t2 == "UNT" or all_peer_starts[t2] then
-            break
-          end
-          if g_found.children and #g_found.children > 0 then
-            -- If a child's start appears here, descend to the child level
-            local _, child_all = build_peer_map(g_found.children)
-            if child_all[t2] then
-              i = annotate_level(i, end_idx, g_found.children)
-              goto advance
-            end
-          end
-          ::advance::
-          i = i + 1
-        end
-
-        -- Label the *start* of this SG with a clear marker including the triggering start tag.
-        local base
-        if g_found.id and g_found.name then
-          base = g_found.id .. " " .. g_found.name
-        else
-          base = g_found.id or g_found.name or "SG"
-        end
-        local mshort = msg_sig_label(sig)
-        local label = base
-        if mshort then
-          label = label .. " — " .. mshort
-        end
-        -- Explicitly show "start=<TAG>" so it's obvious which segment opened the group
-        put_label(
-          buf,
-          node.s - 2 + open_lnum,
-          {{"⟪ SG " .. label .. "  (start=" .. tostring(start_tag) .. ") ⟫", "EdiScopeSG"}},
-          125
-        )
-        -- Do not increment i here; the loop resumes at the next sibling (or UNT).
-      end
-      ::continue::
-    end
-    return i
-  end
-
-  -- Treat a single transparent container (like "Header/Footer") as pass-through
   local top_groups = schema.groups
-  if type(top_groups) == "table" and #top_groups == 1 then
-    local only = top_groups[1]
-    if only and type(only.children) == "table" and #only.children > 0 then
-      top_groups = only.children
-    end
+  if type(top_groups) == "table" and #top_groups == 1 and type(top_groups[1].children) == "table" and #top_groups[1].children > 0 then
+    top_groups = top_groups[1].children
   end
 
-  annotate_level(1, #lines, top_groups)
+  -- reuse the same walker but only to emit EOL labels at openers
+  compute_sg_extra_indent(
+    lines,
+    1,
+    #lines,
+    top_groups,
+    function(open_i, g, start_tag)
+      local base
+      if g.id and g.name then base = g.id .. " " .. g.name else base = g.id or g.name or "SG" end
+      local mshort = msg_sig_label(sig)
+      local label = mshort and (base .. " — " .. mshort) or base
+      put_label(buf, node.s - 2 + open_i, {{"⟪ " .. label .. "  (start=" .. tostring(start_tag) .. ") ⟫", "EdiScopeSG"}}, 125)
+      dbg("annotate: label on", node.s - 2 + open_i, base, "start", start_tag)
+    end
+  )
 
   if schema_path then
-    vim.b.edi_schema_match = {
-      path = schema_path,
-      type = (sig and sig.type) or "?",
-      release = (sig and sig.release) or "?"
-    }
+    vim.b.edi_schema_match = {path = schema_path, type = (sig and sig.type) or "?", release = (sig and sig.release) or "?"}
   end
 end
 
@@ -1386,100 +1447,47 @@ local function edi_pretty_toggle()
   vim.api.nvim_buf_set_option(pbuf, "buftype", "nofile")
   vim.api.nvim_buf_set_option(pbuf, "bufhidden", "wipe")
   vim.api.nvim_buf_set_option(pbuf, "swapfile", false)
-  vim.api.nvim_buf_set_option(pbuf, "modifiable", false)
+  -- IMPORTANT: leave modifiable true until we've applied SG indentation
+  vim.api.nvim_buf_set_option(pbuf, "modifiable", true)
   vim.api.nvim_buf_set_name(pbuf, "[EDI Pretty] " .. (vim.api.nvim_buf_get_name(cur):match("[^/]+$") or ""))
 
   apply_syntax(pbuf, cfg)
   vim.api.nvim_win_set_buf(win, pbuf)
+
+  -- SG reindent BEFORE freezing the buffer
+  local changed = apply_sg_indentation(pbuf)
+  if state.cfg.debug then
+    dbg("SG indentation changed=", tostring(changed))
+  end
+
+  -- Now annotate (EOL labels)
   annotate_pretty(pbuf)
 
-  -- Jumps
-  vim.keymap.set(
-    {"n"},
-    "]m",
-    function()
-      jump_to(1, "message")
-    end,
-    {buffer = pbuf, desc = "next message"}
-  )
-  vim.keymap.set(
-    {"n"},
-    "[m",
-    function()
-      jump_to(-1, "message")
-    end,
-    {buffer = pbuf, desc = "prev message"}
-  )
-  vim.keymap.set(
-    {"n"},
-    "]g",
-    function()
-      jump_to(1, "group")
-    end,
-    {buffer = pbuf, desc = "next group"}
-  )
-  vim.keymap.set(
-    {"n"},
-    "[g",
-    function()
-      jump_to(-1, "group")
-    end,
-    {buffer = pbuf, desc = "prev group"}
-  )
-  vim.keymap.set(
-    {"n"},
-    "]i",
-    function()
-      jump_to(1, "interchange")
-    end,
-    {buffer = pbuf, desc = "next interchange"}
-  )
-  vim.keymap.set(
-    {"n"},
-    "[i",
-    function()
-      jump_to(-1, "interchange")
-    end,
-    {buffer = pbuf, desc = "prev interchange"}
-  )
+  -- Finally freeze the pretty buffer
+  vim.api.nvim_buf_set_option(pbuf, "modifiable", false)
 
-  -- Text-objects (visual + operator-pending) — pretty buffer only
+  -- Jumps
+  vim.keymap.set({"n"}, "]m", function() jump_to(1, "message") end,   {buffer = pbuf, desc = "next message"})
+  vim.keymap.set({"n"}, "[m", function() jump_to(-1, "message") end,  {buffer = pbuf, desc = "prev message"})
+  vim.keymap.set({"n"}, "]g", function() jump_to(1, "group") end,     {buffer = pbuf, desc = "next group"})
+  vim.keymap.set({"n"}, "[g", function() jump_to(-1, "group") end,    {buffer = pbuf, desc = "prev group"})
+  vim.keymap.set({"n"}, "]i", function() jump_to(1, "interchange") end,{buffer = pbuf, desc = "next interchange"})
+  vim.keymap.set({"n"}, "[i", function() jump_to(-1, "interchange") end,{buffer = pbuf, desc = "prev interchange"})
+
+  -- Text-objects
   for _, which in ipairs({{"m", "message"}, {"g", "group"}, {"i", "interchange"}}) do
     local key, kind = which[1], which[2]
-    vim.keymap.set(
-      {"x", "o"},
-      "i" .. key,
-      function()
-        select_node_lines(kind, false)
-      end,
-      {buffer = pbuf, desc = "inner " .. kind}
-    )
-    vim.keymap.set(
-      {"x", "o"},
-      "a" .. key,
-      function()
-        select_node_lines(kind, true)
-      end,
-      {buffer = pbuf, desc = "around " .. kind}
-    )
+    vim.keymap.set({"x", "o"}, "i" .. key, function() select_node_lines(kind, false) end, {buffer = pbuf, desc = "inner " .. kind})
+    vim.keymap.set({"x", "o"}, "a" .. key, function() select_node_lines(kind, true)  end, {buffer = pbuf, desc = "around " .. kind})
   end
 
   -- 'q' to return
-  vim.keymap.set(
-    "n",
-    "q",
-    function()
-      local s = vim.w.edi_pretty_state
-      if s and vim.api.nvim_buf_is_valid(s.source) then
-        vim.api.nvim_win_set_buf(win, s.source)
-      end
-      if s and vim.api.nvim_buf_is_valid(s.pretty) then
-        pcall(vim.api.nvim_buf_delete, s.pretty, {force = true})
-      end
-      vim.w.edi_pretty_state = nil
-    end,
-    {buffer = pbuf, nowait = true, silent = true}
-  )
+  vim.keymap.set("n", "q", function()
+    local s = vim.w.edi_pretty_state
+    if s and vim.api.nvim_buf_is_valid(s.source) then vim.api.nvim_win_set_buf(win, s.source) end
+    if s and vim.api.nvim_buf_is_valid(s.pretty) then pcall(vim.api.nvim_buf_delete, s.pretty, {force = true}) end
+    vim.w.edi_pretty_state = nil
+  end, {buffer = pbuf, nowait = true, silent = true})
 
   vim.w.edi_pretty_state = {source = cur, pretty = pbuf}
 end
@@ -1831,6 +1839,9 @@ function M.setup(opts)
     merge(state.cfg, opts)
   end
   pcall(try_load_data_dir)
+
+  vim.api.nvim_create_user_command("EdiDebugOn",  function() state.cfg.debug = true  vim.notify("edi: debug=on",  vim.log.levels.INFO) end, {})
+  vim.api.nvim_create_user_command("EdiDebugOff", function() state.cfg.debug = false vim.notify("edi: debug=off", vim.log.levels.INFO) end, {})
 
   vim.api.nvim_create_user_command(
     "EdiPretty",
