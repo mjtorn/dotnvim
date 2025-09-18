@@ -1136,75 +1136,75 @@ local function _choose_best_group(lines, idx, candidates)
 end
 
 -- Compute extra indentation per line (within a message), and (optionally) call cb_open(line_idx, group, start_tag)
+-- Compute extra indentation per line (within a message), and (optionally) call cb_open(line_idx, group, start_tag)
+-- This version FIRST finds the next peer boundary, THEN descends into children bounded by that span.
 local function compute_sg_extra_indent(lines, start_idx, end_idx, groups, cb_open)
-  local extra = {} -- 1-based relative to 'lines' array passed in
+  local extra = {} -- 1-based relative to 'lines'
+
   local function add_range(s, e, delta)
+    if s > e then return end
     for i = s, e do
       extra[i] = (extra[i] or 0) + delta
     end
   end
 
-  local function walk_level(i, j, level_groups)
+  local function process_level(i, j, level_groups)
     if not level_groups or #level_groups == 0 then
       return i
     end
-    local by_tag, all_peer_starts = _build_peer_map(level_groups)
+    local by_tag, peer_starts = _build_peer_map(level_groups)
 
     while i <= j do
       local tag = tag_of_text(lines[i] or "")
-      if not tag then i = i + 1 goto cont end
+      if not tag then
+        i = i + 1
+        goto cont
+      end
 
-      local cands = by_tag[tag] or {}
-      local g_found = (#cands == 1) and cands[1] or (#cands > 1 and _choose_best_group(lines, i, cands) or nil)
+      local cands = by_tag[tag]
+      local g = (cands and #cands == 1) and cands[1]
+              or (cands and #cands > 1) and _choose_best_group(lines, i, cands)
+              or nil
 
-      if not g_found then
+      if not g then
         i = i + 1
       else
         local open_i = i
-        dbg("SG open at", open_i, "tag", tag, "id", g_found.id or "?", "name", g_found.name or "?")
+        if cb_open then cb_open(open_i, g, tag) end
+        dbg("SG open@", open_i, "tag", tag, "id", g.id or "?", "name", g.name or "?")
+
+        -- Step past opener to search for NEXT PEER (of THIS level)
         i = i + 1
-
-        -- children immediately after opener
-        if g_found.children and #g_found.children > 0 then
-          i = walk_level(i, j, g_found.children)
-        end
-
-        -- find end of this group's span (next peer start or UNT)
-        local span_end = j
-        while i <= j do
-          local t2 = tag_of_text(lines[i] or "")
-          if t2 == "UNT" or all_peer_starts[t2] then
-            span_end = i - 1
+        local boundary = j
+        for k = i, j do
+          local t2 = tag_of_text(lines[k] or "")
+          if peer_starts[t2] then
+            boundary = k - 1
+            dbg("  peer boundary before@", k, "(", t2 or "?", ") for", g.id or g.name or tag, "span=", open_i+1, "...", boundary)
             break
           end
-          -- If a child start shows up here, let child layer claim it
-          if g_found.children and #g_found.children > 0 then
-            local _, child_all = _build_peer_map(g_found.children)
-            if child_all[t2] then
-              i = walk_level(i, j, g_found.children)
-              goto loop_continue
-            end
-          end
-          i = i + 1
-          ::loop_continue::
+        end
+        if boundary == j then
+          dbg("  boundary=level end  span=", open_i+1, "...", boundary)
         end
 
-        -- indent everything inside the group (excluding the opener and sibling boundary)
-        if span_end >= open_i + 1 then
-          add_range(open_i + 1, span_end, 1)
+        -- Recurse into CHILDREN but only inside [i, boundary]
+        if g.children and #g.children > 0 and i <= boundary then
+          i = process_level(i, boundary, g.children)
         end
 
-        -- notify opener (for EOL labels)
-        if cb_open then
-          cb_open(open_i, g_found, tag)
-        end
+        -- Indent inside the group (exclude opener line)
+        add_range(open_i + 1, boundary, 1)
+
+        -- Continue at the next peer (or j+1)
+        i = boundary + 1
       end
       ::cont::
     end
     return i
   end
 
-  walk_level(start_idx, end_idx, groups)
+  process_level(start_idx, end_idx, groups)
   return extra
 end
 
@@ -1278,6 +1278,7 @@ local function apply_sg_indentation(pbuf)
 end
 
 -- annotate SGs inside a message node (EOL labels only; indentation handled elsewhere)
+-- annotate SGs inside a message node (EOL labels only; indentation handled elsewhere)
 local function annotate_sg_in_message(buf, node, cfg)
   local lines = vim.api.nvim_buf_get_lines(buf, node.s - 1, node.e, false)
   if #lines == 0 then return end
@@ -1302,24 +1303,25 @@ local function annotate_sg_in_message(buf, node, cfg)
     return
   end
 
+  -- unwrap single container like "Header/Footer"
   local top_groups = schema.groups
   if type(top_groups) == "table" and #top_groups == 1 and type(top_groups[1].children) == "table" and #top_groups[1].children > 0 then
     top_groups = top_groups[1].children
   end
 
-  -- reuse the same walker but only to emit EOL labels at openers
+  -- Reuse the walker to only emit opener labels
   compute_sg_extra_indent(
     lines,
     1,
     #lines,
     top_groups,
     function(open_i, g, start_tag)
-      local base
-      if g.id and g.name then base = g.id .. " " .. g.name else base = g.id or g.name or "SG" end
+      local base = (g.id and g.name) and (g.id .. " " .. g.name) or (g.id or g.name or "SG")
       local mshort = msg_sig_label(sig)
       local label = mshort and (base .. " — " .. mshort) or base
-      put_label(buf, node.s - 2 + open_i, {{"⟪ " .. label .. "  (start=" .. tostring(start_tag) .. ") ⟫", "EdiScopeSG"}}, 125)
-      dbg("annotate: label on", node.s - 2 + open_i, base, "start", start_tag)
+      local buf_lnum = node.s - 2 + open_i
+      put_label(buf, buf_lnum, {{"⟪ " .. label .. "  (start=" .. tostring(start_tag) .. ") ⟫", "EdiScopeSG"}}, 125)
+      dbg("annotate: label@", buf_lnum, base, "start", start_tag)
     end
   )
 
