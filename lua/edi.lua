@@ -952,10 +952,12 @@ local function normalize_schema(js)
   return next(out) and {groups = out} or nil
 end
 
+-- Accept exact or prefix matches for candidate stems, case-insensitive.
 local function scan_json_candidates(root, stems)
-  local want = {}
-  for _, st in ipairs(stems) do
-    want[(st .. ".json"):lower()] = true
+  local wants = {}
+  for _, st in ipairs(stems or {}) do
+    local low = (st or ""):lower()
+    wants[low] = true
   end
   local h = vim.loop.fs_scandir(root)
   if not h then
@@ -963,12 +965,14 @@ local function scan_json_candidates(root, stems)
   end
   while true do
     local name, typ = vim.loop.fs_scandir_next(h)
-    if not name then
-      break
-    end
+    if not name then break end
     if typ == "file" and name:match("%.json$") then
-      if want[name:lower()] then
-        return root .. "/" .. name
+      local base = name:sub(1, #name - 5):lower() -- strip .json
+      -- exact match OR prefix match against any candidate stem
+      for st, _ in pairs(wants) do
+        if base == st or base:sub(1, #st) == st then
+          return root .. "/" .. name
+        end
       end
     end
   end
@@ -1018,15 +1022,19 @@ local function to_set(lst)
   end
   return t
 end
+
 local function build_peer_map(groups)
-  local map, all = {}, {}
+  -- by_tag: { ["RFF"] = {g1, g2, ...}, ["NAD"] = {g3}, ... }
+  -- all:    { ["RFF"]=true, ["NAD"]=true, ... }  (fast "is sibling start?" check)
+  local by_tag, all = {}, {}
   for _, g in ipairs(groups or {}) do
-    map[g] = to_set(g.starts or {})
     for _, s in ipairs(g.starts or {}) do
+      by_tag[s] = by_tag[s] or {}
+      table.insert(by_tag[s], g)
       all[s] = true
     end
   end
-  return map, all
+  return by_tag, all
 end
 
 -- NEW: choose the best-matching group among candidates that share the same start tag.
@@ -1111,8 +1119,11 @@ local function annotate_sg_in_message(buf, node, cfg)
     if not groups or #groups == 0 then
       return start_idx
     end
-    local peer_map, all_peer_starts = build_peer_map(groups)
+
+    -- Index once per level: much more robust than using the table object as a key
+    local by_tag, all_peer_starts = build_peer_map(groups)
     local i = start_idx
+
     while i <= end_idx do
       local tag = tag_of(lines[i] or "")
       if not tag then
@@ -1120,19 +1131,14 @@ local function annotate_sg_in_message(buf, node, cfg)
         goto continue
       end
 
-      -- collect all groups that can start with this tag
-      local cands = {}
-      for _, g in ipairs(groups) do
-        if peer_map[g][tag] then
-          table.insert(cands, g)
-        end
-      end
+      -- collect all groups that can start with this tag at this level
+      local cands = by_tag[tag] or {}
 
       local g_found = nil
       if #cands == 1 then
         g_found = cands[1]
       elseif #cands > 1 then
-        -- disambiguate using the declared "segments" sequence (JSON).
+        -- Disambiguate e.g. RFF-DTM vs RFF-FTX with declared `segments` sequence
         g_found = choose_best_group(lines, i, cands, tag_of)
       end
 
@@ -1142,17 +1148,20 @@ local function annotate_sg_in_message(buf, node, cfg)
         local open_lnum = i
         i = i + 1
 
-        -- Recurse into children starting immediately after opener.
+        -- Recurse into children immediately after opener.
         if g_found.children and #g_found.children > 0 then
           i = annotate_level(i, end_idx, g_found.children)
         end
 
-        -- Walk until next sibling start (including same start tag) or UNT (message end).
+        -- Walk until next sibling start (incl. same start tag) or UNT (message end).
+        -- NB: we don't advance past the next sibling; we return to the top
+        --     so the while-loop can consider that sibling as a new opener.
         while i <= end_idx do
           local t2 = tag_of(lines[i] or "")
           if t2 == "UNT" or all_peer_starts[t2] then
             break
           end
+
           -- If a child's start appears here, let the child layer claim it.
           if g_found.children and #g_found.children > 0 then
             local _, child_all = build_peer_map(g_found.children)
@@ -1161,9 +1170,11 @@ local function annotate_sg_in_message(buf, node, cfg)
               goto loop_cont
             end
           end
+
           i = i + 1
           ::loop_cont::
         end
+
         local close_lnum = math.max(open_lnum, i - 1)
 
         local base
@@ -1178,15 +1189,25 @@ local function annotate_sg_in_message(buf, node, cfg)
 
         put_label(buf, node.s - 2 + open_lnum, {{"⟪ " .. label .. " ⟫", "EdiScopeSG"}})
         put_label(buf, node.s - 2 + close_lnum, {{"⟪ /" .. label .. " ⟫", "EdiScopeSG"}})
-        -- NOTE: we intentionally do NOT advance i here; the while-loop will see the next
-        -- sibling start (possibly the same tag, e.g., multiple ERC/RFF) and open again.
+        -- do not increment i here; next loop iteration will consider the sibling (or UNT)
       end
+
       ::continue::
     end
     return i
   end
 
-  annotate_level(1, #lines, schema.groups)
+  -- If the schema is wrapped in a single container group (like "Header/Footer"),
+  -- treat that container as transparent and annotate its children directly.
+  local top_groups = schema.groups
+  if type(top_groups) == "table" and #top_groups == 1 then
+    local only = top_groups[1]
+    if only and type(only.children) == "table" and #only.children > 0 then
+      top_groups = only.children
+    end
+  end
+
+  annotate_level(1, #lines, top_groups)
 
   if schema_path then
     vim.b.edi_schema_match = {
