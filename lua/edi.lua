@@ -1,14 +1,25 @@
 -- lua/edi.lua — EDIFACT/X12 helper for Neovim
 -- Features
 --   :EdiPretty            toggle logical-lines view IN PLACE (q to return)
---   Hover on K            segment/element/component + code meaning (from JSON)
+--   Hover on K            segment/element/component + code meaning (from JSON only)
 --   Jumps                 ]m/[m  ]g/[g  ]i/[i   (message/group/interchange)
 --   Text-objects          im/am  ig/ag  ii/ai  (pretty view)
---   SG annotations        from JSON schema (case-insensitive; groups/segment_groups)
+--   SG annotations        from JSON schema files ONLY (no built-ins, no heuristics)
 --   :EdiSgWhichSchema     show which SG schema matched (or the best candidate)
---   :EdiSgDump            dump normalized SG tree the annotator sees
+--   :EdiSgDumpSchema      dump normalized SG tree the annotator sees
 --   :EdiFetchEdifactAll   fetch UNCL 0001..9999 code lists (JSON-LD → flat map)
 --   :EdiFetchStatus, :EdiReloadData
+--
+-- JSON layout expected under:  ~/.config/nvim/edi-data
+--   edifact/
+--     segments.json              -- segment metadata (titles, elements/components, codesets)
+--     codes/<ID>.json            -- UNCL code lists, flat { "xxx": "Meaning", ... }
+--     messages/
+--       APERAK-96A-UN-EDIEL.json -- message SG schema(s)
+--       APERAK/APERAK-96A-UN-EDIEL.json (also supported)
+--   x12/ (optional, same idea)
+--
+-- This build has NO BUILTIN dictionaries: everything comes from your JSON files.
 
 local M = {}
 
@@ -22,7 +33,7 @@ local state = {
   augroup = nil,
   cfg = {
     data_dir = vim.fn.stdpath("config") .. "/edi-data",
-    dict_overrides = {},
+    dict_overrides = {}, -- optional user overrides merged on top of loaded JSON
     hover = {
       max_width = 96,
       close_events = {
@@ -36,8 +47,10 @@ local state = {
         "TermEnter"
       }
     },
-    annotate = true
+    annotate = true,
+    debug = false -- enable verbose SG debug with :EdiDebugOn / :EdiDebugOff
   },
+  -- Data containers are populated only from on-disk JSON; no built-ins remain.
   data = {x12 = {segments = {}, codes = {}}, edifact = {segments = {}, codes = {}}},
   schema_cache = {} -- key "TYPE:REL:AGY:ASSOC" → schema or false
 }
@@ -45,6 +58,19 @@ local state = {
 -- ---------------------------------------------------------------------------
 -- Utils
 -- ---------------------------------------------------------------------------
+
+-- Debug helper
+local function dbg(...)
+  if state.cfg.debug then
+    vim.notify("edi: " .. table.concat(vim.tbl_map(tostring, {...}), " "), vim.log.levels.INFO)
+  end
+end
+
+-- Strip indent + return tag (safe on pretty text)
+local function tag_of_text(line)
+  return (line:gsub("^%s+", ""):match("^([A-Z][A-Z0-9]+)"))
+end
+
 local function buf_text(bufnr)
   return table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")
 end
@@ -116,150 +142,31 @@ local function load_json(path)
   return dec
 end
 
--- ---------------------------------------------------------------------------
--- Data loading (segments & code lists). Segment titles have a small builtin
--- to have something even without external JSON; code meanings come only from
--- JSON under data_dir/{edifact|x12}/codes/<id>.json
--- ---------------------------------------------------------------------------
-local BUILTIN = {
-  edifact = {
-    segments = {
-      UNB = {
-        title = "Interchange Header",
-        elements = {
-          {name = "S001 Syntax identifier"},
-          {name = "S002 Interchange sender"},
-          {name = "S003 Interchange recipient"},
-          {name = "S004 Date/time of preparation"},
-          {name = "0020 Interchange control reference", id = "0020"},
-          {name = "S005 Recipient's reference/password"},
-          {name = "0026 Application reference", id = "0026"},
-          {name = "0029 Processing priority code", id = "0029"},
-          {name = "0031 Acknowledgement request", id = "0031"},
-          {name = "0032 Interchange agreement identifier", id = "0032"},
-          {name = "0035 Test indicator", id = "0035"}
-        }
-      },
-      UNH = {
-        title = "Message Header",
-        elements = {
-          {name = "0062 Message reference number", id = "0062"},
-          {
-            name = "S009 Message identifier",
-            components = {
-              {name = "0065 Message type", id = "0065"},
-              {name = "0052 Version", id = "0052"},
-              {name = "0054 Release", id = "0054"},
-              {name = "0051 Agency", id = "0051"},
-              {name = "0057 Association code", id = "0057"}
-            }
-          },
-          {name = "0068 Common access reference", id = "0068"},
-          {name = "S010 Status of transfer"}
-        }
-      },
-      BGM = {
-        title = "Beginning of message",
-        elements = {
-          {
-            name = "C002 Document/message name",
-            components = {
-              {name = "1001 Document name code", id = "1001"},
-              {name = "1131 Code list ID", id = "1131"},
-              {name = "3055 Code list agency", id = "3055"},
-              {name = "1000 Document name", id = "1000"}
-            }
-          },
-          {name = "C106 Document message ID"},
-          {name = "1225 Message function, coded", id = "1225"},
-          {name = "4343 Response type, coded", id = "4343"}
-        }
-      },
-      DTM = {
-        title = "Date/time/period",
-        elements = {
-          {
-            name = "C507 Date/time/period",
-            components = {
-              {name = "2005 Qualifier", id = "2005"},
-              {name = "2380 Date/time/period", id = "2380"},
-              {name = "2379 Format qualifier", id = "2379"}
-            }
-          }
-        }
-      },
-      RFF = {
-        title = "Reference",
-        elements = {
-          {
-            name = "C506 Reference",
-            components = {
-              {name = "1153 Reference qualifier", id = "1153"},
-              {name = "1154 Reference number", id = "1154"},
-              {name = "1156 Line number", id = "1156"},
-              {name = "4000 Reference version", id = "4000"}
-            }
-          }
-        }
-      },
-      NAD = {
-        title = "Name and address",
-        elements = {
-          {name = "3035 Party qualifier", id = "3035"},
-          {name = "C082 Party identification"},
-          {name = "C058 Name and address"},
-          {name = "C080 Party name"},
-          {name = "C059 Street"},
-          {name = "3164 City", id = "3164"},
-          {name = "3251 Postcode", id = "3251"},
-          {name = "3207 Country", id = "3207"}
-        }
-      },
-      ERC = {
-        title = "Application Error Information",
-        elements = {
-          {
-            name = "C901 Application error detail",
-            components = {
-              {name = "9321 Application error identification", id = "9321"},
-              {name = "1131 Code list ID", id = "1131"},
-              {name = "3055 Agency", id = "3055"}
-            }
-          }
-        }
-      },
-      FTX = {title = "Free text"},
-      LIN = {title = "Line item"},
-      QTY = {title = "Quantity"},
-      PRI = {title = "Price details"},
-      MOA = {title = "Monetary amount"},
-      UNT = {title = "Message Trailer"},
-      UNZ = {title = "Interchange Trailer"}
-    }
-  },
-  x12 = {
-    segments = {
-      ISA = {title = "Interchange Control Header"},
-      GS = {title = "Functional Group Header"},
-      ST = {title = "Transaction Set Header"},
-      SE = {title = "Transaction Set Trailer"},
-      GE = {title = "Functional Group Trailer"},
-      IEA = {title = "Interchange Control Trailer"}
-    }
-  }
-}
+-- Make a Vim regex that matches the literal string `s` using very-nomagic.
+-- We only need to escape the delimiter `/` and `\` itself.
+local function vim_regex_literal(s)
+  if not s or s == "" then
+    return ""
+  end
+  return "\\V" .. vim.fn.escape(s, [[\/]])
+end
 
+-- ---------------------------------------------------------------------------
+-- Data loading (segments & code lists) — JSON only
+-- Segment titles have a small builtin → REMOVED: code meanings come only from JSON
+-- under data_dir/{edifact|x12}/codes/<id>.json
+-- ---------------------------------------------------------------------------
 local function try_load_data_dir()
   local base = state.cfg.data_dir
   state.data = {x12 = {segments = {}, codes = {}}, edifact = {segments = {}, codes = {}}}
 
-  -- optional extended segment metadata
+  -- optional extended segment metadata (titles/elements/components/codesets)
   local x12_seg = load_json(base .. "/x12/segments.json")
   local edf_seg = load_json(base .. "/edifact/segments.json")
   state.data.x12.segments = x12_seg or {}
   state.data.edifact.segments = edf_seg or {}
 
-  -- code lists
+  -- code lists (flat maps)
   for _, fl in ipairs({"x12", "edifact"}) do
     local dir = base .. "/" .. fl .. "/codes"
     local h = vim.loop.fs_scandir(dir)
@@ -286,7 +193,6 @@ end
 -- ---------------------------------------------------------------------------
 local function detect_edi(bufnr)
   local head = buf_text(bufnr):sub(1, 4000)
-  local has_ISA = head:find("ISA", 1, true)
   local has_UNB = head:find("UNB", 1, true)
   local has_UNA = head:find("UNA", 1, true)
   if has_UNB or has_UNA then
@@ -356,9 +262,9 @@ end
 -- Pretty printer & syntax
 -- ---------------------------------------------------------------------------
 local X12_PUSH = {ISA = true, GS = true, ST = true}
-local X12_POP = {IEA = true, GE = true, SE = true}
+local X12_POP  = {IEA = true, GE = true, SE = true}
 local EDI_PUSH = {UNB = true, UNG = true, UNH = true}
-local EDI_POP = {UNZ = true, UNE = true, UNT = true}
+local EDI_POP  = {UNZ = true, UNE = true, UNT = true}
 
 local function compute_indent(tag, flavor, depth)
   local d = depth
@@ -394,26 +300,23 @@ end
 
 local function apply_syntax(buf, cfg)
   vim.api.nvim_set_hl(0, "EdiSegmentTag", {link = "Label"})
-  vim.api.nvim_set_hl(0, "EdiSep", {link = "Delimiter"})
-  vim.api.nvim_set_hl(0, "EdiCompSep", {link = "Delimiter"})
-  vim.api.nvim_set_hl(0, "EdiRelease", {link = "SpecialChar"})
-  vim.api.nvim_set_hl(0, "EdiNum", {link = "Number"})
-  vim.api.nvim_buf_call(
-    buf,
-    function()
-      vim.cmd("syntax enable")
-      vim.cmd("silent! syntax clear EdiSegmentTag EdiSep EdiCompSep EdiRelease EdiNum")
-      vim.cmd([[syntax match EdiSegmentTag "^\s*\zs[A-Z][A-Z0-9]\{1,5\}\ze\>"]])
-      vim.cmd("execute 'syntax match EdiSep /" .. esc(cfg.elem) .. "/'")
-      if cfg.comp and #cfg.comp > 0 then
-        vim.cmd("execute 'syntax match EdiCompSep /" .. esc(cfg.comp) .. "/'")
-      end
-      if cfg.release and #cfg.release > 0 then
-        vim.cmd("execute 'syntax match EdiRelease /" .. esc(cfg.release) .. "/'")
-      end
-      vim.cmd([[syntax match EdiNum "\v(^|[^A-Z0-9])\zs\d+(\.\d+)?\ze([^A-Z0-9]|$)"]])
+  vim.api.nvim_set_hl(0, "EdiSep",        {link = "Delimiter"})
+  vim.api.nvim_set_hl(0, "EdiCompSep",    {link = "Delimiter"})
+  vim.api.nvim_set_hl(0, "EdiRelease",    {link = "SpecialChar"})
+  vim.api.nvim_set_hl(0, "EdiNum",        {link = "Number"})
+  vim.api.nvim_buf_call(buf, function()
+    vim.cmd("syntax enable")
+    vim.cmd("silent! syntax clear EdiSegmentTag EdiSep EdiCompSep EdiRelease EdiNum")
+    vim.cmd([[syntax match EdiSegmentTag "^\s*\zs[A-Z][A-Z0-9]\{1,5\}\ze\>"]])
+    vim.cmd(("execute 'syntax match EdiSep /%s/'"):format(vim_regex_literal(cfg.elem)))
+    if cfg.comp and #cfg.comp > 0 then
+      vim.cmd(("execute 'syntax match EdiCompSep /%s/'"):format(vim_regex_literal(cfg.comp)))
     end
-  )
+    if cfg.release and #cfg.release > 0 then
+      vim.cmd(("execute 'syntax match EdiRelease /%s/'"):format(vim_regex_literal(cfg.release)))
+    end
+    vim.cmd([[syntax match EdiNum "\v(^|[^A-Z0-9])\zs\d+(\.\d+)?\ze([^A-Z0-9]|$)"]])
+  end)
   vim.api.nvim_buf_set_option(buf, "filetype", (cfg.flavor == "x12") and "x12" or "edifact")
 end
 
@@ -433,10 +336,7 @@ local function split_with_ranges(s, sep, release)
     local ch = s:sub(i, i)
     if release and ch == release then
       local nxt = (i < n) and s:sub(i + 1, i + 1) or ""
-      table.insert(cur, ch)
-      if nxt ~= "" then
-        table.insert(cur, nxt)
-      end
+      table.insert(cur, ch); if nxt ~= "" then table.insert(cur, nxt) end
       i = i + ((nxt ~= "") and 2 or 1)
     elseif ch == sep then
       local piece = table.concat(cur)
@@ -444,8 +344,7 @@ local function split_with_ranges(s, sep, release)
       cur, start = {}, i -- start is 0-based col for the char AFTER this separator
       i = i + 1
     else
-      table.insert(cur, ch)
-      i = i + 1
+      table.insert(cur, ch); i = i + 1
     end
   end
   local piece = table.concat(cur)
@@ -493,26 +392,15 @@ local function current_segment_at_cursor(cfg)
   return trim(seg), indent, #line - 1
 end
 
+-- Build dictionaries strictly from JSON (+ optional overrides)
 local function get_dict(flavor)
-  local dict = vim.deepcopy(BUILTIN[flavor] or {})
-
-  -- ensure tables exist before merging
-  dict.segments = dict.segments or {}
-  dict.codes = dict.codes or {}
-
-  -- merge user data loaded from ~/.config/nvim/edi-data
+  local dict = {segments = {}, codes = {}}
   merge(dict.segments, state.data[flavor].segments or {})
-  merge(dict.codes, state.data[flavor].codes or {})
-
-  -- optional overrides
+  merge(dict.codes,    state.data[flavor].codes    or {})
   local ov = state.cfg.dict_overrides and state.cfg.dict_overrides[flavor] or nil
   if ov then
-    if ov.segments then
-      merge(dict.segments, ov.segments)
-    end
-    if ov.codes then
-      merge(dict.codes, ov.codes)
-    end
+    if ov.segments then merge(dict.segments, ov.segments) end
+    if ov.codes    then merge(dict.codes,    ov.codes)    end
     merge(dict, ov)
   end
   return dict
@@ -657,7 +545,7 @@ local function build_doc(cfg, seg, seg_s, _seg_e)
   end
 
   local info = resolve_element_info(cfg.flavor, tag, elem_idx, comp_idx)
-  local seg_title = info and info.seg and info.seg.title or "Segment"
+  local seg_title = info and info.seg and info.seg.title or nil
   local elem_name = info and info.elem and info.elem.name or nil
   local comp_name = info and info.comp and info.comp.name or nil
   local codeset = info and info.codeset or nil
@@ -734,12 +622,12 @@ local function show_float(lines)
       maxw = #l
     end
   end
-  local width = math.min(state.cfg.hover.max_width or 96, math.max(30, maxw + 2))
+  local width  = math.min(state.cfg.hover.max_width or 96, math.max(30, maxw + 2))
   local height = math.min(20, #lines)
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.api.nvim_buf_set_option(buf, "modifiable", false)
-  vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
+  vim.api.nvim_buf_set_option(buf, "bufhidden",   "wipe")
   local win =
     vim.api.nvim_open_win(
     buf,
@@ -763,8 +651,8 @@ local function show_float(lines)
     vim.api.nvim_create_autocmd(ev, {group = state.augroup, callback = close_float})
   end
   vim.keymap.set("n", "<Esc>", close_float, {buffer = buf, nowait = true, silent = true})
-  vim.keymap.set("n", "q", close_float, {buffer = buf, nowait = true, silent = true})
-  vim.keymap.set("n", "<CR>", close_float, {buffer = buf, nowait = true, silent = true})
+  vim.keymap.set("n", "q",     close_float, {buffer = buf, nowait = true, silent = true})
+  vim.keymap.set("n", "<CR>",  close_float, {buffer = buf, nowait = true, silent = true})
 end
 
 function M.hover()
@@ -785,12 +673,12 @@ function M.hover()
 end
 
 -- ---------------------------------------------------------------------------
--- Pretty annotations: standard scopes + SG from schema
+-- Pretty annotations: standard scopes + SG from schema (JSON only)
 -- ---------------------------------------------------------------------------
 vim.api.nvim_set_hl(0, "EdiScopeInterchange", {link = "Title"})
-vim.api.nvim_set_hl(0, "EdiScopeGroup", {link = "PreProc"})
-vim.api.nvim_set_hl(0, "EdiScopeMessage", {link = "Identifier"})
-vim.api.nvim_set_hl(0, "EdiScopeSG", {link = "Type"})
+vim.api.nvim_set_hl(0, "EdiScopeGroup",       {link = "PreProc"})
+vim.api.nvim_set_hl(0, "EdiScopeMessage",     {link = "Identifier"})
+vim.api.nvim_set_hl(0, "EdiScopeSG",          {link = "Type"})
 
 local ns_anno = vim.api.nvim_create_namespace("edi-anno")
 
@@ -942,7 +830,7 @@ local function clear_annotations(buf)
 end
 
 -- ---------------------------------------------------------------------------
--- Schema normalization (permissive)
+-- Schema normalization (permissive) + on-disk discovery (JSONs only)
 -- ---------------------------------------------------------------------------
 local function is_array(t)
   if type(t) ~= "table" then
@@ -975,24 +863,34 @@ local function strtoupper_list(lst)
   return out
 end
 
+-- Normalize one group node:
+-- * keep id/name
+-- * starts: explicit starts OR infer from first element of "segments"
+-- * children: normalize recursively
+-- * segments: preserve declared sequence (uppercased) for disambiguation
 local function norm_group_obj(g, key_hint)
   if type(g) == "string" then
-    return {id = key_hint or g, name = key_hint or g, starts = {g:upper()}, children = {}}
+    return {id = key_hint or g, name = key_hint or g, starts = {g:upper()}, children = {}, segments = {g:upper()}}
   end
   local o = {}
-  o.id = g.id or key_hint
+  -- IDs may be numbers (e.g., 2.1); always stringify
+  o.id = (g.id ~= nil) and tostring(g.id) or key_hint
   o.name = g.name or g.title or g.description
 
-  local starts = g.starts or g.start or g.head or g.begin or g.trigger
-  if type(starts) == "string" then
-    starts = {starts}
+  local segs = {}
+  if type(g.segments) == "table" then
+    for _, s in ipairs(g.segments) do
+      if type(s) == "string" then table.insert(segs, s:upper()) end
+      if type(s) == "table" and type(s.tag) == "string" then table.insert(segs, s.tag:upper()) end
+    end
   end
-  if (not starts) and type(g.segments) == "table" and #g.segments > 0 then
-    local first = g.segments[1]
-    if type(first) == "string" then
-      starts = {first}
-    elseif type(first) == "table" and type(first.tag) == "string" then
-      starts = {first.tag}
+  o.segments = segs
+
+  local starts = g.starts or g.start or g.head or g.begin or g.trigger
+  if type(starts) == "string" then starts = {starts} end
+  if (not starts) or (#strtoupper_list(starts) == 0) then
+    if #segs > 0 then
+      starts = {segs[1]}
     end
   end
   o.starts = strtoupper_list(starts or {})
@@ -1068,10 +966,12 @@ local function normalize_schema(js)
   return next(out) and {groups = out} or nil
 end
 
+-- Accept exact or prefix matches for candidate stems, case-insensitive.
 local function scan_json_candidates(root, stems)
-  local want = {}
-  for _, st in ipairs(stems) do
-    want[(st .. ".json"):lower()] = true
+  local wants = {}
+  for _, st in ipairs(stems or {}) do
+    local low = (st or ""):lower()
+    wants[low] = true
   end
   local h = vim.loop.fs_scandir(root)
   if not h then
@@ -1079,12 +979,14 @@ local function scan_json_candidates(root, stems)
   end
   while true do
     local name, typ = vim.loop.fs_scandir_next(h)
-    if not name then
-      break
-    end
+    if not name then break end
     if typ == "file" and name:match("%.json$") then
-      if want[name:lower()] then
-        return root .. "/" .. name
+      local base = name:sub(1, #name - 5):lower() -- strip .json
+      -- exact match OR prefix match against any candidate stem
+      for st, _ in pairs(wants) do
+        if base == st or base:sub(1, #st) == st then
+          return root .. "/" .. name
+        end
       end
     end
   end
@@ -1134,126 +1036,314 @@ local function to_set(lst)
   end
   return t
 end
+
 local function build_peer_map(groups)
-  local map, all = {}, {}
+  -- by_tag: { ["RFF"] = {g1, g2, ...}, ["NAD"] = {g3}, ... }
+  -- all:    { ["RFF"]=true, ["NAD"]=true, ... }  (fast "is sibling start?" check)
+  local by_tag, all = {}, {}
   for _, g in ipairs(groups or {}) do
-    map[g] = to_set(g.starts or {})
     for _, s in ipairs(g.starts or {}) do
+      by_tag[s] = by_tag[s] or {}
+      table.insert(by_tag[s], g)
       all[s] = true
     end
   end
-  return map, all
+  return by_tag, all
 end
 
-local function annotate_sg_in_message(buf, node, cfg)
-  local lines = vim.api.nvim_buf_get_lines(buf, node.s - 1, node.e, false)
-  if #lines == 0 then
-    return
+-- NEW: choose the best-matching group among candidates that share the same start tag.
+-- Uses the declared "segments" sequence from JSON (if present) to disambiguate cases like
+-- RFF-DTM vs RFF-FTX. Scores by longest prefix match of the sequence starting at 'idx'.
+local function choose_best_group(lines, idx, candidates, tag_of)
+  local function score(g)
+    local seq = g.segments or {}
+    if #seq == 0 then
+      -- no explicit sequence → minimal score; still a candidate
+      return 1
+    end
+    if seq[1] ~= tag_of(lines[idx] or "") then
+      return -1
+    end
+    local s = 1
+    local j = idx + 1
+    for k = 2, #seq do
+      local t = tag_of(lines[j] or "")
+      if t == seq[k] then
+        s = s + 1
+        j = j + 1
+      else
+        break
+      end
+    end
+    return s
   end
 
+  local best, bscore = nil, -1
+  for _, g in ipairs(candidates or {}) do
+    local sc = score(g)
+    if sc > bscore then
+      best, bscore = g, sc
+    elseif sc == bscore and best and ( #(g.segments or {}) > #(best.segments or {}) ) then
+      -- tie-breaker: prefer the longer declared sequence
+      best = g
+    end
+  end
+  return best
+end
+
+-- Build a per-level index of starters so we can quickly see "is this a sibling start?"
+local function _build_peer_map(groups)
+  local by_tag, all = {}, {}
+  for _, g in ipairs(groups or {}) do
+    for _, s in ipairs(g.starts or {}) do
+      by_tag[s] = by_tag[s] or {}
+      table.insert(by_tag[s], g)
+      all[s] = true
+    end
+  end
+  return by_tag, all
+end
+
+-- Disambiguate groups that share the same starter using declared "segments"
+local function _choose_best_group(lines, idx, candidates)
+  local function score(g)
+    local seq = g.segments or {}
+    if #seq == 0 then return 1 end
+    if seq[1] ~= tag_of_text(lines[idx] or "") then
+      return -1
+    end
+    local s = 1
+    local j = idx + 1
+    for k = 2, #seq do
+      local t = tag_of_text(lines[j] or "")
+      if t == seq[k] then
+        s = s + 1
+        j = j + 1
+      else
+        break
+      end
+    end
+    return s
+  end
+  local best, bscore = nil, -1
+  for _, g in ipairs(candidates or {}) do
+    local sc = score(g)
+    if sc > bscore or (sc == bscore and best and #(g.segments or {}) > #(best.segments or {})) then
+      best, bscore = g, sc
+    end
+  end
+  return best
+end
+
+-- Compute extra indentation per line (within a message), and (optionally) call cb_open(line_idx, group, start_tag)
+-- Compute extra indentation per line (within a message), and (optionally) call cb_open(line_idx, group, start_tag)
+-- This version FIRST finds the next peer boundary, THEN descends into children bounded by that span.
+local function compute_sg_extra_indent(lines, start_idx, end_idx, groups, cb_open)
+  local extra = {} -- 1-based relative to 'lines'
+
+  local function add_range(s, e, delta)
+    if s > e then return end
+    for i = s, e do
+      extra[i] = (extra[i] or 0) + delta
+    end
+  end
+
+  local function process_level(i, j, level_groups)
+    if not level_groups or #level_groups == 0 then
+      return i
+    end
+    local by_tag, peer_starts = _build_peer_map(level_groups)
+
+    while i <= j do
+      local tag = tag_of_text(lines[i] or "")
+      if not tag then
+        i = i + 1
+        goto cont
+      end
+
+      local cands = by_tag[tag]
+      local g = (cands and #cands == 1) and cands[1]
+              or (cands and #cands > 1) and _choose_best_group(lines, i, cands)
+              or nil
+
+      if not g then
+        i = i + 1
+      else
+        local open_i = i
+        if cb_open then cb_open(open_i, g, tag) end
+        dbg("SG open@", open_i, "tag", tag, "id", g.id or "?", "name", g.name or "?")
+
+        -- Step past opener to search for NEXT PEER (of THIS level)
+        i = i + 1
+        local boundary = j
+        for k = i, j do
+          local t2 = tag_of_text(lines[k] or "")
+          if peer_starts[t2] then
+            boundary = k - 1
+            dbg("  peer boundary before@", k, "(", t2 or "?", ") for", g.id or g.name or tag, "span=", open_i+1, "...", boundary)
+            break
+          end
+        end
+        if boundary == j then
+          dbg("  boundary=level end  span=", open_i+1, "...", boundary)
+        end
+
+        -- Recurse into CHILDREN but only inside [i, boundary]
+        if g.children and #g.children > 0 and i <= boundary then
+          i = process_level(i, boundary, g.children)
+        end
+
+        -- Indent inside the group (exclude opener line)
+        add_range(open_i + 1, boundary, 1)
+
+        -- Continue at the next peer (or j+1)
+        i = boundary + 1
+      end
+      ::cont::
+    end
+    return i
+  end
+
+  process_level(start_idx, end_idx, groups)
+  return extra
+end
+
+-- Re-indent pretty buffer lines inside messages according to SG nesting (dedent at next sibling start).
+local function apply_sg_indentation(pbuf)
+  local nodes, cfg = build_tree(pbuf)
+  local any = false
+
+  -- For each message node, load schema and compute per-line extra indents; then rewrite those lines.
+  for _, n in ipairs(nodes) do
+    if n.type == "message" then
+      local lines = vim.api.nvim_buf_get_lines(pbuf, n.s - 1, n.e, false)
+      if #lines > 0 then
+        -- Resolve schema (same logic as annotator)
+        local sig = n.sig or parse_message_sig(lines[1] or "", cfg)
+        local cache_key = table.concat({
+          sig and sig.type or "",
+          sig and sig.release or "",
+          sig and sig.agency or "",
+          sig and sig.assoc or ""
+        }, ":")
+
+        local schema = state.schema_cache[cache_key]
+        if schema == nil then
+          local js = nil
+          js = select(1, try_load_schema(sig or {}))
+          schema = js or false
+          state.schema_cache[cache_key] = schema
+        end
+        if schema ~= false and schema and schema.groups then
+          local top_groups = schema.groups
+          if type(top_groups) == "table" and #top_groups == 1 and type(top_groups[1].children) == "table" and #top_groups[1].children > 0 then
+            top_groups = top_groups[1].children
+          end
+
+          -- compute extra indent, and also capture openers for labeling (we'll still label later in annotate_pretty)
+          local opener_marks = {}
+          local extra = compute_sg_extra_indent(
+            lines,
+            1,
+            #lines,
+            top_groups,
+            function(open_i, g, start_tag)
+              table.insert(opener_marks, {lnum = open_i, g = g, tag = start_tag})
+            end
+          )
+
+          -- rewrite lines with extra indentation (two spaces per level, matching your pretty_text)
+          local rewritten = {}
+          for i, line in ipairs(lines) do
+            local bol = line:find("%S") or (#line + 1)
+            local current_indent = bol - 1
+            local add = (extra[i] or 0)
+            if add > 0 then any = true end
+            rewritten[i] = string.rep(" ", current_indent + add * 2) .. line:sub(bol)
+          end
+          vim.api.nvim_buf_set_lines(pbuf, n.s - 1, n.e, false, rewritten)
+
+          -- lightweight debug
+          if state.cfg.debug then
+            dbg("SG indent applied to message lines", n.s, "…", n.e, "openers", #opener_marks)
+          end
+        else
+          dbg("no SG schema for message at lines", n.s, "…", n.e)
+        end
+      end
+    end
+  end
+
+  return any
+end
+
+-- annotate SGs inside a message node (EOL labels only; indentation handled elsewhere)
+-- annotate SGs inside a message node (EOL labels only; indentation handled elsewhere)
+local function annotate_sg_in_message(buf, node, cfg)
+  local lines = vim.api.nvim_buf_get_lines(buf, node.s - 1, node.e, false)
+  if #lines == 0 then return end
+
   local sig = node.sig or parse_message_sig(lines[1] or "", cfg)
-  local cache_key =
-    table.concat(
-    {
-      sig and sig.type or "",
-      sig and sig.release or "",
-      sig and sig.agency or "",
-      sig and sig.assoc or ""
-    },
-    ":"
-  )
+  local cache_key = table.concat({
+    sig and sig.type or "",
+    sig and sig.release or "",
+    sig and sig.agency or "",
+    sig and sig.assoc or ""
+  }, ":")
 
   local schema = state.schema_cache[cache_key]
   local schema_path = nil
   if schema == nil then
     local js, path = try_load_schema(sig or {})
-    if js then
-      schema = js
-      schema_path = path
-    else
-      schema = false
-    end
+    if js then schema = js schema_path = path else schema = false end
     state.schema_cache[cache_key] = schema
   end
   if schema == false or not (schema and schema.groups) then
+    dbg("annotate: no schema")
     return
   end
 
-  local function tag_of(line)
-    return (line:gsub("^%s+", ""):match("^([A-Z][A-Z0-9]+)"))
+  -- unwrap single container like "Header/Footer"
+  local top_groups = schema.groups
+  if type(top_groups) == "table" and #top_groups == 1 and type(top_groups[1].children) == "table" and #top_groups[1].children > 0 then
+    top_groups = top_groups[1].children
   end
 
-  local function annotate_level(start_idx, end_idx, groups)
-    if not groups or #groups == 0 then
-      return start_idx
-    end
-    local peer_map, all_peer_starts = build_peer_map(groups)
-    local i = start_idx
-    while i <= end_idx do
-      local tag = tag_of(lines[i] or "")
-      if not tag then
-        i = i + 1
-        goto continue
-      end
-
-      local g_found = nil
-      for _, g in ipairs(groups) do
-        if peer_map[g][tag] then
-          g_found = g
-          break
-        end
-      end
-      if not g_found then
-        i = i + 1
-      else
-        local open_lnum = i
-        i = i + 1
-        if g_found.children and #g_found.children > 0 then
-          i = annotate_level(i, end_idx, g_found.children)
-        end
-        while i <= end_idx do
-          local t2 = tag_of(lines[i] or "")
-          if t2 == "UNT" or all_peer_starts[t2] then
-            break
-          end
-          if g_found.children and #g_found.children > 0 then
-            local _, child_all = build_peer_map(g_found.children)
-            if child_all[t2] then
-              i = annotate_level(i, end_idx, g_found.children)
-              goto loop_cont
-            end
-          end
-          i = i + 1
-          ::loop_cont::
-        end
-        local close_lnum = math.max(open_lnum, i - 1)
-
-        local base
-        if g_found.id and g_found.name then
-          base = g_found.id .. " " .. g_found.name
-        else
-          base = g_found.id or g_found.name or "SG"
-        end
-
-        local mshort = msg_sig_label(sig)
-        local label = mshort and (base .. " — " .. mshort) or base
-
-        put_label(buf, node.s - 2 + open_lnum, {{"⟪ " .. label .. " ⟫", "EdiScopeSG"}})
-        put_label(buf, node.s - 2 + close_lnum, {{"⟪ /" .. label .. " ⟫", "EdiScopeSG"}})
-      end
-      ::continue::
-    end
-    return i
+  -- Reuse the walker to only emit opener labels
+  -- De-duplicate only *consecutive* duplicates of the same SG opener.
+  local last_key, last_ln = nil, -1
+  local function gkey(g, start_tag)
+    return tostring(g.id or "?") .. "|" .. (g.name or "") .. "|" .. (start_tag or "")
   end
 
-  annotate_level(1, #lines, schema.groups)
+  compute_sg_extra_indent(
+    lines,
+    1,
+    #lines,
+    top_groups,
+    function(open_i, g, start_tag)
+      local key = gkey(g, start_tag)
+
+      -- If same opener as the previous one and immediately consecutive, skip.
+      if last_key == key and open_i == last_ln + 1 then
+        last_ln = open_i        -- <-- advance even when skipping to keep the run
+        dbg("annotate: skip consecutive dup@", open_i, key)
+        return
+      end
+
+      -- New run (or different SG): label and update tracking.
+      last_key, last_ln = key, open_i
+      local base = (g.id and g.name) and (g.id .. " " .. g.name) or (g.id or g.name or "SG")
+      local mshort = msg_sig_label(sig)
+      local label = mshort and (base .. " — " .. mshort) or base
+      local buf_lnum = node.s - 2 + open_i
+      put_label(buf, buf_lnum, {{"⟪ " .. label .. "  (start=" .. tostring(start_tag) .. ") ⟫", "EdiScopeSG"}}, 125)
+      dbg("annotate: label@", buf_lnum, base, "start", start_tag)
+    end
+  )
 
   if schema_path then
-    vim.b.edi_schema_match = {
-      path = schema_path,
-      type = (sig and sig.type) or "?",
-      release = (sig and sig.release) or "?"
-    }
+    vim.b.edi_schema_match = {path = schema_path, type = (sig and sig.type) or "?", release = (sig and sig.release) or "?"}
   end
 end
 
@@ -1376,100 +1466,47 @@ local function edi_pretty_toggle()
   vim.api.nvim_buf_set_option(pbuf, "buftype", "nofile")
   vim.api.nvim_buf_set_option(pbuf, "bufhidden", "wipe")
   vim.api.nvim_buf_set_option(pbuf, "swapfile", false)
-  vim.api.nvim_buf_set_option(pbuf, "modifiable", false)
+  -- IMPORTANT: leave modifiable true until we've applied SG indentation
+  vim.api.nvim_buf_set_option(pbuf, "modifiable", true)
   vim.api.nvim_buf_set_name(pbuf, "[EDI Pretty] " .. (vim.api.nvim_buf_get_name(cur):match("[^/]+$") or ""))
 
   apply_syntax(pbuf, cfg)
   vim.api.nvim_win_set_buf(win, pbuf)
+
+  -- SG reindent BEFORE freezing the buffer
+  local changed = apply_sg_indentation(pbuf)
+  if state.cfg.debug then
+    dbg("SG indentation changed=", tostring(changed))
+  end
+
+  -- Now annotate (EOL labels)
   annotate_pretty(pbuf)
 
-  -- Jumps
-  vim.keymap.set(
-    {"n"},
-    "]m",
-    function()
-      jump_to(1, "message")
-    end,
-    {buffer = pbuf, desc = "next message"}
-  )
-  vim.keymap.set(
-    {"n"},
-    "[m",
-    function()
-      jump_to(-1, "message")
-    end,
-    {buffer = pbuf, desc = "prev message"}
-  )
-  vim.keymap.set(
-    {"n"},
-    "]g",
-    function()
-      jump_to(1, "group")
-    end,
-    {buffer = pbuf, desc = "next group"}
-  )
-  vim.keymap.set(
-    {"n"},
-    "[g",
-    function()
-      jump_to(-1, "group")
-    end,
-    {buffer = pbuf, desc = "prev group"}
-  )
-  vim.keymap.set(
-    {"n"},
-    "]i",
-    function()
-      jump_to(1, "interchange")
-    end,
-    {buffer = pbuf, desc = "next interchange"}
-  )
-  vim.keymap.set(
-    {"n"},
-    "[i",
-    function()
-      jump_to(-1, "interchange")
-    end,
-    {buffer = pbuf, desc = "prev interchange"}
-  )
+  -- Finally freeze the pretty buffer
+  vim.api.nvim_buf_set_option(pbuf, "modifiable", false)
 
-  -- Text-objects (visual + operator-pending) — pretty buffer only
+  -- Jumps
+  vim.keymap.set({"n"}, "]m", function() jump_to(1, "message") end,   {buffer = pbuf, desc = "next message"})
+  vim.keymap.set({"n"}, "[m", function() jump_to(-1, "message") end,  {buffer = pbuf, desc = "prev message"})
+  vim.keymap.set({"n"}, "]g", function() jump_to(1, "group") end,     {buffer = pbuf, desc = "next group"})
+  vim.keymap.set({"n"}, "[g", function() jump_to(-1, "group") end,    {buffer = pbuf, desc = "prev group"})
+  vim.keymap.set({"n"}, "]i", function() jump_to(1, "interchange") end,{buffer = pbuf, desc = "next interchange"})
+  vim.keymap.set({"n"}, "[i", function() jump_to(-1, "interchange") end,{buffer = pbuf, desc = "prev interchange"})
+
+  -- Text-objects
   for _, which in ipairs({{"m", "message"}, {"g", "group"}, {"i", "interchange"}}) do
     local key, kind = which[1], which[2]
-    vim.keymap.set(
-      {"x", "o"},
-      "i" .. key,
-      function()
-        select_node_lines(kind, false)
-      end,
-      {buffer = pbuf, desc = "inner " .. kind}
-    )
-    vim.keymap.set(
-      {"x", "o"},
-      "a" .. key,
-      function()
-        select_node_lines(kind, true)
-      end,
-      {buffer = pbuf, desc = "around " .. kind}
-    )
+    vim.keymap.set({"x", "o"}, "i" .. key, function() select_node_lines(kind, false) end, {buffer = pbuf, desc = "inner " .. kind})
+    vim.keymap.set({"x", "o"}, "a" .. key, function() select_node_lines(kind, true)  end, {buffer = pbuf, desc = "around " .. kind})
   end
 
   -- 'q' to return
-  vim.keymap.set(
-    "n",
-    "q",
-    function()
-      local s = vim.w.edi_pretty_state
-      if s and vim.api.nvim_buf_is_valid(s.source) then
-        vim.api.nvim_win_set_buf(win, s.source)
-      end
-      if s and vim.api.nvim_buf_is_valid(s.pretty) then
-        pcall(vim.api.nvim_buf_delete, s.pretty, {force = true})
-      end
-      vim.w.edi_pretty_state = nil
-    end,
-    {buffer = pbuf, nowait = true, silent = true}
-  )
+  vim.keymap.set("n", "q", function()
+    local s = vim.w.edi_pretty_state
+    if s and vim.api.nvim_buf_is_valid(s.source) then vim.api.nvim_win_set_buf(win, s.source) end
+    if s and vim.api.nvim_buf_is_valid(s.pretty) then pcall(vim.api.nvim_buf_delete, s.pretty, {force = true}) end
+    vim.w.edi_pretty_state = nil
+  end, {buffer = pbuf, nowait = true, silent = true})
 
   vim.w.edi_pretty_state = {source = cur, pretty = pbuf}
 end
@@ -1647,11 +1684,13 @@ local function pump()
             function()
               vim.notify(
                 string.format(
-                  "edi: %d/%d saved %d last=%s",
+                  "edi: %d/%d saved %d last=%s(%d) url=%s",
                   fetcher.done,
                   fetcher.max_id,
                   fetcher.saved,
-                  fetcher.last_saved and string.format("%04d", fetcher.last_saved) or "-"
+                  fetcher.last_saved and string.format("%04d", fetcher.last_saved) or "none",
+                  fetcher.last_count or 0,
+                  fetcher.last_url or "n/a"
                 ),
                 vim.log.levels.INFO
               )
@@ -1765,7 +1804,7 @@ local function cmd_sg_which_schema()
 end
 
 -- dump normalized SGs the annotator sees
-local function cmd_sg_dump()
+local function cmd_sg_dump_schema()
   local buf = vim.api.nvim_get_current_buf()
   local nodes, cfg = build_tree(buf)
   local msg = nil
@@ -1820,6 +1859,9 @@ function M.setup(opts)
   end
   pcall(try_load_data_dir)
 
+  vim.api.nvim_create_user_command("EdiDebugOn",  function() state.cfg.debug = true  vim.notify("edi: debug=on",  vim.log.levels.INFO) end, {})
+  vim.api.nvim_create_user_command("EdiDebugOff", function() state.cfg.debug = false vim.notify("edi: debug=off", vim.log.levels.INFO) end, {})
+
   vim.api.nvim_create_user_command(
     "EdiPretty",
     function()
@@ -1864,7 +1906,7 @@ function M.setup(opts)
     {}
   )
   vim.api.nvim_create_user_command("EdiSgWhichSchema", cmd_sg_which_schema, {desc = "Show which SG schema file matched"})
-  vim.api.nvim_create_user_command("EdiSgDump", cmd_sg_dump, {desc = "Dump normalized SG tree"})
+  vim.api.nvim_create_user_command("EdiSgDumpSchema",  cmd_sg_dump_schema,  {desc = "Dump normalized SG tree"})
 
   local grp = vim.api.nvim_create_augroup("edi-core", {clear = true})
   vim.api.nvim_create_autocmd({"BufReadPost", "BufNewFile"}, {group = grp, callback = maybe_set_ft})
