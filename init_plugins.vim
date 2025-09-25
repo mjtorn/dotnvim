@@ -19,7 +19,9 @@ nmap <buffer> gd <plug>DeopleteRustGoToDefinitionTab
 
 " Emmet might be a bit trigger happy
 let g:user_emmet_install_global = 0
-autocmd FileType html,css EmmetInstall
+if filter(split(execute(':scriptname'), "\n"), 'v:val =~? "emmet"') != []
+  autocmd FileType html,css EmmetInstall
+end
 
 " treesitter
 " https://github.com/neovim/neovim/issues/32675#issuecomment-2690131055
