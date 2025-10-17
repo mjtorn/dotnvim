@@ -1,0 +1,508 @@
+{
+  "UNB": {
+    "title": "Interchange Header",
+    "elements": [
+      {
+        "name": "S001 Syntax identifier",
+        "components": [
+          { "name": "0001 Syntax identifier", "id": "0001" },
+          { "name": "0002 Syntax version number", "id": "0002" },
+          { "name": "0080 Service code list directory version number", "id": "0080" },
+          { "name": "0133 Character encoding, coded", "id": "0133", "codeset": "0133" }
+        ]
+      },
+      {
+        "name": "S002 Interchange sender",
+        "components": [
+          { "name": "0004 Sender identification", "id": "0004" },
+          { "name": "0007 Partner identification code qualifier", "id": "0007", "codeset": "0007" },
+          { "name": "0008 Address for reverse routing", "id": "0008" }
+        ]
+      },
+      {
+        "name": "S003 Interchange recipient",
+        "components": [
+          { "name": "0010 Recipient identification", "id": "0010" },
+          { "name": "0007 Partner identification code qualifier", "id": "0007", "codeset": "0007" },
+          { "name": "0014 Routing address", "id": "0014" }
+        ]
+      },
+      {
+        "name": "S004 Date/time of preparation",
+        "components": [
+          { "name": "0017 Date", "id": "0017" },
+          { "name": "0019 Time", "id": "0019" }
+        ]
+      },
+      { "name": "0020 Interchange control reference", "id": "0020" },
+      {
+        "name": "S005 Recipient's reference/password details",
+        "components": [
+          { "name": "0022 Recipient's reference/password", "id": "0022" },
+          { "name": "0025 Recipient's reference/password qualifier", "id": "0025", "codeset": "0025" }
+        ]
+      },
+      { "name": "0026 Application reference", "id": "0026" },
+      { "name": "0029 Processing priority code", "id": "0029", "codeset": "0029" },
+      { "name": "0031 Acknowledgement request", "id": "0031", "codeset": "0031" },
+      { "name": "0032 Interchange agreement identifier", "id": "0032" },
+      { "name": "0035 Test indicator", "id": "0035", "codeset": "0035" }
+    ]
+  },
+
+  "UNH": {
+    "title": "Message Header",
+    "elements": [
+      { "name": "0062 Message reference number", "id": "0062" },
+      {
+        "name": "S009 Message identifier",
+        "components": [
+          { "name": "0065 Message type", "id": "0065" },
+          { "name": "0052 Message version number", "id": "0052" },
+          { "name": "0054 Message release number", "id": "0054" },
+          { "name": "0051 Controlling agency", "id": "0051", "codeset": "0051" },
+          { "name": "0057 Association assigned code", "id": "0057" }
+        ]
+      },
+      { "name": "0068 Common access reference", "id": "0068" },
+      { "name": "S010 Status of the transfer", "components": [
+        { "name": "0070 Sequence of transfers", "id": "0070" },
+        { "name": "0073 First and last transfer", "id": "0073", "codeset": "0073" }
+      ]}
+    ]
+  },
+
+  "UNT": { "title": "Message Trailer", "elements": [
+    { "name": "0074 Number of segments in a message", "id": "0074" },
+    { "name": "0062 Message reference number", "id": "0062" }
+  ]},
+
+  "UNZ": { "title": "Interchange Trailer", "elements": [
+    { "name": "0036 Interchange control count", "id": "0036" },
+    { "name": "0020 Interchange control reference", "id": "0020" }
+  ]},
+
+  "UNG": { "title": "Functional Group Header" },
+  "UNE": { "title": "Functional Group Trailer" },
+
+  "BGM": {
+    "title": "Beginning of message",
+    "elements": [
+      {
+        "name": "C002 Document/message name",
+        "components": [
+          { "name": "1001 Document name code", "id": "1001", "codeset": "1001" },
+          { "name": "1131 Code list qualifier", "id": "1131" },
+          { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" },
+          { "name": "1000 Document name", "id": "1000" }
+        ]
+      },
+      { "name": "C106 Document/message identification",
+        "components": [
+          { "name": "1004 Document/message number", "id": "1004" },
+          { "name": "1056 Version", "id": "1056" },
+          { "name": "1060 Revision", "id": "1060" }
+        ]
+      },
+      { "name": "1225 Message function, coded", "id": "1225", "codeset": "1225" },
+      { "name": "4343 Response type, coded", "id": "4343", "codeset": "4343" }
+    ]
+  },
+
+  "DTM": {
+    "title": "Date/time/period",
+    "elements": [
+      {
+        "name": "C507 Date/time/period",
+        "components": [
+          { "name": "2005 Date/time/period qualifier", "id": "2005", "codeset": "2005" },
+          { "name": "2380 Date/time/period", "id": "2380" },
+          { "name": "2379 Date/time/period format qualifier", "id": "2379", "codeset": "2379" }
+        ]
+      }
+    ]
+  },
+
+  "RFF": {
+    "title": "Reference",
+    "elements": [
+      {
+        "name": "C506 Reference",
+        "components": [
+          { "name": "1153 Reference qualifier", "id": "1153", "codeset": "1153" },
+          { "name": "1154 Reference number", "id": "1154" },
+          { "name": "1156 Line number", "id": "1156" },
+          { "name": "4000 Reference version", "id": "4000" }
+        ]
+      }
+    ]
+  },
+
+  "NAD": {
+    "title": "Name and address",
+    "elements": [
+      { "name": "3035 Party qualifier", "id": "3035", "codeset": "3035" },
+      { "name": "C082 Party identification", "components": [
+        { "name": "3039 Party id", "id": "3039" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]},
+      { "name": "C058 Name and address", "components": [
+        { "name": "3124 Name and address line", "id": "3124" },
+        { "name": "3124 Name and address line", "id": "3124" },
+        { "name": "3124 Name and address line", "id": "3124" },
+        { "name": "3124 Name and address line", "id": "3124" },
+        { "name": "3124 Name and address line", "id": "3124" }
+      ]},
+      { "name": "C080 Party name", "components": [
+        { "name": "3036 Party name", "id": "3036" },
+        { "name": "3036 Party name", "id": "3036" },
+        { "name": "3036 Party name", "id": "3036" },
+        { "name": "3036 Party name", "id": "3036" },
+        { "name": "3045 Party name format, coded", "id": "3045", "codeset": "3045" }
+      ]},
+      { "name": "C059 Street", "components": [
+        { "name": "3042 Street and number/p.o. box", "id": "3042" },
+        { "name": "3042 Street and number/p.o. box", "id": "3042" },
+        { "name": "3042 Street and number/p.o. box", "id": "3042" },
+        { "name": "3042 Street and number/p.o. box", "id": "3042" }
+      ]},
+      { "name": "3164 City name", "id": "3164" },
+      { "name": "3251 Postcode id", "id": "3251" },
+      { "name": "3207 Country, coded", "id": "3207", "codeset": "3207" }
+    ]
+  },
+
+  "CTA": {
+    "title": "Contact information",
+    "elements": [
+      { "name": "3139 Contact function code", "id": "3139", "codeset": "3139" },
+      { "name": "C056 Department or employee details", "components": [
+        { "name": "3413 Department or employee", "id": "3413" },
+        { "name": "3412 Department or employee id", "id": "3412" }
+      ]}
+    ]
+  },
+
+  "COM": {
+    "title": "Communication contact",
+    "elements": [
+      { "name": "C076 Communication contact", "components": [
+        { "name": "3148 Communication number", "id": "3148" },
+        { "name": "3155 Communication channel qualifier", "id": "3155", "codeset": "3155" }
+      ]}
+    ]
+  },
+
+  "LOC": {
+    "title": "Place/location identification",
+    "elements": [
+      { "name": "3227 Location function code qualifier", "id": "3227", "codeset": "3227" },
+      { "name": "C517 Location identification", "components": [
+        { "name": "3225 Location id", "id": "3225" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]},
+      { "name": "C519 Related location", "components": [
+        { "name": "3223 Related location one id", "id": "3223" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]}
+    ]
+  },
+
+  "LIN": {
+    "title": "Line item",
+    "elements": [
+      { "name": "1082 Line item number", "id": "1082" },
+      { "name": "1229 Action request/notification, coded", "id": "1229", "codeset": "1229" },
+      { "name": "C212 Item number identification", "components": [
+        { "name": "7140 Item number", "id": "7140" },
+        { "name": "7143 Item number type, coded", "id": "7143", "codeset": "7143" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]}
+    ]
+  },
+
+  "PIA": {
+    "title": "Additional product id",
+    "elements": [
+      { "name": "4347 Product id function qualifier", "id": "4347", "codeset": "4347" },
+      { "name": "C212 Item number identification", "components": [
+        { "name": "7140 Item number", "id": "7140" },
+        { "name": "7143 Item number type, coded", "id": "7143", "codeset": "7143" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]},
+      { "name": "C212 Item number identification", "components": [
+        { "name": "7140 Item number", "id": "7140" },
+        { "name": "7143 Item number type, coded", "id": "7143", "codeset": "7143" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]},
+      { "name": "C212 Item number identification", "components": [
+        { "name": "7140 Item number", "id": "7140" },
+        { "name": "7143 Item number type, coded", "id": "7143", "codeset": "7143" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]}
+    ]
+  },
+
+  "IMD": {
+    "title": "Item description",
+    "elements": [
+      { "name": "7077 Item description type, coded", "id": "7077", "codeset": "7077" },
+      { "name": "7081 Item characteristic, coded", "id": "7081", "codeset": "7081" },
+      { "name": "C273 Item description", "components": [
+        { "name": "7008 Item description", "id": "7008" },
+        { "name": "7008 Item description", "id": "7008" },
+        { "name": "7008 Item description", "id": "7008" },
+        { "name": "3453 Language, coded", "id": "3453", "codeset": "3453" }
+      ]}
+    ]
+  },
+
+  "FTX": {
+    "title": "Free text",
+    "elements": [
+      { "name": "4451 Text subject qualifier", "id": "4451", "codeset": "4451" },
+      { "name": "4453 Free text function, coded", "id": "4453", "codeset": "4453" },
+      { "name": "C107 Text reference", "components": [
+        { "name": "4441 Free text, coded", "id": "4441" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]},
+      { "name": "C108 Text literal", "components": [
+        { "name": "4440 Free text", "id": "4440" },
+        { "name": "4440 Free text", "id": "4440" },
+        { "name": "4440 Free text", "id": "4440" }
+      ]},
+      { "name": "3453 Language, coded", "id": "3453", "codeset": "3453" }
+    ]
+  },
+
+  "PRI": {
+    "title": "Price details",
+    "elements": [
+      { "name": "C509 Price information", "components": [
+        { "name": "5125 Price qualifier", "id": "5125", "codeset": "5125" },
+        { "name": "5118 Price", "id": "5118" },
+        { "name": "5375 Price type, coded", "id": "5375", "codeset": "5375" },
+        { "name": "5387 Price type qualifier", "id": "5387", "codeset": "5387" },
+        { "name": "5284 Unit price basis", "id": "5284" },
+        { "name": "6411 Measure unit qualifier", "id": "6411", "codeset": "6411" }
+      ]}
+    ]
+  },
+
+  "CUX": {
+    "title": "Currencies",
+    "elements": [
+      { "name": "C504 Currency details", "components": [
+        { "name": "6347 Currency details qualifier", "id": "6347", "codeset": "6347" },
+        { "name": "6345 Currency id", "id": "6345" },
+        { "name": "6343 Currency type code qualifier", "id": "6343", "codeset": "6343" }
+      ]},
+      { "name": "C504 Currency details", "components": [
+        { "name": "6347 Currency details qualifier", "id": "6347", "codeset": "6347" },
+        { "name": "6345 Currency id", "id": "6345" },
+        { "name": "6343 Currency type code qualifier", "id": "6343", "codeset": "6343" }
+      ]}
+    ]
+  },
+
+  "QTY": {
+    "title": "Quantity",
+    "elements": [
+      { "name": "C186 Quantity details", "components": [
+        { "name": "6063 Quantity qualifier", "id": "6063", "codeset": "6063" },
+        { "name": "6060 Quantity", "id": "6060" },
+        { "name": "6411 Measure unit qualifier", "id": "6411", "codeset": "6411" }
+      ]}
+    ]
+  },
+
+  "MOA": {
+    "title": "Monetary amount",
+    "elements": [
+      { "name": "C516 Monetary amount", "components": [
+        { "name": "5025 Monetary amount type qualifier", "id": "5025", "codeset": "5025" },
+        { "name": "5004 Monetary amount", "id": "5004" },
+        { "name": "6345 Currency id", "id": "6345" }
+      ]}
+    ]
+  },
+
+  "MEA": {
+    "title": "Measurements",
+    "elements": [
+      { "name": "6311 Measurement purpose, coded", "id": "6311", "codeset": "6311" },
+      { "name": "C502 Measurement details", "components": [
+        { "name": "6313 Measurement dimension, coded", "id": "6313", "codeset": "6313" },
+        { "name": "6321 Measurement significance, coded", "id": "6321", "codeset": "6321" },
+        { "name": "6155 Non-discrete measurement name code", "id": "6155", "codeset": "6155" }
+      ]},
+      { "name": "C174 Value/range", "components": [
+        { "name": "6411 Measure unit qualifier", "id": "6411", "codeset": "6411" },
+        { "name": "6314 Measurement value", "id": "6314" },
+        { "name": "6162 Range minimum", "id": "6162" },
+        { "name": "6152 Range maximum", "id": "6152" }
+      ]}
+    ]
+  },
+
+  "STS": {
+    "title": "Status",
+    "elements": [
+      { "name": "C601 Status type", "components": [
+        { "name": "9015 Status type, coded", "id": "9015", "codeset": "9015" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]},
+      { "name": "C555 Status", "components": [
+        { "name": "9011 Status, coded", "id": "9011", "codeset": "9011" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]},
+      { "name": "C556 Status reason", "components": [
+        { "name": "9013 Status reason, coded", "id": "9013", "codeset": "9013" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]}
+    ]
+  },
+
+  "TAX": {
+    "title": "Duty/tax/fee details",
+    "elements": [
+      { "name": "5283 Duty/tax/fee function code qualifier", "id": "5283", "codeset": "5283" },
+      { "name": "C241 Duty/tax/fee type", "components": [
+        { "name": "5153 Duty/tax/fee type, coded", "id": "5153", "codeset": "5153" }
+      ]},
+      { "name": "C243 Duty/tax/fee detail", "components": [
+        { "name": "5278 Duty/tax/fee rate", "id": "5278" },
+        { "name": "5279 Duty/tax/fee rate id", "id": "5279" }
+      ]}
+    ]
+  },
+
+  "ALI": {
+    "title": "Additional information",
+    "elements": [
+      { "name": "3239 Country of origin, coded", "id": "3239", "codeset": "3239" },
+      { "name": "9213 Type of duty regime, coded", "id": "9213", "codeset": "9213" }
+    ]
+  },
+
+  "DOC": {
+    "title": "Document/message details",
+    "elements": [
+      { "name": "C002 Document/message name", "components": [
+        { "name": "1001 Document name code", "id": "1001", "codeset": "1001" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" },
+        { "name": "1000 Document name", "id": "1000" }
+      ]},
+      { "name": "C503 Document/message details", "components": [
+        { "name": "1004 Document/message number", "id": "1004" },
+        { "name": "1373 Document/status code", "id": "1373", "codeset": "1373" }
+      ]}
+    ]
+  },
+
+  "ERC": {
+    "title": "Application error information",
+    "elements": [
+      { "name": "C901 Application error detail", "components": [
+        { "name": "9321 Application error identification", "id": "9321" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]}
+    ]
+  },
+
+  "IDE": {
+    "title": "Identification of a time series",
+    "elements": [
+      { "name": "C206 Identification", "components": [
+        { "name": "7402 Identity number", "id": "7402" },
+        { "name": "7405 Identity qualifier", "id": "7405", "codeset": "7405" }
+      ]},
+      { "name": "1131 Code list qualifier", "id": "1131" },
+      { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+    ]
+  },
+
+  "SEQ": {
+    "title": "Sequence details",
+    "elements": [
+      { "name": "1229 Action request/notification, coded", "id": "1229", "codeset": "1229" },
+      { "name": "C286 Sequence information", "components": [
+        { "name": "1050 Sequence number", "id": "1050" },
+        { "name": "1159 Sequence qualifier", "id": "1159", "codeset": "1159" }
+      ]}
+    ]
+  },
+
+  "CCI": {
+    "title": "Characteristic/class id",
+    "elements": [
+      { "name": "7059 Characteristic id, coded", "id": "7059", "codeset": "7059" },
+      { "name": "C502 Measurement details", "components": [
+        { "name": "6313 Measurement dimension, coded", "id": "6313", "codeset": "6313" },
+        { "name": "6321 Measurement significance, coded", "id": "6321", "codeset": "6321" }
+      ]}
+    ]
+  },
+
+  "CAV": {
+    "title": "Characteristic value",
+    "elements": [
+      { "name": "C889 Characteristic value", "components": [
+        { "name": "7111 Characteristic value, coded", "id": "7111", "codeset": "7111" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" },
+        { "name": "7110 Characteristic value", "id": "7110" }
+      ]}
+    ]
+  },
+
+  "MKS": {
+    "title": "Market/sales channel qualification",
+    "elements": [
+      { "name": "7297 Information category, coded", "id": "7297", "codeset": "7297" },
+      { "name": "C332 Sales channel identification", "components": [
+        { "name": "3453 Language, coded", "id": "3453", "codeset": "3453" }
+      ]}
+    ]
+  },
+
+  "PRC": {
+    "title": "Process identification",
+    "elements": [
+      { "name": "C242 Process", "components": [
+        { "name": "7187 Process type, coded", "id": "7187", "codeset": "7187" },
+        { "name": "1131 Code list qualifier", "id": "1131" },
+        { "name": "3055 Code list responsible agency", "id": "3055", "codeset": "3055" }
+      ]},
+      { "name": "C246 Process identification details", "components": [
+        { "name": "7164 Process identifier", "id": "7164" }
+      ]}
+    ]
+  },
+
+  "AGR": { "title": "Agreement identification" },
+
+  "RTE": {
+    "title": "Rate details",
+    "elements": [
+      { "name": "C128 Rate details", "components": [
+        { "name": "5414 Rate", "id": "5414" },
+        { "name": "5482 Unit price basis rate", "id": "5482" },
+        { "name": "6411 Measure unit qualifier", "id": "6411", "codeset": "6411" }
+      ]}
+    ]
+  }
+}
