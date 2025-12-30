@@ -144,7 +144,9 @@ function! StripWhiteSpaces()
   :silent! %s/^\s\+$//g
   :silent! %s/^\(\s*[^\s]\+\)\s\+$/\1/g
 endfunction
-au BufEnter * call StripWhiteSpaces()
+"" C# code is notoriously crap with this, can't easily exclude, go manual
+" au BufEnter * call StripWhiteSpaces()
+" au BufEnter *\%(!\.cs\)$ call StripWhiteSpaces()
 
 function! MaybeSpeshulTab(...)
   let col = col('.') - 1
