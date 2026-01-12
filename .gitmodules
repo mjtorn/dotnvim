@@ -74,9 +74,6 @@
 [submodule "bundle/rust.vim"]
 	path = bundle/rust.vim
 	url = https://github.com/rust-lang/rust.vim.git
-[submodule "bundle/omnisharp"]
-	path = bundle/omnisharp
-	url = https://github.com/OmniSharp/omnisharp-vim
 [submodule "bundle/dispatch"]
 	path = bundle/dispatch
 	url = https://github.com/tpope/vim-dispatch
@@ -119,9 +116,6 @@
 [submodule "bundle/cmp-buffer"]
 	path = bundle/cmp-buffer
 	url = https://github.com/hrsh7th/cmp-buffer.git
-[submodule "bundle/omnisharp-extended-lsp"]
-	path = bundle/omnisharp-extended-lsp
-	url = https://github.com/Hoffs/omnisharp-extended-lsp.nvim.git
 [submodule "bundle/cmp-async-path"]
 	path = bundle/cmp-async-path
 	url = https://github.com/FelipeLema/cmp-async-path.git
