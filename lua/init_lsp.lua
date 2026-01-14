@@ -38,7 +38,7 @@ end
 -- and clean up that unreadable lua coding style.
 -- Populate the function later.
 function setup_servers()
-  vim.cmd("echo 'setting up servers'")
+  -- vim.cmd("echo 'setting up servers'")
   local pid = vim.fn.getpid()
 
   local capabilities = require('cmp_nvim_lsp').default_capabilities()
@@ -193,7 +193,7 @@ function setup_servers()
       }
     })
     vim.lsp.enable("rust_lsp")
-    vim.cmd("echo 'set up rust_lsp'")
+    -- vim.cmd("echo 'set up rust_lsp'")
   end
 
   if vim.fn.executable(pylsp) == 1 then
@@ -220,7 +220,7 @@ function setup_servers()
       on_attach = on_attach,
     })
     vim.lsp.enable(pylsp)
-    vim.cmd("echo 'set up pylsp'")
+    -- vim.cmd("echo 'set up pylsp'")
   end
 
   -- rust
@@ -232,7 +232,7 @@ function setup_servers()
       on_attach = on_attach,
     })
     vim.lsp.enable("rust_analyzer")
-    vim.cmd("echo 'set up rust_analyzer'")
+    -- vim.cmd("echo 'set up rust_analyzer'")
   end
 
   ---- Doesn't cope with submodule project not having *.csproj files
@@ -243,6 +243,6 @@ function setup_servers()
       on_attach = on_attach,
     })
     vim.lsp.enable("csharp_ls")
-    vim.cmd("echo 'set up csharp-ls'")
+    -- vim.cmd("echo 'set up csharp-ls'")
   end
 end
