@@ -174,6 +174,9 @@ function setup_servers()
   -- csharp // `dotnet tool install --global csharp-ls`
   local csharp_ls_bin = vim.fn.join({vim.fn.expand('$HOME'), '.dotnet', 'tools', 'csharp-ls'}, '/')
 
+  -- "~/.local/bash-lsp/$ npm init -y", `npm install bash-language-server`, symlinked from `.bin/` to `~/.local/bin/`
+  local bash_lsp_bin = vim.fn.join({vim.fn.expand('$HOME'), '.local', 'bin', 'bash-language-server'}, '/')
+
   if vim.fn.executable('ruff-lsp') == 1 then
     vim.lsp.config("ruff-lsp", {
       root_markers = {
@@ -245,4 +248,16 @@ function setup_servers()
     vim.lsp.enable("csharp_ls")
     -- vim.cmd("echo 'set up csharp-ls'")
   end
+
+  -- Damn I hate this being node
+  if vim.fn.executable(bash_lsp_bin) == 1 then
+    vim.lsp.config("bashls", {
+      cmd = { bash_lsp_bin, 'start' },
+      filetypes = { 'bash', 'sh', 'zsh' },
+      on_attach = on_attach,
+    })
+    vim.lsp.enable("bashls")
+    -- vim.cmd("echo 'set up bashls'")
+  end
+
 end
