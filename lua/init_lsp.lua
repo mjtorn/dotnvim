@@ -38,9 +38,8 @@ end
 -- and clean up that unreadable lua coding style.
 -- Populate the function later.
 function setup_servers()
+  -- vim.cmd("echo 'setting up servers'")
   local pid = vim.fn.getpid()
-  local lspconfig = require('lspconfig')
-  local lsputil = require('lspconfig/util')
 
   local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
@@ -174,21 +173,16 @@ function setup_servers()
 
   -- csharp // `dotnet tool install --global csharp-ls`
   local csharp_ls_bin = vim.fn.join({vim.fn.expand('$HOME'), '.dotnet', 'tools', 'csharp-ls'}, '/')
-  -- XXX: but using that `--languageserver` approach just fails autocompletes and docs
-  local omnisharp_bin = vim.fn.join({vim.fn.expand('$HOME'), '.cache', 'omnisharp-vim', 'omnisharp-roslyn', 'OmniSharp.exe'}, '/')
 
   if vim.fn.executable('ruff-lsp') == 1 then
-    lspconfig.ruff_lsp.setup {
-      root_dir = function(fname)
-        local root_files = {
-          'pyproject.toml',
-          'setup.py',
-          'setup.cfg',
-          'requirements.txt',
-          'Pipfile',
-        }
-        return lsputil.root_pattern(unpack(root_files))(fname) or lsputil.find_git_ancestor(fname)
-      end,
+    vim.lsp.config("ruff-lsp", {
+      root_markers = {
+        'pyproject.toml',
+        'setup.py',
+        'setup.cfg',
+        'requirements.txt',
+        'Pipfile',
+      },
       on_attach = on_attach,
       init_options = {
         settings = {
@@ -197,22 +191,22 @@ function setup_servers()
           }
         }
       }
-    }
+    })
+    vim.lsp.enable("rust_lsp")
+    -- vim.cmd("echo 'set up rust_lsp'")
   end
 
   if vim.fn.executable(pylsp) == 1 then
-    lspconfig.pylsp.setup {
+    vim.lsp.config(pylsp, {
+      filetypes = { 'python' },
       cmd = {pylsp},
-      root_dir = function(fname)
-        local root_files = {
-          'pyproject.toml',
-          'setup.py',
-          'setup.cfg',
-          'requirements.txt',
-          'Pipfile',
-        }
-        return lsputil.root_pattern(unpack(root_files))(fname) or lsputil.find_git_ancestor(fname)
-      end,
+      root_markers = {
+        'pyproject.toml',
+        'setup.py',
+        'setup.cfg',
+        'requirements.txt',
+        'Pipfile',
+      },
       settings = {
         pylsp = {
           plugins = {
@@ -223,74 +217,32 @@ function setup_servers()
           },
         },
       },
-      cmd_env = {VIRTUAL_ENV = venv, PATH = lsputil.path.join(venv, 'bin') .. ':' .. vim.env.PATH},
       on_attach = on_attach,
-    }
+    })
+    vim.lsp.enable(pylsp)
+    -- vim.cmd("echo 'set up pylsp'")
   end
 
   -- rust
-  lspconfig.rust_analyzer.setup {
-    capabilities = capabilities,
-    autoimport = 'enable',
-    on_attach = on_attach,
-  }
+  if vim.fn.executable("rust-analyzer") == 1 then
+    vim.lsp.config("rust_analyzer", {
+      filetypes = { 'rust' },
+      capabilities = capabilities,
+      autoimport = 'enable',
+      on_attach = on_attach,
+    })
+    vim.lsp.enable("rust_analyzer")
+    -- vim.cmd("echo 'set up rust_analyzer'")
+  end
 
   ---- Doesn't cope with submodule project not having *.csproj files
-  lspconfig.csharp_ls.setup {
-    cmd = { csharp_ls_bin },
-    on_attach = on_attach,
-  }
-
-  lspconfig.omnisharp.setup {
-    -- cmd = { '/bin/mono', omnisharp_bin, '--languageserver' , '--hostPID', tostring(pid) },
-    -- cmd = { "dotnet", "/home/mjt/.cache/omnisharp-vim/omnisharp-roslyn/OmniSharp.dll" },
-
-    ---- Not needed, these are added by lspconfig
-    -- cmd = { omnisharp_bin, '--languageserver', '--hostPID', tostring(pid) };
-
-    cmd = { omnisharp_bin };
-
-    -- https://github.com/Hoffs/omnisharp-extended-lsp.nvim
-    handlers = {
-      ["textDocument/definition"] = require('omnisharp_extended').handler,
-    },
-
-    -- Enables support for reading code style, naming convention and analyzer
-    -- settings from .editorconfig.
-    enable_editorconfig_support = true,
-
-    -- If true, MSBuild project system will only load projects for files that
-    -- were opened in the editor. This setting is useful for big C# codebases
-    -- and allows for faster initialization of code navigation features only
-    -- for projects that are relevant to code that is being edited. With this
-    -- setting enabled OmniSharp may load fewer projects and may thus display
-    -- incomplete reference lists for symbols.
-    -- enable_ms_build_load_projects_on_demand = true,
-    enable_ms_build_load_projects_on_demand = false,
-
-    -- Enables support for roslyn analyzers, code fixes and rulesets.
-    enable_roslyn_analyzers = false,
-
-    -- Specifies whether 'using' directives should be grouped and sorted during
-    -- document formatting.
-    organize_imports_on_format = false,
-
-    -- Enables support for showing unimported types and unimported extension
-    -- methods in completion lists. When committed, the appropriate using
-    -- directive will be added at the top of the current file. This option can
-    -- have a negative impact on initial completion responsiveness,
-    -- particularly for the first few completion sessions after opening a
-    -- solution.
-    enable_import_completion = false,
-
-    -- Specifies whether to include preview versions of the .NET SDK when
-    -- determining which version to use for project loading.
-    sdk_include_prereleases = false,
-
-    -- Only run analyzers against open files when 'enableRoslynAnalyzers' is
-    -- true
-    analyze_open_documents_only = false,
-
-    on_attach = on_attach,
-  }
+  if vim.fn.executable(csharp_ls_bin) == 1 then
+    vim.lsp.config("csharp_ls", {
+      cmd = { csharp_ls_bin },
+      filetypes = { 'cs' },
+      on_attach = on_attach,
+    })
+    vim.lsp.enable("csharp_ls")
+    -- vim.cmd("echo 'set up csharp-ls'")
+  end
 end

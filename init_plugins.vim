@@ -36,7 +36,6 @@ let g:riv_python_rst_hl = 1
 :lua require('init_cmp')
 :lua setup_misc()
 :lua require('init_treesitter')
-:source ~/.config/nvim/config/omnisharp.vim
 :lua setup_cmp()
 
 :lua require('tabnav')
