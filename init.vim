@@ -105,6 +105,8 @@ autocmd BufEnter *.coffee setl tabstop=2 expandtab autoindent shiftwidth=2 filee
 autocmd BufEnter *.c setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax
 autocmd BufEnter *.cpp setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax
 autocmd BufEnter *.java setl tabstop=4 expandtab autoindent shiftwidth=4 fileencoding=utf-8 foldmethod=syntax
+autocmd BufEnter *.yaml setl tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8 foldmethod=syntax
+autocmd BufEnter *.yml setl tabstop=2 expandtab autoindent shiftwidth=2 fileencoding=utf-8 foldmethod=syntax
 
 "" From neocomplete and http://blog.fluther.com/django-vim/
 " XXX: Is markdown really html enough to use the same completions
