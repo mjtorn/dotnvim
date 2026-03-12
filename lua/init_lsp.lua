@@ -271,10 +271,17 @@ function setup_servers()
       on_attach = on_attach,
       settings = {
         yaml = {
+          completion = true,
+          format = {
+            enable = true,
+            printWidth = 125,
+          },
+          hover = true,
           schemas = {
             ["http://json.schemastore.org/github-workflow"] = ".github/workflows/*",
             ["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
           },
+          validate = true,
         },
       },
     })
