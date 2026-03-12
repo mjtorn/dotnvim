@@ -177,6 +177,9 @@ function setup_servers()
   -- "~/.local/bash-lsp/$ npm init -y", `npm install bash-language-server`, symlinked from `.bin/` to `~/.local/bin/`
   local bash_lsp_bin = vim.fn.join({vim.fn.expand('$HOME'), '.local', 'bin', 'bash-language-server'}, '/')
 
+  -- "~/.local/yaml-language-server/$ npm init-y", `npm install yaml-language-server`, symlinked from `.bin/` to `~/.local/bin/`
+  local yaml_lsp_bin = vim.fn.join({vim.fn.expand('$HOME'), '.local', 'bin', 'yaml-language-server'}, '/')
+
   if vim.fn.executable('ruff-lsp') == 1 then
     vim.lsp.config("ruff-lsp", {
       root_markers = {
@@ -260,4 +263,21 @@ function setup_servers()
     -- vim.cmd("echo 'set up bashls'")
   end
 
+  -- And ick this node too
+  if vim.fn.executable(yaml_lsp_bin) == 1 then
+    vim.lsp.config("yamlls", {
+      cmd = { yaml_lsp_bin, '--stdio'},
+      filetypes = { 'yaml' },
+      on_attach = on_attach,
+      settings = {
+        yaml = {
+          schemas = {
+            ["http://json.schemastore.org/github-workflow"] = ".github/workflows/*",
+            ["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
+          },
+        },
+      },
+    })
+    vim.lsp.enable("yamlls")
+  end
 end
