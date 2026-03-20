@@ -280,6 +280,7 @@ function setup_servers()
           schemas = {
             ["http://json.schemastore.org/github-workflow"] = ".github/workflows/*",
             ["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
+            ["https://raw.githubusercontent.com/compose-spec/compose-go/master/schema/compose-spec.json"] = "{docker-,}compose*.{yml,yaml}",
           },
           validate = true,
         },
