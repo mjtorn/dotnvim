@@ -17,6 +17,11 @@ git submodule update --recursive --merge
 mkdir undo
 ```
 
+## Tree-sitter
+
+Download [the cli](https://github.com/tree-sitter/tree-sitter/releases)
+into `~/.local/bin/`
+
 ### Obsession
 All you need is to kick off `:Obsession` when you're
 doing things to create `Session.vim`.
