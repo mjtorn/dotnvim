@@ -14,10 +14,3 @@ autocmd BufWinEnter *.h,*.c,*cpp call matchadd('ColorColumn', '\%101v', 100)
 
 "" Tabs highlighted as well plz
 set lcs=eol:$,tab:⇥\ ,trail:-,nbsp:␣
-
-"" Tree-sitter and sessions do not play nice, deploy the nuclear option
-autocmd VimEnter * lua
-  \ local parsers = require'nvim-treesitter.parsers'
-  \ if parsers.has_parser(vim.bo.filetype) then
-  \   require'nvim-treesitter.highlight'.attach(0)
-  \   end
