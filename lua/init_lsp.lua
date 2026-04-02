@@ -198,8 +198,8 @@ function setup_servers()
         }
       }
     })
-    vim.lsp.enable("rust_lsp")
-    -- vim.cmd("echo 'set up rust_lsp'")
+    vim.lsp.enable("ruff-lsp")
+    -- vim.cmd("echo 'set up ruff-lsp'")
   end
 
   if vim.fn.executable(pylsp) == 1 then
