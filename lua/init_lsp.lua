@@ -202,6 +202,17 @@ function setup_servers()
     -- vim.cmd("echo 'set up ruff-lsp'")
   end
 
+  if vim.fn.executable('ty') == 1 then
+    vim.lsp.config('ty', {
+      settings = {
+        ty = {
+        }
+      }
+    })
+    vim.lsp.enable('ty')
+    -- vim.cmd("echo 'set up ty'")
+  end
+
   if vim.fn.executable(pylsp) == 1 then
     vim.lsp.config(pylsp, {
       filetypes = { 'python' },
