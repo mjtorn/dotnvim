@@ -180,8 +180,8 @@ function setup_servers()
   -- "~/.local/yaml-language-server/$ npm init-y", `npm install yaml-language-server`, symlinked from `.bin/` to `~/.local/bin/`
   local yaml_lsp_bin = vim.fn.join({vim.fn.expand('$HOME'), '.local', 'bin', 'yaml-language-server'}, '/')
 
-  if vim.fn.executable('ruff-lsp') == 1 then
-    vim.lsp.config("ruff-lsp", {
+  if vim.fn.executable('ruff') == 1 then
+    vim.lsp.config("ruff", {
       root_markers = {
         'pyproject.toml',
         'setup.py',
@@ -198,8 +198,8 @@ function setup_servers()
         }
       }
     })
-    vim.lsp.enable("ruff-lsp")
-    -- vim.cmd("echo 'set up ruff-lsp'")
+    vim.lsp.enable("ruff")
+    -- vim.cmd("echo 'set up ruff'")
   end
 
   if vim.fn.executable('ty') == 1 then
@@ -228,9 +228,7 @@ function setup_servers()
         pylsp = {
           plugins = {
             pylint = { enabled = false },
-            ruff = {
-              extendSelect = { "I" },
-            },
+            ruff = { preview = true },
           },
         },
       },
