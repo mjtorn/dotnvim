@@ -204,10 +204,6 @@ function setup_servers()
 
   if vim.fn.executable('ty') == 1 then
     vim.lsp.config('ty', {
-      settings = {
-        ty = {
-        }
-      }
     })
     vim.lsp.enable('ty')
     -- vim.cmd("echo 'set up ty'")
